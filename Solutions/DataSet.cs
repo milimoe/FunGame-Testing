@@ -24,15 +24,9 @@ namespace DataSetJsonConverter
             var jsonString = JsonSerializer.Serialize(p1, options);
             jsonString += JsonSerializer.Serialize(p2, options);
 
-            var regex = new Regex(@"(?<=\})(?=\{)");
-            var jsonStrings = regex.Split(jsonString);
+            jsonString = "[" + jsonString.Replace("}{", "},{") + "]";
 
-            var people = new List<Person>();
-            foreach (var str in jsonStrings)
-            {
-                var person = JsonSerializer.Deserialize<Person>(str, options);
-                people.Add(person);
-            }
+            var people = JsonSerializer.Deserialize<Person[]>(jsonString, options);
 
             foreach (var person in people)
             {
