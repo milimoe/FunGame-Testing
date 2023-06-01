@@ -1,7 +1,9 @@
 using System;
+using System.Collections.Generic;
 using System.Data;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using System.Text.RegularExpressions;
 
 namespace DataSetJsonConverter
 {
@@ -9,37 +11,32 @@ namespace DataSetJsonConverter
     {
         static void Main(string[] args)
         {
-            var ds = new DataSet();
-            var dt = new DataTable();
-            dt.Columns.Add("ID", typeof(int));
-            dt.Columns.Add("Name", typeof(string));
-            dt.Columns.Add("Time", typeof(DateTime));
-            var dr = dt.NewRow();
-            dr["ID"] = 1;
-            dr["Name"] = "YES";
-            dr["Time"] = DateTime.Now;
-            dt.Rows.Add(dr);
-            dr = dt.NewRow();
-            dr["ID"] = 2;
-            dr["Name"] = "NO";
-            dr["Time"] = DateTime.Now;
-            dt.Rows.Add(dr);
-            ds.Tables.Add(dt);
+            Person p1 = new(1, "YES", DateTime.Now);
+            Person p2 = new(2, "NO", DateTime.Now);
 
             var options = new JsonSerializerOptions()
             {
                 WriteIndented = true
             };
             options.Converters.Add(new DataSetConverter());
+            options.Converters.Add(new DateTimeConverter());
 
-            var jsonString = JsonSerializer.Serialize(ds, options);
+            var jsonString = JsonSerializer.Serialize(p1, options);
+            jsonString += JsonSerializer.Serialize(p2, options);
 
-            var dataSet = JsonSerializer.Deserialize<DataSet>(jsonString, options);
-            var dataTable = dataSet.Tables[0];
+            var regex = new Regex(@"(?<=\})(?=\{)");
+            var jsonStrings = regex.Split(jsonString);
 
-            foreach (DataRow row in dataTable.Rows)
+            var people = new List<Person>();
+            foreach (var str in jsonStrings)
             {
-                Console.WriteLine("{0}, {1}", row["ID"], row["Name"]);
+                var person = JsonSerializer.Deserialize<Person>(str, options);
+                people.Add(person);
+            }
+
+            foreach (var person in people)
+            {
+                Console.WriteLine(person.Name);
             }
         }
     }
@@ -334,6 +331,60 @@ namespace DataSetJsonConverter
                     dataTable.Rows.Add(values);
                 }
             }
+        }
+    }
+
+    public class DateTimeConverter : JsonConverter<DateTime>
+    {
+        private readonly string _format = "yyyy-MM-dd hh:mm:ss.fff";
+
+        public override DateTime Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
+        {
+            if (reader.TokenType != JsonTokenType.String)
+            {
+                throw new JsonException();
+            }
+
+            string dateString = reader.GetString();
+
+            if (DateTime.TryParseExact(dateString, _format, null, System.Globalization.DateTimeStyles.None, out DateTime result))
+            {
+                return result;
+            }
+
+            throw new JsonException();
+        }
+
+        public override void Write(Utf8JsonWriter writer, DateTime value, JsonSerializerOptions options)
+        {
+            writer.WriteStringValue(value.ToString(_format));
+        }
+    }
+
+    public class Person
+    {
+        public int ID { get; }
+        public string Name { get; }
+        public DateTime Time { get; }
+        public DataSet ds { get; }
+
+        [JsonConstructor]
+        public Person(int ID, string Name, DateTime Time)
+        {
+            this.ID = ID;
+            this.Name = Name;
+            this.Time = Time;
+            ds = new DataSet();
+            var dt = new DataTable();
+            dt.Columns.Add("ID", typeof(int));
+            dt.Columns.Add("Name", typeof(string));
+            dt.Columns.Add("Time", typeof(DateTime));
+            var dr = dt.NewRow();
+            dr["ID"] = ID;
+            dr["Name"] = Name;
+            dr["Time"] = Time;
+            dt.Rows.Add(dr);
+            ds.Tables.Add(dt);
         }
     }
 }
