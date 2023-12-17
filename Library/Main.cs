@@ -1,4 +1,4 @@
-using System.Collections;
+1using System.Collections;
 using System.Data;
 using ConverterExample;
 using Milimoe.FunGame.Core.Api.Utility;
@@ -68,7 +68,7 @@ json = JsonTool.GetString(p);
 Person p2 = JsonTool.GetObject<Person>(json) ?? new();
 
 Console.WriteLine("My name is " + p2.Name + ", I am " + p2.Age + "-year-old. I live at " + p2.Address.State + " " + p2.Address.City);
-Console.WriteLine("摆烂了47");
+Console.WriteLine("摆烂了48");
 
 // 生成一对公钥秘钥
 //TwoFactorAuthenticator.CreateSecretKey();
