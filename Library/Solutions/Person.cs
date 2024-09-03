@@ -19,7 +19,12 @@ namespace ConverterExample
 
     public class AddressConverter : BaseEntityConverter<Address>
     {
-        public override void ReadPropertyName(ref Utf8JsonReader reader, string propertyName, JsonSerializerOptions options, ref Address? result)
+        public override Address NewInstance()
+        {
+            return new();
+        }
+
+        public override void ReadPropertyName(ref Utf8JsonReader reader, string propertyName, JsonSerializerOptions options, ref Address result)
         {
             result ??= new();
             switch (propertyName)
@@ -47,7 +52,12 @@ namespace ConverterExample
 
     public class PersonConverter : BaseEntityConverter<Person>
     {
-        public override void ReadPropertyName(ref Utf8JsonReader reader, string propertyName, JsonSerializerOptions options, ref Person? result)
+        public override Person NewInstance()
+        {
+            return new();
+        }
+
+        public override void ReadPropertyName(ref Utf8JsonReader reader, string propertyName, JsonSerializerOptions options, ref Person result)
         {
             result ??= new();
             switch (propertyName)

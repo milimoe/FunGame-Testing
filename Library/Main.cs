@@ -1,74 +1,103 @@
-using System.Collections;
-using System.Data;
-using ConverterExample;
 using Milimoe.FunGame.Core.Api.Utility;
 using Milimoe.FunGame.Core.Entity;
-using Milimoe.FunGame.Core.Library.Common.JsonConverter;
+using Milimoe.FunGame.Core.Library.Common.Addon;
+using Milimoe.FunGame.Core.Library.Common.Event;
+using Milimoe.FunGame.Core.Library.Constant;
+using Milimoe.FunGame.Testing.Solutions;
 
-DataSet ds = new();
-DataTable table = new("SampleTable1");
-table.Columns.Add("Id", typeof(int));
-table.Columns.Add("Name", typeof(string));
-table.Columns.Add("Age", typeof(int));
-table.Rows.Add(1, "John", 30);
-table.Rows.Add(2, "Jane", 25);
-table.Rows.Add(3, "Bob", 40);
-ds.Tables.Add(table);
-
-table = new("SampleTable2");
-table.Columns.Add("Id", typeof(int));
-table.Columns.Add("Name", typeof(string));
-table.Columns.Add("Age", typeof(int));
-table.Rows.Add(1, "John", 30);
-table.Rows.Add(2, "Jane", 25);
-table.Rows.Add(3, "Bob", 40);
-ds.Tables.Add(table);
-
-JsonTool JsonTool = new();
-JsonTool.AddConverters(new System.Text.Json.Serialization.JsonConverter[] { new UserConverter(), new RoomConverter(), new PersonConverter(), new AddressConverter() });
-
-Room r = Factory.GetRoom(1294367, "w5rtvh8".ToUpper(), DateTime.Now, Factory.GetUser(), Milimoe.FunGame.Core.Library.Constant.RoomType.Mix, "", "", Milimoe.FunGame.Core.Library.Constant.RoomState.Created);
-User u = Factory.GetUser(1, "LUOLI", DateTime.Now, DateTime.Now, "LUOLI@66.COM", "QWQAQW");
-
-Hashtable hashtable = new()
+PluginLoader plugins = PluginLoader.LoadPlugins([]);
+foreach (string plugin in plugins.Plugins.Keys)
 {
-    { "table", table },
-    { "room", r },
-    { "user", u }
-};
+    Console.WriteLine(plugin + " is loaded.");
+}
 
-string json = JsonTool.GetString(hashtable);
-
-Hashtable hashtable2 = JsonTool.GetObject<Hashtable>(json) ?? new();
-
-DataTable table2 = JsonTool.GetObject<DataTable>(json) ?? new();
-User u2 = JsonTool.GetObject<User>(hashtable2, "user") ?? Factory.GetUser();
-Room r2 = JsonTool.GetObject<Room>(hashtable2, "room") ?? Factory.GetRoom();
-
-table2.AsEnumerable().ToList().ForEach(row =>
+Dictionary<string, string> plugindllsha512 = [];
+foreach (string pfp in PluginLoader.PluginFilePaths.Keys)
 {
-    Console.WriteLine("Id: " + row["Id"] + ", Name: "+ row["Name"] + ", Age: " + row["Age"]);
-});
+    string text = Encryption.FileSha512(PluginLoader.PluginFilePaths[pfp]);
+    plugindllsha512.Add(pfp, text);
+    Console.WriteLine(pfp + $" is {text}.");
+}
 
-Console.WriteLine(u2.Username + " 进入了 " + r2.Roomid + " 房间");
-
-Person p = new()
+LoginEventArgs e = new();
+plugins.OnBeforeLoginEvent(plugins, e);
+if (!e.Cancel)
 {
-    Age = (int)r2.Id,
-    Name = u2.Username,
-    Address = new()
+    plugins.OnSucceedLoginEvent(plugins, e);
+    plugins.OnFailedLoginEvent(plugins, e);
+}
+plugins.OnAfterLoginEvent(plugins, e);
+
+List<Character> list = [];
+
+GameModuleLoader modules = GameModuleLoader.LoadGameModules(FunGameInfo.FunGame.FunGame_Desktop, []);
+foreach (CharacterModule cm in modules.Characters.Values)
+{
+    foreach (Character c in cm.Characters)
     {
-        State = "呵呵州(Hehe State)",
-        City = "哈哈市(Haha City)"
+        Console.WriteLine(c.Name);
+        list.Add(c);
     }
-};
+}
 
-json = JsonTool.GetString(p);
+Dictionary<string, string> moduledllsha512 = [];
+foreach (string mfp in GameModuleLoader.ModuleFilePaths.Keys)
+{
+    string text = Encryption.FileSha512(GameModuleLoader.ModuleFilePaths[mfp]);
+    moduledllsha512.Add(mfp, text);
+    Console.WriteLine(mfp + $" is {text}.");
+}
 
-Person p2 = JsonTool.GetObject<Person>(json) ?? new();
+foreach (string moduledll in moduledllsha512.Keys)
+{
+    string server = moduledllsha512[moduledll];
+    if (plugindllsha512.TryGetValue(moduledll, out string? client) && client != "" && server == client)
+    {
+        Console.WriteLine(moduledll + $" is checked pass.");
+    }
+}
 
-Console.WriteLine("My name is " + p2.Name + ", I am " + p2.Age + "-year-old. I live at " + p2.Address.State + " " + p2.Address.City);
-Console.WriteLine("摆烂了86");
+if (list.Count > 3)
+{
+    Console.WriteLine();
+    Console.WriteLine("Start!!!");
+    Console.WriteLine();
 
-// 生成一对公钥秘钥
-//TwoFactorAuthenticator.CreateSecretKey();
+    Character character1 = list[0].Copy();
+    Character character2 = list[1].Copy();
+    Character character3 = list[2].Copy();
+    Character character4 = list[3].Copy();
+
+    ActionQueue actionQueue = new();
+    List<Character> characters = [character1, character2, character3, character4];
+
+    // 初始顺序表排序
+    actionQueue.CalculateInitialOrder(characters);
+    Console.WriteLine();
+
+    // 显示初始顺序表
+    actionQueue.DisplayQueue();
+    Console.WriteLine();
+
+    // 模拟时间流逝
+    int i = 1;
+    while (i < 10)
+    {
+        // 检查是否有角色可以行动
+        Character? characterToAct = actionQueue.NextCharacter();
+        if (characterToAct != null)
+        {
+            Console.WriteLine($"=== Round {i++} ===");
+            actionQueue.ProcessTurn(characterToAct);
+            actionQueue.DisplayQueue();
+            Console.WriteLine();
+        }
+
+        //Thread.Sleep(1); // 模拟时间流逝
+        actionQueue.ReduceHardnessTimes();
+    }
+
+    Console.WriteLine("--- End ---");
+}
+
+Console.ReadKey();
