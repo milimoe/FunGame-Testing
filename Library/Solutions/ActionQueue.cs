@@ -141,7 +141,7 @@ public class ActionQueue
             // 回血回蓝
             double douHP = Math.Round(character.HR * timeToReduce, 2, MidpointRounding.AwayFromZero);
             double douMP = Math.Round(character.MR * timeToReduce, 2, MidpointRounding.AwayFromZero);
-            Console.WriteLine("角色 " + character.Name + " 回血：" + douHP + " / "+ "回蓝：" + douMP);
+            Console.WriteLine("角色 " + character.Name + " 回血：" + douHP + " / " + "回蓝：" + douMP);
         }
         Console.WriteLine();
     }
