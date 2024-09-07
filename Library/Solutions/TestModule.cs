@@ -1,7 +1,6 @@
 ﻿using Milimoe.FunGame.Core.Api.Utility;
 using Milimoe.FunGame.Core.Entity;
 using Milimoe.FunGame.Core.Library.Common.Addon;
-using Milimoe.FunGame.Core.Library.Constant;
 
 namespace Addons
 {
@@ -51,7 +50,6 @@ namespace Addons
                 List<Skill> list = [];
                 Skill s = Factory.GetSkill();
                 s.Name = "Example Skill";
-                s.MagicType = MagicType.PurityNatural;
                 list.Add(s);
                 return list;
             }

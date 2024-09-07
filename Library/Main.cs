@@ -3,7 +3,7 @@ using Milimoe.FunGame.Core.Entity;
 using Milimoe.FunGame.Core.Library.Common.Addon;
 using Milimoe.FunGame.Core.Library.Common.Event;
 using Milimoe.FunGame.Core.Library.Constant;
-using Milimoe.FunGame.Testing.Solutions;
+using Milimoe.FunGame.Testing.Skills;
 
 PluginLoader plugins = PluginLoader.LoadPlugins([]);
 foreach (string plugin in plugins.Plugins.Keys)
@@ -67,34 +67,65 @@ if (list.Count > 3)
     Character character2 = list[1].Copy();
     Character character3 = list[2].Copy();
     Character character4 = list[3].Copy();
+    Character character5 = list[4].Copy();
+    Character character6 = list[5].Copy();
+    Character character7 = list[6].Copy();
+    Character character8 = list[7].Copy();
+    Character character9 = list[8].Copy();
+    Character character10 = list[9].Copy();
+    Character character11 = list[10].Copy();
+    Character character12 = list[11].Copy();
 
-    ActionQueue actionQueue = new();
-    List<Character> characters = [character1, character2, character3, character4];
+    List<Character> characters = [
+        character1, character2, character3, character4,
+        character5, character6, character7, character8,
+        character9, character10, character11, character12
+    ];
 
-    // 初始顺序表排序
-    actionQueue.CalculateInitialOrder(characters);
+    // 升级和赋能
+    for (int index = 0; index < characters.Count; index++)
+    {
+        characters[index].Level = 60;
+        characters[index].Skills.Add("冰霜攻击", new 冰霜攻击(characters[index]));
+        characters[index].Skills["冰霜攻击"].Level += 8;
+        characters[index].Skills.Add("天赐之力", new 天赐之力(characters[index]));
+        characters[index].Skills["天赐之力"].Level += 6;
+    }
+
+    // 显示角色信息
+    characters.ForEach(c => Console.WriteLine(c.GetInfo()));
+
+    // 创建顺序表并排序
+    ActionQueue actionQueue = new(characters, Console.WriteLine);
     Console.WriteLine();
 
     // 显示初始顺序表
     actionQueue.DisplayQueue();
     Console.WriteLine();
 
-    // 模拟时间流逝
+    // 总回合数
     int i = 1;
-    while (i < 10)
+    while (i < 999)
     {
         // 检查是否有角色可以行动
         Character? characterToAct = actionQueue.NextCharacter();
         if (characterToAct != null)
         {
             Console.WriteLine($"=== Round {i++} ===");
-            actionQueue.ProcessTurn(characterToAct);
+            Console.WriteLine("现在是 [ " + characterToAct + " ] 的回合！");
+
+            bool isGameEnd = actionQueue.ProcessTurn(characterToAct);
+            if (isGameEnd)
+            {
+                break;
+            }
+
             actionQueue.DisplayQueue();
             Console.WriteLine();
         }
 
-        //Thread.Sleep(1); // 模拟时间流逝
-        actionQueue.ReduceHardnessTimes();
+        // 模拟时间流逝
+        actionQueue.TimeLapse();
     }
 
     Console.WriteLine("--- End ---");
