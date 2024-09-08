@@ -85,11 +85,24 @@ if (list.Count > 3)
     // 升级和赋能
     for (int index = 0; index < characters.Count; index++)
     {
-        characters[index].Level = 60;
-        characters[index].Skills.Add("冰霜攻击", new 冰霜攻击(characters[index]));
-        characters[index].Skills["冰霜攻击"].Level += 8;
-        characters[index].Skills.Add("天赐之力", new 天赐之力(characters[index]));
-        characters[index].Skills["天赐之力"].Level += 6;
+        Character c = characters[index];
+        c.Level = 60;
+        c.NormalAttack.Level += 7;
+
+        Skill 冰霜攻击 = new 冰霜攻击(c);
+        冰霜攻击.Level += 8;
+        c.Skills.Add(冰霜攻击);
+
+        if (c.ToString() == character1.ToString())
+        {
+            Skill 大岛特性 = new 大岛特性(c);
+            大岛特性.Level++;
+            c.Skills.Add(大岛特性);
+        }
+
+        Skill 天赐之力 = new 天赐之力(c);
+        天赐之力.Level += 6;
+        c.Skills.Add(天赐之力);
     }
 
     // 显示角色信息

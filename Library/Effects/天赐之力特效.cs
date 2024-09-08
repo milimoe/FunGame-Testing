@@ -8,7 +8,7 @@ namespace Milimoe.FunGame.Testing.Effects
     {
         public override long Id => 1;
         public override string Name => "天赐之力";
-        public override string Description => $"{Duration} 时间内，获得 25% 闪避率，普通攻击硬直时间额外减少 20%，基于 120%（+60%/Lv）核心属性 [ {伤害加成} ] 强化普通攻击的伤害。";
+        public override string Description => $"{Duration} 时间内，获得 25% 闪避率（不可叠加），普通攻击硬直时间额外减少 20%，基于 {Calculation.Round4Digits((1.2 + (1 + 0.6 * (Skill.Level - 1))) * 100)}% 核心属性 [ {伤害加成} ] 强化普通攻击的伤害。";
         public override bool TargetSelf => false;
         public override int TargetCount => 1;
         public override bool Durative => true;
@@ -56,10 +56,10 @@ namespace Milimoe.FunGame.Testing.Effects
 
         public override void OnSkillCasted(ActionQueue queue, Character actor, List<Character> enemys, List<Character> teammates, Dictionary<string, object> others)
         {
-            if (!actor.Effects.ContainsKey(Name))
+            RemainDuration = Duration;
+            if (!actor.Effects.Contains(this))
             {
-                actor.Effects.Add(Name, this);
-                RemainDuration = Duration;
+                actor.Effects.Add(this);
                 OnEffectGained(actor);
             }
         }
