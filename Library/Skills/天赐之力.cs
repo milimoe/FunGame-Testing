@@ -5,7 +5,7 @@ namespace Milimoe.FunGame.Testing.Skills
 {
     public class 天赐之力 : Skill
     {
-        public override long Id => 1;
+        public override long Id => 3001;
         public override string Name => "天赐之力";
         public override string Description => Effects.Count > 0 ? Effects.First().Description : "";
         public override double EPCost => 100;

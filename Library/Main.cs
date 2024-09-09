@@ -57,6 +57,15 @@ foreach (string moduledll in moduledllsha512.Keys)
     }
 }
 
+// M = 0, W = 7, P1 = 1, P3 = 1
+// M = 1, W = 6, P1 = 2, P3 = 0
+// M = 2, W = 4, P1 = 0, P3 = 2
+// M = 2, W = 5, P1 = 0, P3 = 0
+// M = 3, W = 3, P1 = 1, P3 = 1
+// M = 4, W = 2, P1 = 2, P3 = 0
+// M = 5, W = 0, P1 = 0, P3 = 2
+// M = 5, W = 1, P1 = 0, P3 = 0
+
 if (list.Count > 3)
 {
     Console.WriteLine();
@@ -98,6 +107,13 @@ if (list.Count > 3)
             Skill 大岛特性 = new 大岛特性(c);
             大岛特性.Level++;
             c.Skills.Add(大岛特性);
+        }
+
+        if (c.ToString() == character9.ToString())
+        {
+            Skill 疾风步 = new 疾风步(c);
+            疾风步.Level += 6;
+            c.Skills.Add(疾风步);
         }
 
         Skill 天赐之力 = new 天赐之力(c);

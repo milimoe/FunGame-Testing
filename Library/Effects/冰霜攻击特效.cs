@@ -6,12 +6,11 @@ namespace Milimoe.FunGame.Testing.Effects
 {
     public class 冰霜攻击特效(Skill skill) : Effect(skill)
     {
-        public override long Id => 1;
+        public override long Id => Skill.Id;
         public override string Name => "冰霜攻击";
-        public override string Description => $"对目标敌人造成 {Calculation.Round4Digits(1.2 * (1 + 1.8 * (Skill.Level - 1))) * 100}%智力 [ {Damage} ] 点{CharacterSet.GetMagicName(MagicType)}。";
+        public override string Description => $"对目标敌人造成 {Calculation.Round2Digits(90 + 60 * (Skill.Level - 1))} + {Calculation.Round2Digits((1.2 + 1.8 * (Skill.Level - 1)) * 100)}%智力 [ {Damage} ] 点{CharacterSet.GetMagicName(MagicType)}。";
         public override bool TargetSelf => false;
         public override int TargetCount => 1;
-        public override MagicType MagicType => MagicType.None;
 
         private double Damage
         {
@@ -20,7 +19,7 @@ namespace Milimoe.FunGame.Testing.Effects
                 double d = 0;
                 if (Skill.Character != null)
                 {
-                    d = Calculation.Round2Digits(1.2 * (1 + 1.8 * (Skill.Level - 1)) * Skill.Character.INT);
+                    d = Calculation.Round2Digits(90 + 60 * (Skill.Level - 1) + (1.2 + 1.8 * (Skill.Level - 1)) * Skill.Character.INT);
                 }
                 return d;
             }

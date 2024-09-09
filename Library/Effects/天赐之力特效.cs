@@ -6,14 +6,13 @@ namespace Milimoe.FunGame.Testing.Effects
 {
     public class 天赐之力特效(Skill skill) : Effect(skill)
     {
-        public override long Id => 1;
+        public override long Id => Skill.Id;
         public override string Name => "天赐之力";
-        public override string Description => $"{Duration} 时间内，获得 25% 闪避率（不可叠加），普通攻击硬直时间额外减少 20%，基于 {Calculation.Round4Digits((1.2 + (1 + 0.6 * (Skill.Level - 1))) * 100)}% 核心属性 [ {伤害加成} ] 强化普通攻击的伤害。";
+        public override string Description => $"{Duration} 时间内，获得 25% 闪避率（不可叠加），普通攻击硬直时间额外减少 20%，基于 {Calculation.Round2Digits((1.2 + (1 + 0.6 * (Skill.Level - 1))) * 100)}% 核心属性 [ {伤害加成} ] 强化普通攻击的伤害。";
         public override bool TargetSelf => false;
         public override int TargetCount => 1;
         public override bool Durative => true;
         public override double Duration => 40;
-        public override MagicType MagicType => MagicType.Element;
 
         private double 伤害加成
         {

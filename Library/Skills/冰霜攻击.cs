@@ -5,7 +5,7 @@ namespace Milimoe.FunGame.Testing.Skills
 {
     public class 冰霜攻击 : Skill
     {
-        public override long Id => 1;
+        public override long Id => 2001;
         public override string Name => "冰霜攻击";
         public override string Description => Effects.Count > 0 ? Effects.First().Description : "";
         public override double MPCost => BaseMPCost + (50 * (Level - 1));

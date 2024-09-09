@@ -5,7 +5,7 @@ namespace Milimoe.FunGame.Testing.Skills
 {
     public class 大岛特性 : Skill
     {
-        public override long Id => 1;
+        public override long Id => 5001;
         public override string Name => "大岛特性";
         public override string Description => Effects.Count > 0 ? Effects.First().Description : "";
 
