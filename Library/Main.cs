@@ -91,34 +91,85 @@ if (list.Count > 3)
         character9, character10, character11, character12
     ];
 
+    int clevel = 60;
+    int slevel = 6;
+    int mlevel = 8;
+
     // 升级和赋能
     for (int index = 0; index < characters.Count; index++)
     {
         Character c = characters[index];
-        c.Level = 60;
-        c.NormalAttack.Level += 7;
+        c.Level = clevel;
+        c.NormalAttack.Level = mlevel;
 
-        Skill 冰霜攻击 = new 冰霜攻击(c);
-        冰霜攻击.Level += 8;
+        Skill 冰霜攻击 = new 冰霜攻击(c)
+        {
+            Level = mlevel
+        };
         c.Skills.Add(冰霜攻击);
 
-        if (c.ToString() == character1.ToString())
+        if (c == character1)
         {
-            Skill 大岛特性 = new 大岛特性(c);
-            大岛特性.Level++;
-            c.Skills.Add(大岛特性);
+            Skill META马 = new META马(c)
+            {
+                Level = 1
+            };
+            c.Skills.Add(META马);
+
+            Skill 力量爆发 = new 力量爆发(c)
+            {
+                Level = mlevel
+            };
+            c.Skills.Add(力量爆发);
         }
 
-        if (c.ToString() == character9.ToString())
+        if (c == character2)
         {
-            Skill 疾风步 = new 疾风步(c);
-            疾风步.Level += 6;
+            Skill 心灵之火 = new 心灵之火(c)
+            {
+                Level = 1
+            };
+            c.Skills.Add(心灵之火);
+
+            Skill 天赐之力 = new 天赐之力(c)
+            {
+                Level = slevel
+            };
+            c.Skills.Add(天赐之力);
+        }
+        
+        if (c== character3)
+        {
+            Skill 魔法震荡 = new 魔法震荡(c)
+            {
+                Level = 1
+            };
+            c.Skills.Add(魔法震荡);
+
+            Skill 魔法涌流 = new 魔法涌流(c)
+            {
+                Level = slevel
+            };
+            c.Skills.Add(魔法涌流);
+        }
+
+        if (c == character9)
+        {
+            Skill 疾风步 = new 疾风步(c)
+            {
+                Level = slevel
+            };
             c.Skills.Add(疾风步);
         }
 
-        Skill 天赐之力 = new 天赐之力(c);
-        天赐之力.Level += 6;
-        c.Skills.Add(天赐之力);
+        if (c != character1 && c != character2 && c != character3)
+        {
+            Skill 天赐之力 = new 天赐之力(c)
+            {
+                Level = slevel
+            };
+            c.Skills.Add(天赐之力);
+        }
     }
 
     // 显示角色信息
@@ -138,6 +189,8 @@ if (list.Count > 3)
     {
         // 检查是否有角色可以行动
         Character? characterToAct = actionQueue.NextCharacter();
+
+        // 处理回合
         if (characterToAct != null)
         {
             Console.WriteLine($"=== Round {i++} ===");
