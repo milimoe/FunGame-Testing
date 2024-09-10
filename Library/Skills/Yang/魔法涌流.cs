@@ -10,7 +10,7 @@ namespace Milimoe.FunGame.Testing.Skills
         public override string Name => "魔法涌流";
         public override string Description => Effects.Count > 0 ? Effects.First().Description : "";
         public override double EPCost => 100;
-        public override double CD => 65;
+        public override double CD => 35;
         public override double HardnessTime => 10;
 
         public 魔法涌流(Character character) : base(SkillType.SuperSkill, character)
@@ -23,12 +23,12 @@ namespace Milimoe.FunGame.Testing.Skills
     {
         public override long Id => Skill.Id;
         public override string Name => "魔法涌流";
-        public override string Description => $"{Duration} 秒内，增加所有伤害的20%伤害减免，并将普通攻击转为魔法伤害，可叠加魔法震荡的效果。";
+        public override string Description => $"{Duration} 秒内，增加所有伤害的 {减伤比例 * 100}% 伤害减免，并将普通攻击转为魔法伤害，可叠加魔法震荡的效果。";
         public override bool TargetSelf => true;
         public override bool Durative => true;
-        public override double Duration => 50;
+        public override double Duration => 25;
 
-        private double 减伤比例 => Calculation.Round2Digits(0.2 + 0.02 * (Level -1));
+        private double 减伤比例 => Calculation.Round2Digits(0.1 + 0.02 * (Level -1));
         private double 实际比例 = 0;
 
         public override void OnEffectGained(Character character)
@@ -42,7 +42,7 @@ namespace Milimoe.FunGame.Testing.Skills
             character.NormalAttack.SetMagicType(false, character.MagicType);
         }
 
-        public override void AlterActualDamageAfterCalculation(Character character, Character enemy, ref double damage, bool isNormalAttack, bool isMagicDamage, MagicType magicType, bool isCritical)
+        public override void AlterActualDamageAfterCalculation(Character character, Character enemy, ref double damage, bool isNormalAttack, bool isMagicDamage, MagicType magicType, DamageResult damageResult)
         {
             if (enemy == Skill.Character)
             {

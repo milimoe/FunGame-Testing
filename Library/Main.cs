@@ -152,6 +152,36 @@ if (list.Count > 3)
             };
             c.Skills.Add(魔法涌流);
         }
+        
+        if (c== character4)
+        {
+            Skill 灵能反射 = new 灵能反射(c)
+            {
+                Level = 1
+            };
+            c.Skills.Add(灵能反射);
+
+            Skill 三重叠加 = new 三重叠加(c)
+            {
+                Level = slevel
+            };
+            c.Skills.Add(三重叠加);
+        }
+        
+        if (c== character5)
+        {
+            Skill 智慧与力量 = new 智慧与力量(c)
+            {
+                Level = 1
+            };
+            c.Skills.Add(智慧与力量);
+
+            Skill 变幻之心 = new 变幻之心(c)
+            {
+                Level = slevel
+            };
+            c.Skills.Add(变幻之心);
+        }
 
         if (c == character9)
         {
@@ -162,7 +192,8 @@ if (list.Count > 3)
             c.Skills.Add(疾风步);
         }
 
-        if (c != character1 && c != character2 && c != character3)
+        if (c != character1 && c != character2 && c != character3 && c != character4 &&
+            c != character5)
         {
             Skill 天赐之力 = new 天赐之力(c)
             {
@@ -187,6 +218,26 @@ if (list.Count > 3)
     int i = 1;
     while (i < 999)
     {
+        if (i == 998)
+        {
+            Console.WriteLine($"=== 终局审判 ===");
+            Dictionary<Character, double> 他们的血量百分比 = [];
+            foreach (Character c in characters)
+            {
+                他们的血量百分比.TryAdd(c, Calculation.Round4Digits(c.HP / c.MaxHP));
+            }
+            double max = 他们的血量百分比.Values.Max();
+            Character winner = 他们的血量百分比.Keys.Where(c => 他们的血量百分比[c] == max).First();
+            Console.WriteLine("[ " + winner + " ] 成为了天选之人！！");
+            foreach (Character c in characters.Where(c => c != winner && c.HP > 0))
+            {
+                Console.WriteLine("[ " + winner + " ] 对 [ " + c + " ] 造成了 99999999999 点真实伤害。");
+                actionQueue.DeathCalculation(winner, c);
+            }
+            actionQueue.EndGameInfo(winner);
+            break;
+        }
+
         // 检查是否有角色可以行动
         Character? characterToAct = actionQueue.NextCharacter();
 

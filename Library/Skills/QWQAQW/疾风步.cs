@@ -65,7 +65,7 @@ namespace Milimoe.FunGame.Testing.Skills
             character.ExCritRate -= 0.15;
         }
 
-        public override void AlterActualDamageAfterCalculation(Character character, Character enemy, ref double damage, bool isNormalAttack, bool isMagicDamage, MagicType magicType, bool isCritical)
+        public override void AlterActualDamageAfterCalculation(Character character, Character enemy, ref double damage, bool isNormalAttack, bool isMagicDamage, MagicType magicType, DamageResult damageResult)
         {
             if (character == Skill.Character && 首次伤害)
             {

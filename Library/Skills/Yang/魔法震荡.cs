@@ -28,9 +28,9 @@ namespace Milimoe.FunGame.Testing.Skills
         public override string Description => $"造成魔法伤害时有 35% 几率使敌人眩晕 1 回合。";
         public override bool TargetSelf => true;
 
-        public override void AfterDamageCalculation(Character character, Character enemy, double damage, bool isNormalAttack, bool isMagicDamage, MagicType magicType, bool isCritical)
+        public override void AfterDamageCalculation(Character character, Character enemy, double damage, bool isNormalAttack, bool isMagicDamage, MagicType magicType, DamageResult damageResult)
         {
-            if (character == Skill.Character && isMagicDamage && new Random().NextDouble() < 0.35)
+            if (character == Skill.Character && isMagicDamage && damageResult != DamageResult.Evaded && new Random().NextDouble() < 0.35)
             {
                 IEnumerable<Effect> effects = enemy.Effects.Where(e => e is 眩晕 && e.Skill == Skill);
                 if (effects.Any())
