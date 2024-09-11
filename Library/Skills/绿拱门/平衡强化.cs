@@ -3,15 +3,15 @@ using Milimoe.FunGame.Core.Library.Constant;
 
 namespace Milimoe.FunGame.Testing.Skills
 {
-    public class 智慧与力量 : Skill
+    public class 平衡强化 : Skill
     {
-        public override long Id => 4005;
-        public override string Name => "智慧与力量";
+        public override long Id => 4011;
+        public override string Name => "平衡强化";
         public override string Description => Effects.Count > 0 ? Effects.First().Description : "";
 
-        public 智慧与力量(Character character) : base(SkillType.Passive, character)
+        public 平衡强化(Character character) : base(SkillType.Passive, character)
         {
-            Effects.Add(new 智慧与力量特效(this));
+            Effects.Add(new 平衡强化特效(this));
         }
 
         public override IEnumerable<Effect> AddInactiveEffectToCharacter()
@@ -20,12 +20,11 @@ namespace Milimoe.FunGame.Testing.Skills
         }
     }
 
-    public class 智慧与力量特效(Skill skill) : Effect(skill)
+    public class 平衡强化特效(Skill skill) : Effect(skill)
     {
         public override long Id => Skill.Id;
         public override string Name => Skill.Name;
-        public override string Description => $"当生命值低于 30% 时，智力转化为力量；当生命值高于或等于 30% 时，力量转化为智力。" +
-            (Skill.Character != null ? "（当前模式：" + CharacterSet.GetPrimaryAttributeName(Skill.Character.PrimaryAttribute) + "）" : "");
+        public override string Description => $"敏捷提高20%，然后将目前的力量补充到与敏捷持平，持续30秒。";
         public override bool TargetSelf => true;
 
         private double 交换前的额外智力 = 0;

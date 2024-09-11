@@ -55,7 +55,7 @@ namespace Milimoe.FunGame.Testing.Skills
             }
         }
 
-        public override void AlterHardnessTimeAfterCastSkill(Character character, ref double baseHardnessTime)
+        public override void AlterHardnessTimeAfterCastSkill(Character character, ref double baseHardnessTime, ref bool isCheckProtected)
         {
             释放次数++;
             if (释放次数 < 触发硬直次数)

@@ -108,6 +108,12 @@ if (list.Count > 3)
         };
         c.Skills.Add(冰霜攻击);
 
+        Skill 疾风步 = new 疾风步(c)
+        {
+            Level = slevel
+        };
+        c.Skills.Add(疾风步);
+
         if (c == character1)
         {
             Skill META马 = new META马(c)
@@ -182,18 +188,85 @@ if (list.Count > 3)
             };
             c.Skills.Add(变幻之心);
         }
-
-        if (c == character9)
+        
+        if (c== character6)
         {
-            Skill 疾风步 = new 疾风步(c)
+            Skill 致命打击 = new 致命打击(c)
+            {
+                Level = 1
+            };
+            c.Skills.Add(致命打击);
+
+            Skill 精准打击 = new 精准打击(c)
             {
                 Level = slevel
             };
-            c.Skills.Add(疾风步);
+            c.Skills.Add(精准打击);
+        }
+        
+        if (c== character7)
+        {
+            Skill 毁灭之势 = new 毁灭之势(c)
+            {
+                Level = 1
+            };
+            c.Skills.Add(毁灭之势);
+
+            Skill 绝对领域 = new 绝对领域(c)
+            {
+                Level = slevel
+            };
+            c.Skills.Add(绝对领域);
+        }
+        
+        if (c== character8)
+        {
+            Skill 枯竭打击 = new 枯竭打击(c)
+            {
+                Level = 1
+            };
+            c.Skills.Add(枯竭打击);
+
+            Skill 能量毁灭 = new 能量毁灭(c)
+            {
+                Level = slevel
+            };
+            c.Skills.Add(能量毁灭);
+        }
+
+        if (c == character9)
+        {
+            Skill 玻璃大炮 = new 玻璃大炮(c)
+            {
+                Level = 1
+            };
+            c.Skills.Add(玻璃大炮);
+
+            Skill 迅捷之势 = new 迅捷之势(c)
+            {
+                Level = slevel
+            };
+            c.Skills.Add(迅捷之势);
+        }
+        
+        if (c == character10)
+        {
+            Skill 累积之压 = new 累积之压(c)
+            {
+                Level = 1
+            };
+            c.Skills.Add(累积之压);
+
+            Skill 嗜血标记 = new 嗜血标记(c)
+            {
+                Level = slevel
+            };
+            c.Skills.Add(嗜血标记);
         }
 
         if (c != character1 && c != character2 && c != character3 && c != character4 &&
-            c != character5)
+            c != character5 && c != character6 && c != character7 && c != character8 &&
+            c != character9 && c != character10) //&& c != character11 && c != character12)
         {
             Skill 天赐之力 = new 天赐之力(c)
             {

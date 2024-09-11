@@ -98,7 +98,7 @@ namespace FunGame.Testing.Characters
                 c.InitialAGI = 7;
                 c.AGIGrowth = 0.7;
                 c.InitialINT = 17;
-                c.INTGrowth = 0.7;
+                c.INTGrowth = 1.7;
                 c.InitialSPD = 300;
                 c.InitialHR = 4;
                 c.InitialMR = 2;

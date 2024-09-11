@@ -44,14 +44,14 @@ namespace Milimoe.FunGame.Testing.Skills
             character.ExATK2 -= 实际攻击力加成;
         }
 
-        public override void OnSkillCasted(Character actor, List<Character> enemys, List<Character> teammates, Dictionary<string, object> others)
+        public override void OnSkillCasted(Character caster, List<Character> enemys, List<Character> teammates, Dictionary<string, object> others)
         {
             RemainDuration = Duration;
-            if (!actor.Effects.Contains(this))
+            if (!caster.Effects.Contains(this))
             {
                 实际攻击力加成 = 0;
-                actor.Effects.Add(this);
-                OnEffectGained(actor);
+                caster.Effects.Add(this);
+                OnEffectGained(caster);
             }
         }
     }

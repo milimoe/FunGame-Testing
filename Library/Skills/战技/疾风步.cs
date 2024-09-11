@@ -23,7 +23,7 @@ namespace Milimoe.FunGame.Testing.Skills
     {
         public override long Id => Skill.Id;
         public override string Name => Skill.Name;
-        public override string Description => $"进入不可选中状态，获得 100 行动速度，提高 15% 闪避率和 15% 暴击率，持续 {Duration} 时间。破隐一击：在持续时间内，首次造成伤害会附加 {Calculation.Round2Digits((1.5 + 1.5 * (Skill.Level - 1)) * 100)}% 敏捷 [ {伤害加成} ] 的强化伤害，并解除不可选中状态。";
+        public override string Description => $"进入不可选中状态，获得 100 行动速度，提高 8% 暴击率，持续 {Duration} 时间。破隐一击：在持续时间内，首次造成伤害会附加 {Calculation.Round2Digits((1.5 + 1.5 * (Skill.Level - 1)) * 100)}% 敏捷 [ {伤害加成} ] 的强化伤害，并解除不可选中状态。";
         public override bool TargetSelf => true;
         public override bool Durative => true;
         public override double Duration => 15 + (2 * (Level - 1));
@@ -46,10 +46,10 @@ namespace Milimoe.FunGame.Testing.Skills
         public override void OnEffectGained(Character character)
         {
             Skill.IsInEffect = true;
-            character.IsUnselectable = true;
+            character.CharacterEffectControlTypes.Add(this, [EffectControlType.Unselectable]);
+            character.UpdateCharacterState();
             character.ExSPD += 100;
-            character.ExEvadeRate += 0.15;
-            character.ExCritRate += 0.15;
+            character.ExCritRate += 0.08;
         }
 
         public override void OnEffectLost(Character character)
@@ -58,35 +58,37 @@ namespace Milimoe.FunGame.Testing.Skills
             if (!破隐一击)
             {
                 // 在没有打出破隐一击的情况下，恢复角色状态
-                character.IsUnselectable = false;
+                character.CharacterEffectControlTypes.Remove(this);
+                character.UpdateCharacterState();
             }
             character.ExSPD -= 100;
-            character.ExEvadeRate -= 0.15;
-            character.ExCritRate -= 0.15;
+            character.ExCritRate -= 0.08;
         }
 
-        public override void AlterActualDamageAfterCalculation(Character character, Character enemy, ref double damage, bool isNormalAttack, bool isMagicDamage, MagicType magicType, DamageResult damageResult)
+        public override bool AlterActualDamageAfterCalculation(Character character, Character enemy, ref double damage, bool isNormalAttack, bool isMagicDamage, MagicType magicType, DamageResult damageResult)
         {
             if (character == Skill.Character && 首次伤害)
             {
                 首次伤害 = false;
                 破隐一击 = true;
-                character.IsUnselectable = false;
+                character.CharacterEffectControlTypes.Remove(this);
+                character.UpdateCharacterState();
                 double d = 伤害加成;
                 damage = Calculation.Round2Digits(damage + d);
                 WriteLine($"[ {character} ] 触发了疾风步破隐一击，获得了 [ {d} ] 点伤害加成！");
             }
+            return false;
         }
 
-        public override void OnSkillCasted(Character actor, List<Character> enemys, List<Character> teammates, Dictionary<string, object> others)
+        public override void OnSkillCasted(Character caster, List<Character> enemys, List<Character> teammates, Dictionary<string, object> others)
         {
-            if (!actor.Effects.Contains(this))
+            if (!caster.Effects.Contains(this))
             {
                 首次伤害 = true;
                 破隐一击 = false;
                 RemainDuration = Duration;
-                actor.Effects.Add(this);
-                OnEffectGained(actor);
+                caster.Effects.Add(this);
+                OnEffectGained(caster);
             }
         }
     }

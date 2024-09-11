@@ -49,13 +49,13 @@ namespace Milimoe.FunGame.Testing.Skills
             }
         }
 
-        public override void OnSkillCasted(Character actor, List<Character> enemys, List<Character> teammates, Dictionary<string, object> others)
+        public override void OnSkillCasted(Character caster, List<Character> enemys, List<Character> teammates, Dictionary<string, object> others)
         {
             剩余持续次数 = 技能持续次数;
-            if (!actor.Effects.Contains(this))
+            if (!caster.Effects.Contains(this))
             {
-                actor.Effects.Add(this);
-                OnEffectGained(actor);
+                caster.Effects.Add(this);
+                OnEffectGained(caster);
             }
         }
     }

@@ -52,23 +52,23 @@ namespace Milimoe.FunGame.Testing.Skills
             }
         }
 
-        public override void OnSkillCasted(Character actor, List<Character> enemys, List<Character> teammates, Dictionary<string, object> others)
+        public override void OnSkillCasted(Character caster, List<Character> enemys, List<Character> teammates, Dictionary<string, object> others)
         {
-            IEnumerable<Effect> effects = actor.Effects.Where(e => e is 智慧与力量特效);
+            IEnumerable<Effect> effects = caster.Effects.Where(e => e is 智慧与力量特效);
             if (effects.Any())
             {
-                if (actor.PrimaryAttribute == PrimaryAttribute.STR)
+                if (caster.PrimaryAttribute == PrimaryAttribute.STR)
                 {
-                    double 回复的生命 = Calculation.Round2Digits(生命值回复 * actor.MaxHP);
-                    actor.HP += 回复的生命;
-                    WriteLine("[ " + actor + " ] 发动了变幻之心！回复了 " + 回复的生命 + " 点生命值！");
+                    double 回复的生命 = Calculation.Round2Digits(生命值回复 * caster.MaxHP);
+                    caster.HP += 回复的生命;
+                    WriteLine("[ " + caster + " ] 回复了 " + 回复的生命 + " 点生命值！");
                 }
-                else if (actor.PrimaryAttribute == PrimaryAttribute.INT)
+                else if (caster.PrimaryAttribute == PrimaryAttribute.INT)
                 {
-                    if (!actor.Effects.Contains(this))
+                    if (!caster.Effects.Contains(this))
                     {
-                        actor.Effects.Add(this);
-                        OnEffectGained(actor);
+                        caster.Effects.Add(this);
+                        OnEffectGained(caster);
                     }
                 }
             }

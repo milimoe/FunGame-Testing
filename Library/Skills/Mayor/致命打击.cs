@@ -31,5 +31,10 @@ namespace Milimoe.FunGame.Testing.Skills
         {
             character.ExCritDMG += 0.3;
         }
+
+        public override void OnEffectLost(Character character)
+        {
+            character.ExCritDMG -= 0.3;
+        }
     }
 }

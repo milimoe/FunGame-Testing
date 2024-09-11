@@ -23,7 +23,7 @@ namespace Milimoe.FunGame.Testing.Skills
     {
         public override long Id => Skill.Id;
         public override string Name => "魔法涌流";
-        public override string Description => $"{Duration} 秒内，增加所有伤害的 {减伤比例 * 100}% 伤害减免，并将普通攻击转为魔法伤害，可叠加魔法震荡的效果。";
+        public override string Description => $"{Duration} 秒内，增加所有伤害的 {减伤比例 * 100:f2}% 伤害减免，并将普通攻击转为魔法伤害，可叠加魔法震荡的效果。";
         public override bool TargetSelf => true;
         public override bool Durative => true;
         public override double Duration => 25;
@@ -42,22 +42,23 @@ namespace Milimoe.FunGame.Testing.Skills
             character.NormalAttack.SetMagicType(false, character.MagicType);
         }
 
-        public override void AlterActualDamageAfterCalculation(Character character, Character enemy, ref double damage, bool isNormalAttack, bool isMagicDamage, MagicType magicType, DamageResult damageResult)
+        public override bool AlterActualDamageAfterCalculation(Character character, Character enemy, ref double damage, bool isNormalAttack, bool isMagicDamage, MagicType magicType, DamageResult damageResult)
         {
             if (enemy == Skill.Character)
             {
                 damage = Calculation.Round2Digits(damage * (1 - 实际比例));
             }
+            return false;
         }
 
-        public override void OnSkillCasted(Character actor, List<Character> enemys, List<Character> teammates, Dictionary<string, object> others)
+        public override void OnSkillCasted(Character caster, List<Character> enemys, List<Character> teammates, Dictionary<string, object> others)
         {
             RemainDuration = Duration;
-            if (!actor.Effects.Contains(this))
+            if (!caster.Effects.Contains(this))
             {
                 实际比例 = 0;
-                actor.Effects.Add(this);
-                OnEffectGained(actor);
+                caster.Effects.Add(this);
+                OnEffectGained(caster);
             }
         }
     }

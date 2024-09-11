@@ -28,7 +28,7 @@ namespace Milimoe.FunGame.Testing.Skills
         public override string Description => $"普通攻击硬直时间减少 20%。";
         public override bool TargetSelf => true;
 
-        public override void AlterHardnessTimeAfterNormalAttack(Character character, ref double baseHardnessTime)
+        public override void AlterHardnessTimeAfterNormalAttack(Character character, ref double baseHardnessTime, ref bool isCheckProtected)
         {
             baseHardnessTime = Calculation.Round2Digits(baseHardnessTime * 0.8);
         }

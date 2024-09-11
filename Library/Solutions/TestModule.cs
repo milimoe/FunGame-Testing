@@ -48,9 +48,6 @@ namespace Addons
             get
             {
                 List<Skill> list = [];
-                Skill s = Factory.GetSkill();
-                s.Name = "Example Skill";
-                list.Add(s);
                 return list;
             }
         }

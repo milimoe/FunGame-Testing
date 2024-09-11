@@ -7,7 +7,7 @@ namespace Milimoe.FunGame.Testing.Effects
     {
         public override long Id => 4101;
         public override string Name => "眩晕";
-        public override string Description => $"此角色被眩晕了，不能行动。来自：[ " + _sourceCharacter + " ] 的 [ " + Skill.Name + " ]";
+        public override string Description => $"此角色被眩晕了，不能行动。来自：[ {Source} ] 的 [ {Skill.Name} ]";
         public override EffectControlType ControlType => EffectControlType.Stun;
         public override bool TargetSelf => true;
         public override Character Source => _sourceCharacter;
@@ -33,7 +33,7 @@ namespace Milimoe.FunGame.Testing.Effects
         {
             if (_durative) RemainDuration = Duration;
             else RemainDurationTurn = DurationTurn;
-            character.CharacterEffectStates.Add(this, CharacterState.NotActionable);
+            character.CharacterEffectStates.Add(this, [CharacterState.NotActionable]);
             character.UpdateCharacterState();
             InterruptCasting(character, Source);
         }
@@ -42,11 +42,6 @@ namespace Milimoe.FunGame.Testing.Effects
         {
             character.CharacterEffectStates.Remove(this);
             character.UpdateCharacterState();
-        }
-
-        public override void OnTurnStart(Character character)
-        {
-
         }
     }
 }
