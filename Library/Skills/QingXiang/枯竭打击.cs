@@ -38,7 +38,7 @@ namespace Milimoe.FunGame.Testing.Skills
                 double EP = new Random().Next(10, 25);
                 enemy.EP -= EP;
                 WriteLine($"[ {character} ] 发动了枯竭打击！[ {enemy} ] 的能量值被减少了 {EP} 点！现有能量：{enemy.EP}。");
-                // 伤害提升
+                // 额外伤害
                 if (enemy.EP >= 0 && enemy.EP < 50 || enemy.EP >= 100 && enemy.EP < 150)
                 {
                     double 额外伤害 = Calculation.Round2Digits(damage * 0.3);

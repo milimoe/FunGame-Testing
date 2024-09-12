@@ -1,4 +1,5 @@
-﻿using Milimoe.FunGame.Core.Entity;
+﻿using Milimoe.FunGame.Core.Api.Utility;
+using Milimoe.FunGame.Core.Entity;
 using Milimoe.FunGame.Core.Library.Constant;
 
 namespace Milimoe.FunGame.Testing.Skills
@@ -24,7 +25,26 @@ namespace Milimoe.FunGame.Testing.Skills
     {
         public override long Id => Skill.Id;
         public override string Name => Skill.Name;
-        public override string Description => $"每次普通攻击都将附带基于敏捷的魔法伤害。";
+        public override string Description => $"每次普通攻击都将附带基于 {敏捷系数 * 100:f2}% 敏捷 [ {敏捷伤害} ] 的魔法伤害。";
         public override bool TargetSelf => true;
+
+        private double 敏捷伤害 => Calculation.Round2Digits(敏捷系数 * Skill.Character?.AGI ?? 0);
+        private readonly double 敏捷系数 = 2.5;
+        private bool 是否是嵌套伤害 = false;
+
+        public override void AfterDamageCalculation(Character character, Character enemy, double damage, bool isNormalAttack, bool isMagicDamage, MagicType magicType, DamageResult damageResult)
+        {
+            if (character == Skill.Character && isNormalAttack && damageResult != DamageResult.Evaded && !是否是嵌套伤害)
+            {
+                WriteLine($"[ {character} ] 发动了敏捷之刃！将造成额外伤害！");
+                是否是嵌套伤害 = true;
+                DamageToEnemy(character, enemy, true, magicType, 敏捷伤害);
+            }
+
+            if (character == Skill.Character && 是否是嵌套伤害)
+            {
+                是否是嵌套伤害 = false;
+            }
+        }
     }
 }

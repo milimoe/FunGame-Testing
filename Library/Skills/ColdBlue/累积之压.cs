@@ -41,8 +41,8 @@ namespace Milimoe.FunGame.Testing.Skills
                 if (effects.Any() && effects.First() is 累积之压标记 e)
                 {
                     e.MarkLevel++;
-                    IEnumerable<Effect> effects2 = character.Effects.Where(e => e is 嗜血标记特效);
-                    if (effects2.Any() && effects2.First() is 嗜血标记特效 e2)
+                    IEnumerable<Effect> effects2 = character.Effects.Where(e => e is 嗜血本能特效);
+                    if (effects2.Any() && effects2.First() is 嗜血本能特效 e2)
                     {
                         if (e.MarkLevel >= 4)
                         {

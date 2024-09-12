@@ -5,22 +5,22 @@ using Milimoe.FunGame.Testing.Effects;
 
 namespace Milimoe.FunGame.Testing.Skills
 {
-    public class 嗜血标记 : Skill
+    public class 嗜血本能 : Skill
     {
         public override long Id => 3010;
-        public override string Name => "嗜血标记";
+        public override string Name => "嗜血本能";
         public override string Description => Effects.Count > 0 ? Effects.First().Description : "";
         public override double EPCost => 100;
         public override double CD => 42 - 1 * (Level - 1);
         public override double HardnessTime => 12;
 
-        public 嗜血标记(Character character) : base(SkillType.SuperSkill, character)
+        public 嗜血本能(Character character) : base(SkillType.SuperSkill, character)
         {
-            Effects.Add(new 嗜血标记特效(this));
+            Effects.Add(new 嗜血本能特效(this));
         }
     }
 
-    public class 嗜血标记特效(Skill skill) : Effect(skill)
+    public class 嗜血本能特效(Skill skill) : Effect(skill)
     {
         public override long Id => Skill.Id;
         public override string Name => Skill.Name;
@@ -45,7 +45,7 @@ namespace Milimoe.FunGame.Testing.Skills
                 {
                     层数 = 4;
                 }
-                double 实际吸血 = Calculation.Round2Digits(吸血 * damage);
+                double 实际吸血 = Calculation.Round2Digits(吸血 * 层数 * damage);
                 character.HP += 实际吸血;
                 WriteLine($"[ {character} ] 回复了 {实际吸血} 点生命值！");
             }

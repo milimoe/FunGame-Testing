@@ -257,22 +257,41 @@ if (list.Count > 3)
             };
             c.Skills.Add(累积之压);
 
-            Skill 嗜血标记 = new 嗜血标记(c)
+            Skill 嗜血本能 = new 嗜血本能(c)
             {
                 Level = slevel
             };
-            c.Skills.Add(嗜血标记);
+            c.Skills.Add(嗜血本能);
         }
-
-        if (c != character1 && c != character2 && c != character3 && c != character4 &&
-            c != character5 && c != character6 && c != character7 && c != character8 &&
-            c != character9 && c != character10) //&& c != character11 && c != character12)
+        
+        if (c == character11)
         {
-            Skill 天赐之力 = new 天赐之力(c)
+            Skill 敏捷之刃 = new 敏捷之刃(c)
+            {
+                Level = 1
+            };
+            c.Skills.Add(敏捷之刃);
+
+            Skill 平衡强化 = new 平衡强化(c)
             {
                 Level = slevel
             };
-            c.Skills.Add(天赐之力);
+            c.Skills.Add(平衡强化);
+        }
+        
+        if (c == character12)
+        {
+            Skill 弱者猎手 = new 弱者猎手(c)
+            {
+                Level = 1
+            };
+            c.Skills.Add(弱者猎手);
+
+            Skill 血之狂欢 = new 血之狂欢(c)
+            {
+                Level = slevel
+            };
+            c.Skills.Add(血之狂欢);
         }
     }
 

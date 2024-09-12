@@ -10,7 +10,7 @@ namespace Milimoe.FunGame.Testing.Skills
         public override string Name => "绝对领域";
         public override string Description => Effects.Count > 0 ? Effects.First().Description : "";
         public override double EPCost => Math.Max(100, Character?.EP ?? 100);
-        public override double CD => 32;
+        public override double CD => 32 + (1 * (Level - 1));
         public override double HardnessTime => 12;
 
         public 绝对领域(Character character) : base(SkillType.SuperSkill, character)
@@ -26,9 +26,9 @@ namespace Milimoe.FunGame.Testing.Skills
         public override string Description => $"{Duration} 时间内无法受到任何伤害，且敏捷提升 {系数 * 100:f2}% [ {敏捷提升} ]。此技能会消耗至少 100 点能量。";
         public override bool TargetSelf => true;
         public override bool Durative => true;
-        public override double Duration => Calculation.Round2Digits(20 + 释放时的能量值 * 0.03);
+        public override double Duration => Calculation.Round2Digits(16 + 释放时的能量值 * 0.03);
 
-        private double 系数 => Calculation.Round4Digits(0.3 + 0.04 * (Level - 1));
+        private double 系数 => Calculation.Round4Digits(0.3 + 0.03 * (Level - 1));
         private double 敏捷提升 => Calculation.Round2Digits(系数 * Skill.Character?.BaseAGI ?? 0);
         private double 实际敏捷提升 = 0;
         private double 释放时的能量值 = 0;

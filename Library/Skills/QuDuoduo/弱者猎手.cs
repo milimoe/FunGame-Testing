@@ -1,4 +1,5 @@
-﻿using Milimoe.FunGame.Core.Entity;
+﻿using Milimoe.FunGame.Core.Api.Utility;
+using Milimoe.FunGame.Core.Entity;
 using Milimoe.FunGame.Core.Library.Constant;
 
 namespace Milimoe.FunGame.Testing.Skills
@@ -24,7 +25,28 @@ namespace Milimoe.FunGame.Testing.Skills
     {
         public override long Id => Skill.Id;
         public override string Name => Skill.Name;
-        public override string Description => $"优先攻击血量更低的角色，对生命值低于自己的角色造成150%伤害。";
+        public override string Description => $"优先攻击血量更低的角色，对生命值百分比低于自己的角色造成 150% 伤害。";
         public override bool TargetSelf => true;
+
+        public override void AlterExpectedDamageBeforeCalculation(Character character, Character enemy, ref double damage, bool isNormalAttack, bool isMagicDamage, MagicType magicType)
+        {
+            if (character == Skill.Character && (enemy.HP / enemy.MaxHP) <= (character.HP / character.MaxHP))
+            {
+                double 额外伤害 = Calculation.Round2Digits(damage * 1.5);
+                damage = Calculation.Round2Digits(damage + 额外伤害);
+            }
+        }
+
+        public override bool AlterEnemyListBeforeAction(Character character, List<Character> enemys, List<Character> teammates, List<Skill> skills, Dictionary<Character, int> continuousKilling, Dictionary<Character, int> earnedMoney)
+        {
+            IEnumerable<Character> list = [.. enemys.OrderBy(e => Calculation.Round4Digits(e.HP / e.MaxHP))];
+            if (list.Any())
+            {
+                enemys.Clear();
+                enemys.Add(list.First());
+                WriteLine($"[ {character} ] 发动了弱者猎手！[ {list.First()} ] 被盯上了！");
+            }
+            return true;
+        }
     }
 }

@@ -25,7 +25,7 @@ namespace Milimoe.FunGame.Testing.Skills
     {
         public override long Id => Skill.Id;
         public override string Name => Skill.Name;
-        public override string Description => $"生命值高于30%时，受到额外的 [ 20~40% ] 伤害，但是获得 [ 上次所受伤害的 80%  ] 伤害加成；生命值低于等于30%时，不会受到额外的伤害，但是仅能获得 [ 上次所受伤害的 30% ] 伤害加成。" +
+        public override string Description => $"生命值高于30%时，受到额外的 [ 20~40% ] 伤害，但是获得 [ 上次所受伤害的 110~140%  ] 伤害加成；生命值低于等于30%时，不会受到额外的伤害，仅能获得 [ 上次所受伤害的 35% ] 伤害加成。" +
             $"在没有受到任何伤害的时候，将获得 {常规伤害加成 * 100:f2}% 伤害加成。（当前伤害加成：{伤害加成 * 100:f2}%）";
         public override bool TargetSelf => true;
 
@@ -33,8 +33,9 @@ namespace Milimoe.FunGame.Testing.Skills
         private double 这次的伤害加成 = 0;
         private double 这次受到的额外伤害 = 0;
         private readonly double 常规伤害加成 = 0.2;
-        private readonly double 高于30的加成 = 0.8;
-        private readonly double 低于30的加成 = 0.3;
+        private readonly int 高于30的加成上限 = 40;
+        private readonly int 高于30的加成下限 = 10;
+        private readonly double 低于30的加成 = 0.35;
 
         private double 伤害加成
         {
@@ -47,7 +48,7 @@ namespace Milimoe.FunGame.Testing.Skills
                 {
                     if (character.HP > character.MaxHP * 0.3)
                     {
-                        系数 = 高于30的加成;
+                        系数 = Calculation.Round2Digits(1.0 + ((new Random().Next(高于30的加成下限, 高于30的加成上限) + 0.0) / 100));
                     }
                     else
                     {

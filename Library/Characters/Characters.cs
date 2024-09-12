@@ -16,7 +16,7 @@ namespace FunGame.Testing.Characters
                 c.NickName = "大島シヤ";
                 c.PrimaryAttribute = PrimaryAttribute.STR;
                 c.InitialATK = 25;
-                c.InitialHP = 160;
+                c.InitialHP = 145;
                 c.InitialMP = 10;
                 c.InitialSTR = 35;
                 c.STRGrowth = 3.5;
