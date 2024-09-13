@@ -23,7 +23,7 @@ namespace Milimoe.FunGame.Testing.Skills
     {
         public override long Id => Skill.Id;
         public override string Name => Skill.Name;
-        public override string Description => $"{Duration} 时间内无法受到任何伤害，且敏捷提升 {系数 * 100:f2}% [ {敏捷提升} ]。此技能会消耗至少 100 点能量。";
+        public override string Description => $"{Duration} 时间内无法受到任何伤害，且敏捷提升 {系数 * 100:0.##}% [ {敏捷提升} ]。此技能会消耗至少 100 点能量。";
         public override bool TargetSelf => true;
         public override bool Durative => true;
         public override double Duration => Calculation.Round2Digits(16 + 释放时的能量值 * 0.03);
@@ -37,7 +37,7 @@ namespace Milimoe.FunGame.Testing.Skills
         {
             实际敏捷提升 = 敏捷提升;
             character.ExAGI += 实际敏捷提升;
-            WriteLine($"[ {character} ] 的敏捷提升了 {系数 * 100:f2}% [ {实际敏捷提升} ] ！");
+            WriteLine($"[ {character} ] 的敏捷提升了 {系数 * 100:0.##}% [ {实际敏捷提升} ] ！");
         }
 
         public override void OnEffectLost(Character character)

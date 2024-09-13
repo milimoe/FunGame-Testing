@@ -25,8 +25,21 @@ namespace Milimoe.FunGame.Testing.Skills
     {
         public override long Id => Skill.Id;
         public override string Name => Skill.Name;
-        public override string Description => $"普通攻击硬直时间减少 20%。";
+        public override string Description => $"增加 20% 攻击力且普通攻击硬直时间减少 20%。";
         public override bool TargetSelf => true;
+
+        private double 实际增加攻击力 = 0;
+
+        public override void OnEffectGained(Character character)
+        {
+            实际增加攻击力 = character.BaseATK * 0.2;
+            character.ExATK2 += 实际增加攻击力;
+        }
+
+        public override void OnEffectLost(Character character)
+        {
+            character.ExATK2 -= 实际增加攻击力;
+        }
 
         public override void AlterHardnessTimeAfterNormalAttack(Character character, ref double baseHardnessTime, ref bool isCheckProtected)
         {

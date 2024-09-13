@@ -23,23 +23,13 @@ namespace Milimoe.FunGame.Testing.Skills
     {
         public override long Id => Skill.Id;
         public override string Name => Skill.Name;
-        public override string Description => $"进入不可选中状态，获得 100 行动速度，提高 8% 暴击率，持续 {Duration} 时间。破隐一击：在持续时间内，首次造成伤害会附加 {Calculation.Round2Digits((1.5 + 1.5 * (Skill.Level - 1)) * 100)}% 敏捷 [ {伤害加成} ] 的强化伤害，并解除不可选中状态。";
+        public override string Description => $"进入不可选中状态，获得 100 行动速度，提高 8% 暴击率，持续 {Duration} 时间。破隐一击：在持续时间内，首次造成伤害会附加 {系数 * 100:0.##}% 敏捷 [ {伤害加成} ] 的强化伤害，并解除不可选中状态。";
         public override bool TargetSelf => true;
         public override bool Durative => true;
         public override double Duration => 12 + (1 * (Level - 1));
 
-        private double 伤害加成
-        {
-            get
-            {
-                double d = 0;
-                if (Skill.Character != null)
-                {
-                    d = Calculation.Round2Digits((1.5 + 1.5 * (Skill.Level - 1)) * Skill.Character.AGI);
-                }
-                return d;
-            }
-        }
+        private double 系数 => Calculation.Round4Digits(0.5 + 0.5 * (Skill.Level - 1));
+        private double 伤害加成 => Calculation.Round2Digits(系数 * Skill.Character?.AGI ?? 0);
         private bool 首次伤害 { get; set; } = true;
         private bool 破隐一击 { get; set; } = false;
 

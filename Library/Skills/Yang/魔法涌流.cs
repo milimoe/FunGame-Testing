@@ -23,7 +23,7 @@ namespace Milimoe.FunGame.Testing.Skills
     {
         public override long Id => Skill.Id;
         public override string Name => "魔法涌流";
-        public override string Description => $"{Duration} 秒内，增加所有伤害的 {减伤比例 * 100:f2}% 伤害减免，并将普通攻击转为魔法伤害，可叠加魔法震荡的效果。";
+        public override string Description => $"{Duration} 秒内，增加所有伤害的 {减伤比例 * 100:0.##}% 伤害减免，并将普通攻击转为魔法伤害，可叠加魔法震荡的效果。";
         public override bool TargetSelf => true;
         public override bool Durative => true;
         public override double Duration => 25;

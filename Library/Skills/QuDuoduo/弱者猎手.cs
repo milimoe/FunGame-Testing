@@ -32,7 +32,7 @@ namespace Milimoe.FunGame.Testing.Skills
         {
             if (character == Skill.Character && (enemy.HP / enemy.MaxHP) <= (character.HP / character.MaxHP))
             {
-                double 额外伤害 = Calculation.Round2Digits(damage * 1.5);
+                double 额外伤害 = Calculation.Round2Digits(damage * 0.5);
                 damage = Calculation.Round2Digits(damage + 额外伤害);
             }
         }

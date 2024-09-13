@@ -25,7 +25,7 @@ namespace Milimoe.FunGame.Testing.Skills
     {
         public override long Id => Skill.Id;
         public override string Name => Skill.Name;
-        public override string Description => $"每时间提升 5.5% 所有伤害，无上限，但受到伤害时效果清零。" + (累计伤害 > 0 ? $"（当前总提升：{累计伤害 * 100:f2}%）" : "");
+        public override string Description => $"每时间提升 5.5% 所有伤害，无上限，但受到伤害时效果清零。" + (累计伤害 > 0 ? $"（当前总提升：{累计伤害 * 100:0.##}%）" : "");
         public override bool TargetSelf => true;
 
         private readonly double 伤害提升 = 0.055;
@@ -53,7 +53,7 @@ namespace Milimoe.FunGame.Testing.Skills
         public override void OnTimeElapsed(Character character, double eapsed)
         {
             累计伤害 = Calculation.Round4Digits(累计伤害 + 伤害提升 * eapsed);
-            WriteLine($"[ {character} ] 的 [ {Name} ] 效果增加了，当前总提升：{累计伤害 * 100:f2}%。");
+            WriteLine($"[ {character} ] 的 [ {Name} ] 效果增加了，当前总提升：{累计伤害 * 100:0.##}%。");
         }
     }
 }

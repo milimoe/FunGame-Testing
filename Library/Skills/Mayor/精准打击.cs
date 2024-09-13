@@ -23,7 +23,7 @@ namespace Milimoe.FunGame.Testing.Skills
     {
         public override long Id => Skill.Id;
         public override string Name => Skill.Name;
-        public override string Description => $"30 时间内暴击率提升 {暴击率提升 * 100:f2}%，暴击伤害再提升 {暴击伤害提升 * 100:f2}%。";
+        public override string Description => $"30 时间内暴击率提升 {暴击率提升 * 100:0.##}%，暴击伤害再提升 {暴击伤害提升 * 100:0.##}%。";
         public override bool TargetSelf => true;
         public override bool Durative => true;
         public override double Duration => 30;
@@ -38,9 +38,9 @@ namespace Milimoe.FunGame.Testing.Skills
             实际暴击率提升 = 暴击率提升;
             实际暴击伤害提升 = 暴击伤害提升;
             character.ExCritRate += 实际暴击率提升;
-            WriteLine($"[ {character} ] 的暴击率提升了 [ {实际暴击率提升 * 100:f2}% ] ！");
+            WriteLine($"[ {character} ] 的暴击率提升了 [ {实际暴击率提升 * 100:0.##}% ] ！");
             character.ExCritDMG += 实际暴击伤害提升;
-            WriteLine($"[ {character} ] 的暴击伤害提升了 [ {实际暴击伤害提升 * 100:f2}% ] ！");
+            WriteLine($"[ {character} ] 的暴击伤害提升了 [ {实际暴击伤害提升 * 100:0.##}% ] ！");
         }
 
         public override void OnEffectLost(Character character)

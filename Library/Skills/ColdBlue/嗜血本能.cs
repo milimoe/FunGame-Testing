@@ -24,7 +24,7 @@ namespace Milimoe.FunGame.Testing.Skills
     {
         public override long Id => Skill.Id;
         public override string Name => Skill.Name;
-        public override string Description => $"{Duration} 秒内，攻击拥有标记的角色将根据标记层数获得 {吸血 * 100:f2}% 吸血每层。";
+        public override string Description => $"{Duration} 秒内，攻击拥有标记的角色将根据标记层数获得 {吸血 * 100:0.##}% 吸血每层。";
         public override bool TargetSelf => true;
         public override bool Durative => true;
         public override double Duration => 30;

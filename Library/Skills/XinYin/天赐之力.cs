@@ -23,32 +23,29 @@ namespace Milimoe.FunGame.Testing.Skills
     {
         public override long Id => Skill.Id;
         public override string Name => Skill.Name;
-        public override string Description => $"{Duration} 时间内，获得 25% 闪避率（不可叠加），普通攻击硬直时间额外减少 20%，基于 {Calculation.Round2Digits((1.2 + (1 + 0.6 * (Skill.Level - 1))) * 100)}% 敏捷 [ {伤害加成} ] 强化普通攻击的伤害。";
+        public override string Description => $"{Duration} 时间内，增加 40% 攻击力 [ {攻击力提升} ]、30% 物理穿透和 25% 闪避率（不可叠加），普通攻击硬直时间额外减少 20%，基于 {系数 * 100:0.##}% 敏捷 [ {伤害加成} ] 强化普通攻击的伤害。";
         public override bool TargetSelf => false;
         public override int TargetCount => 1;
         public override bool Durative => true;
         public override double Duration => 40;
 
-        private double 伤害加成
-        {
-            get
-            {
-                double d = 0;
-                if (Skill.Character != null)
-                {
-                    d = Calculation.Round2Digits(1.2 * (1 + 0.6 * (Skill.Level - 1)) * Skill.Character.AGI);
-                }
-                return d;
-            }
-        }
+        private double 系数 => Calculation.Round4Digits(1.2 * (1 + 0.6 * (Skill.Level - 1)));
+        private double 伤害加成 => Calculation.Round2Digits(系数 * Skill.Character?.AGI ?? 0);
+        private double 攻击力提升 => Calculation.Round2Digits(0.4 * Skill.Character?.BaseATK ?? 0);
+        private double 实际的攻击力提升 = 0;
 
         public override void OnEffectGained(Character character)
         {
+            实际的攻击力提升 = 攻击力提升;
+            character.ExATK2 += 实际的攻击力提升;
+            character.PhysicalPenetration += 0.3;
             character.ExEvadeRate += 0.25;
         }
 
         public override void OnEffectLost(Character character)
         {
+            character.ExATK2 -= 实际的攻击力提升;
+            character.PhysicalPenetration -= 0.3;
             character.ExEvadeRate -= 0.25;
         }
 

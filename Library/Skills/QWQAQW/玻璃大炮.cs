@@ -26,7 +26,7 @@ namespace Milimoe.FunGame.Testing.Skills
         public override long Id => Skill.Id;
         public override string Name => Skill.Name;
         public override string Description => $"生命值高于30%时，受到额外的 [ 20~40% ] 伤害，但是获得 [ 上次所受伤害的 110~140%  ] 伤害加成；生命值低于等于30%时，不会受到额外的伤害，仅能获得 [ 上次所受伤害的 35% ] 伤害加成。" +
-            $"在没有受到任何伤害的时候，将获得 {常规伤害加成 * 100:f2}% 伤害加成。（当前伤害加成：{伤害加成 * 100:f2}%）";
+            $"在没有受到任何伤害的时候，将获得 {常规伤害加成 * 100:0.##}% 伤害加成。（当前伤害加成：{伤害加成 * 100:0.##}%）";
         public override bool TargetSelf => true;
 
         private double 上次受到的伤害 = 0;

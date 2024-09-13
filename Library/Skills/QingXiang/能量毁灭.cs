@@ -11,7 +11,7 @@ namespace Milimoe.FunGame.Testing.Skills
         public override string Description => Effects.Count > 0 ? Effects.First().Description : "";
         public override double EPCost => 100;
         public override double CD => 55 - 3 * (Level - 1);
-        public override double HardnessTime => 15;
+        public override double HardnessTime => 25;
 
         public 能量毁灭(Character character) : base(SkillType.SuperSkill, character)
         {
@@ -24,7 +24,7 @@ namespace Milimoe.FunGame.Testing.Skills
         public override long Id => Skill.Id;
         public override string Name => Skill.Name;
         public override string Description => $"对所有角色造成 " +
-            $"600% 其现有能量值 + {智力系数 * 100:f2}% 智力 [ {智力伤害} ] 的魔法伤害。";
+            $"450% 其现有能量值 + {智力系数 * 100:0.##}% 智力 [ {智力伤害} ] 的魔法伤害。";
         public override bool TargetSelf => false;
         public override double TargetRange => 999;
 

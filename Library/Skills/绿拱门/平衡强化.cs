@@ -41,7 +41,7 @@ namespace Milimoe.FunGame.Testing.Skills
             本次提升的力量 = character.AGI - character.STR;
             character.ExSTR += 本次提升的力量;
             character.Recovery(pastHP, pastMP, pastMaxHP, pastMaxMP);
-            WriteLine($"[ {character} ] 敏捷提升了 {本次提升的敏捷:f2}，力量提升了 {本次提升的力量:f2}！");
+            WriteLine($"[ {character} ] 敏捷提升了 {本次提升的敏捷:0.##}，力量提升了 {本次提升的力量:0.##}！");
         }
 
         public override void OnEffectLost(Character character)

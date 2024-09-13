@@ -26,7 +26,7 @@ namespace Milimoe.FunGame.Testing.Skills
     {
         public override long Id => Skill.Id;
         public override string Name => Skill.Name;
-        public override string Description => $"每次造成伤害都可以叠一层标记，累计 4 层时回收该角色所有标记并造成眩晕 1 回合，额外对该角色造成 {系数 * 100:f2}% 最大生命值的物理伤害。";
+        public override string Description => $"每次造成伤害都可以叠一层标记，累计 4 层时回收该角色所有标记并造成眩晕 1 回合，额外对该角色造成 {系数 * 100:0.##}% 最大生命值的物理伤害。";
         public override bool TargetSelf => true;
 
         private readonly double 系数 = 0.12;
