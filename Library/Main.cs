@@ -1,4 +1,4 @@
-using FunGame.Testing.Tests;
+using Milimoe.FunGame.Testing.Tests;
 
 FunGameSimulation.StartGame(true);
 

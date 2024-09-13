@@ -5,7 +5,7 @@ using Milimoe.FunGame.Core.Library.Common.Addon;
 using Milimoe.FunGame.Core.Library.Constant;
 using Milimoe.FunGame.Testing.Skills;
 
-namespace FunGame.Testing.Tests
+namespace Milimoe.FunGame.Testing.Tests
 {
     public class FunGameSimulation
     {
