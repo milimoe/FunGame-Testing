@@ -13,11 +13,11 @@
             InitializeComponent();
             InitializeChessboard();
 
-            foreach (var panel in chessboardDict.Values)
-            {
-                panel.MouseEnter += OnCellMouseEnter;
-                panel.MouseLeave += OnCellMouseLeave;
-            }
+            //foreach (var panel in chessboardDict.Values)
+            //{
+            //    panel.MouseEnter += OnCellMouseEnter;
+            //    panel.MouseLeave += OnCellMouseLeave;
+            //}
 
             string key = "5_9";
             Button b = new Button();

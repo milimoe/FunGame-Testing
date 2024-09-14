@@ -7,7 +7,7 @@ namespace FunGame.Testing.Solutions
 {
     public class MyPlugin : Plugin, ILoginEvent, IConnectEvent, IIntoRoomEvent
     {
-        public override string Name => "测试插件";
+        public override string Name => "milimoe.fungame.testplugin";
 
         public override string Description => "My First Plugin";
 
