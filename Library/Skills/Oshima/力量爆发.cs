@@ -23,12 +23,12 @@ namespace Milimoe.FunGame.Testing.Skills
     {
         public override long Id => Skill.Id;
         public override string Name => "力量爆发";
-        public override string Description => $"获得 150% 力量 [ {攻击力加成} ] 的攻击力加成，持续 {Duration} 秒，清除硬直时间。";
+        public override string Description => $"获得 150% 力量 [ {攻击力加成} ] 的攻击力加成，持续 {Duration} 时间。";
         public override bool TargetSelf => true;
         public override bool Durative => true;
         public override double Duration => 10 + 1 * (Level - 1);
 
-        private double 攻击力加成 => Calculation.Round2Digits(Skill.Character?.STR * 1.5 ?? 0);  // 300% 攻击力加成
+        private double 攻击力加成 => Calculation.Round2Digits(Skill.Character?.STR * 1.5 ?? 0);
         private double 实际攻击力加成 = 0;
 
         public override void OnEffectGained(Character character)

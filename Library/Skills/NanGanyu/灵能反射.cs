@@ -51,7 +51,7 @@ namespace Milimoe.FunGame.Testing.Skills
                 {
                     double 获得的魔法值 = Calculation.Round2Digits(实际获得能量值 * 10);
                     character.MP += 获得的魔法值;
-                    WriteLine("[ " + character + " ] 发动了三重叠加！额外获得了 " + 获得的魔法值 + " 魔法值！");
+                    WriteLine("[ " + character + " ] 发动了三重叠加！回复了 " + 获得的魔法值 + " 魔法值！");
                 }
             }
         }

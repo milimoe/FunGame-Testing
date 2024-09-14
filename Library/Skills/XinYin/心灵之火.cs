@@ -25,20 +25,40 @@ namespace Milimoe.FunGame.Testing.Skills
     {
         public override long Id => Skill.Id;
         public override string Name => Skill.Name;
-        public override string Description => $"增加 20% 攻击力且普通攻击硬直时间减少 20%。";
+        public override string Description => $"普通攻击硬直时间减少 20%。每次使用普通攻击时，额外再发动一次普通攻击，伤害特效可叠加，冷却 {基础冷却时间:0.##} 时间。" +
+            (冷却时间 > 0 ? $"（正在冷却：剩余 {冷却时间:0.##} 时间）" : "");
         public override bool TargetSelf => true;
 
-        private double 实际增加攻击力 = 0;
+        public double 冷却时间 { get; set; } = 0;
+        public double 基础冷却时间 { get; set; } = 20;
+        private bool 是否是嵌套普通攻击 = false;
 
-        public override void OnEffectGained(Character character)
+        public override void AfterDamageCalculation(Character character, Character enemy, double damage, bool isNormalAttack, bool isMagicDamage, MagicType magicType, DamageResult damageResult)
         {
-            实际增加攻击力 = character.BaseATK * 0.2;
-            character.ExATK2 += 实际增加攻击力;
+            if (character == Skill.Character && isNormalAttack && 冷却时间 == 0 && !是否是嵌套普通攻击 && ActionQueue != null)
+            {
+                WriteLine($"[ {character} ] 发动了心灵之火！额外进行一次普通攻击！");
+                冷却时间 = 基础冷却时间;
+                是否是嵌套普通攻击 = true;
+                character.NormalAttack.Attack(ActionQueue, character, enemy);
+            }
+
+            if (character == Skill.Character && 是否是嵌套普通攻击)
+            {
+                是否是嵌套普通攻击 = false;
+            }
         }
 
-        public override void OnEffectLost(Character character)
+        public override void OnTimeElapsed(Character character, double elapsed)
         {
-            character.ExATK2 -= 实际增加攻击力;
+            if (冷却时间 > 0)
+            {
+                冷却时间 = Calculation.Round2Digits(冷却时间 - elapsed);
+                if (冷却时间 <= 0)
+                {
+                    冷却时间 = 0;
+                }
+            }
         }
 
         public override void AlterHardnessTimeAfterNormalAttack(Character character, ref double baseHardnessTime, ref bool isCheckProtected)

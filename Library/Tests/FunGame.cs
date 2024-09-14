@@ -1,4 +1,4 @@
-﻿using System.Reflection;
+﻿using System.Text;
 using Milimoe.FunGame.Core.Api.Utility;
 using Milimoe.FunGame.Core.Entity;
 using Milimoe.FunGame.Core.Library.Common.Addon;
@@ -21,7 +21,7 @@ namespace Milimoe.FunGame.Testing.Tests
                 if (IsRuning) return ["游戏正在模拟中，请勿重复请求！"];
 
                 List<string> result = [];
-                int death = 0;
+                int deaths = 0;
                 Msg = "";
 
                 IsRuning = true;
@@ -318,6 +318,9 @@ namespace Milimoe.FunGame.Testing.Tests
                     actionQueue.DisplayQueue();
                     if (PrintOut) Console.WriteLine();
 
+                    // 总游戏时长
+                    double totalTime = 0;
+
                     // 总回合数
                     int i = 1;
                     while (i < 999)
@@ -365,28 +368,51 @@ namespace Milimoe.FunGame.Testing.Tests
                         }
 
                         // 模拟时间流逝
-                        actionQueue.TimeLapse();
+                        totalTime += actionQueue.TimeLapse();
 
-                        // 使用反射获取私有字段
-                        FieldInfo? eliminatedField = actionQueue.GetType().GetField("_eliminated", BindingFlags.NonPublic | BindingFlags.Instance);
-                        // 从对象中获取该字段的值
-                        if (eliminatedField != null)
+                        if (actionQueue.Eliminated.Count > deaths)
                         {
-                            if (eliminatedField.GetValue(actionQueue) is List<Character> eliminatedList && eliminatedList.Count > death)
+                            deaths = actionQueue.Eliminated.Count;
+                            string roundMsg = Msg;
+                            string[] strs = roundMsg.Split("==== 角色状态 ====");
+                            if (strs.Length > 0)
                             {
-                                death = eliminatedList.Count;
-                                string roundMsg = Msg;
-                                string[] strs = roundMsg.Split("==== 角色状态 ====");
-                                if (strs.Length > 0)
-                                {
-                                    roundMsg = strs[0];
-                                }
-                                result.Add(roundMsg);
+                                roundMsg = strs[0];
                             }
+                            result.Add(roundMsg);
                         }
                     }
 
-                    if (PrintOut) Console.WriteLine("--- End ---");
+                    if (PrintOut)
+                    {
+                        Console.WriteLine("--- End ---");
+                        Console.WriteLine("总游戏时长：" + Calculation.Round2Digits(totalTime));
+                        Console.WriteLine("");
+                    }
+
+                    // 赛后统计
+                    WriteLine("==== 伤害排行榜 TOP6 ====");
+                    Msg = "==== 伤害排行榜 TOP6 ====\r\n";
+                    // 显示前四的角色统计
+                    int count = 1;
+                    foreach (Character character in actionQueue.CharacterStatistics.OrderByDescending(d => d.Value.TotalDamage).Select(d => d.Key))
+                    {
+                        StringBuilder builder = new();
+                        CharacterStatistics stats = actionQueue.CharacterStatistics[character];
+                        builder.AppendLine($"{count}. [ {character.ToStringWithLevel()} ]");
+                        builder.AppendLine($"存活时长：{stats.LiveTime} / 存活回合数：{stats.LiveRound} / 行动回合数：{stats.ActionTurn}");
+                        builder.AppendLine($"总计伤害：{stats.TotalDamage} / 每秒伤害：{stats.DamagePerSecond} / 每回合伤害：{stats.DamagePerTurn}");
+                        builder.Append($"总计物理伤害：{stats.TotalPhysicalDamage} / 总计魔法伤害：{stats.TotalMagicDamage}");
+                        if (count++ <= 6)
+                        {
+                            WriteLine(builder.ToString());
+                        }
+                        else
+                        {
+                            Console.WriteLine(builder.ToString());
+                        }
+                    }
+                    result.Add(Msg);
 
                     IsRuning = false;
                 }

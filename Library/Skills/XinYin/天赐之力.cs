@@ -23,7 +23,7 @@ namespace Milimoe.FunGame.Testing.Skills
     {
         public override long Id => Skill.Id;
         public override string Name => Skill.Name;
-        public override string Description => $"{Duration} 时间内，增加 40% 攻击力 [ {攻击力提升} ]、30% 物理穿透和 25% 闪避率（不可叠加），普通攻击硬直时间额外减少 20%，基于 {系数 * 100:0.##}% 敏捷 [ {伤害加成} ] 强化普通攻击的伤害。";
+        public override string Description => $"{Duration} 时间内，增加 40% 攻击力 [ {攻击力提升} ]、30% 物理穿透和 25% 闪避率（不可叠加），普通攻击硬直时间额外减少 20%，基于 {系数 * 100:0.##}% 敏捷 [ {伤害加成} ] 强化普通攻击的伤害。在持续时间内，【心灵之火】的冷却时间降低至 3 时间。";
         public override bool TargetSelf => false;
         public override int TargetCount => 1;
         public override bool Durative => true;
@@ -40,6 +40,11 @@ namespace Milimoe.FunGame.Testing.Skills
             character.ExATK2 += 实际的攻击力提升;
             character.PhysicalPenetration += 0.3;
             character.ExEvadeRate += 0.25;
+            if (character.Effects.Where(e => e is 心灵之火特效).FirstOrDefault() is 心灵之火特效 e)
+            {
+                e.基础冷却时间 = 3;
+                if (e.冷却时间 > e.基础冷却时间) e.冷却时间 = e.基础冷却时间;
+            }
         }
 
         public override void OnEffectLost(Character character)
@@ -47,6 +52,16 @@ namespace Milimoe.FunGame.Testing.Skills
             character.ExATK2 -= 实际的攻击力提升;
             character.PhysicalPenetration -= 0.3;
             character.ExEvadeRate -= 0.25;
+            if (character.Effects.Where(e => e is 心灵之火特效).FirstOrDefault() is 心灵之火特效 e)
+            {
+                e.基础冷却时间 = 8;
+            }
+        }
+
+        public override CharacterActionType AlterActionTypeBeforeAction(Character character, CharacterState state, ref bool canUseItem, ref bool canCastSkill, ref double pUseItem, ref double pCastSkill, ref double pNormalAttack)
+        {
+            pNormalAttack += 0.1;
+            return CharacterActionType.None;
         }
 
         public override void AlterExpectedDamageBeforeCalculation(Character character, Character enemy, ref double damage, bool isNormalAttack, bool isMagicDamage, MagicType magicType)
