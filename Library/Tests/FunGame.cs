@@ -409,7 +409,7 @@ namespace Milimoe.FunGame.Testing.Tests
                         }
                         else
                         {
-                            Console.WriteLine(builder.ToString());
+                            if (PrintOut) Console.WriteLine(builder.ToString());
                         }
                     }
                     result.Add(Msg);
