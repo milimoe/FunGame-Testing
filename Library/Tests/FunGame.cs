@@ -104,9 +104,9 @@ namespace Milimoe.FunGame.Testing.Tests
                         character9, character10, character11, character12
                     ];
 
-                    int clevel = 60;
-                    int slevel = 6;
-                    int mlevel = 8;
+                    int clevel = 25;
+                    int slevel = 3;
+                    int mlevel = 4;
 
                     // 升级和赋能
                     for (int index = 0; index < characters.Count; index++)
