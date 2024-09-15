@@ -4,8 +4,14 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 VisualStudioVersion = 17.5.33516.290
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FunGame.Testing", "Library\FunGame.Testing.csproj", "{6F6B4A21-8F39-4B0D-84E8-98AE3E93F06F}"
+	ProjectSection(ProjectDependencies) = postProject
+		{94B564CD-7A1E-4B3C-AF78-23EBCD5D627E} = {94B564CD-7A1E-4B3C-AF78-23EBCD5D627E}
+	EndProjectSection
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FunGame.Testing.Desktop", "Desktop\FunGame.Testing.Desktop.csproj", "{05FA61CB-22AA-4834-8C45-1161C42DF2C7}"
+	ProjectSection(ProjectDependencies) = postProject
+		{94B564CD-7A1E-4B3C-AF78-23EBCD5D627E} = {94B564CD-7A1E-4B3C-AF78-23EBCD5D627E}
+	EndProjectSection
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FunGame.Core", "..\FunGame.Core\FunGame.Core.csproj", "{94B564CD-7A1E-4B3C-AF78-23EBCD5D627E}"
 EndProject

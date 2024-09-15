@@ -24,17 +24,17 @@ namespace Milimoe.FunGame.Testing.Skills
     {
         public override long Id => Skill.Id;
         public override string Name => Skill.Name;
-        public override string Description => $"暴击伤害提升 30%。";
+        public override string Description => $"暴击伤害提升 70%。";
         public override bool TargetSelf => true;
 
         public override void OnEffectGained(Character character)
         {
-            character.ExCritDMG += 0.3;
+            character.ExCritDMG += 0.7;
         }
 
         public override void OnEffectLost(Character character)
         {
-            character.ExCritDMG -= 0.3;
+            character.ExCritDMG -= 0.7;
         }
     }
 }

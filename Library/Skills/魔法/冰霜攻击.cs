@@ -25,7 +25,7 @@ namespace Milimoe.FunGame.Testing.Skills
     {
         public override long Id => Skill.Id;
         public override string Name => Skill.Name;
-        public override string Description => $"对目标敌人造成 {Calculation.Round2Digits(90 + 60 * (Skill.Level - 1))} + {Calculation.Round2Digits((1.2 + 1.8 * (Skill.Level - 1)) * 100)}% 智力 [ {Damage} ] 点{CharacterSet.GetMagicName(MagicType)}。";
+        public override string Description => $"对目标敌人造成 {Calculation.Round2Digits(90 + 60 * (Skill.Level - 1))} + {Calculation.Round2Digits((1.2 + 1.8 * (Skill.Level - 1)) * 100)}% 智力 [ {Damage} ] 点{CharacterSet.GetMagicDamageName(MagicType)}。";
         public override bool TargetSelf => false;
         public override int TargetCount => 1;
 

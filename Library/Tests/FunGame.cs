@@ -1,4 +1,5 @@
 ﻿using System.Text;
+using FunGame.Testing.Items;
 using Milimoe.FunGame.Core.Api.Utility;
 using Milimoe.FunGame.Core.Entity;
 using Milimoe.FunGame.Core.Library.Common.Addon;
@@ -78,7 +79,7 @@ namespace Milimoe.FunGame.Testing.Tests
                 // M = 5, W = 0, P1 = 0, P3 = 2
                 // M = 5, W = 1, P1 = 0, P3 = 0
 
-                if (list.Count > 3)
+                if (list.Count > 11)
                 {
                     if (PrintOut) Console.WriteLine();
                     if (PrintOut) Console.WriteLine("Start!!!");
@@ -99,8 +100,8 @@ namespace Milimoe.FunGame.Testing.Tests
 
                     List<Character> characters = [
                         character1, character2, character3, character4,
-                    character5, character6, character7, character8,
-                    character9, character10, character11, character12
+                        character5, character6, character7, character8,
+                        character9, character10, character11, character12
                     ];
 
                     int clevel = 60;
@@ -320,6 +321,7 @@ namespace Milimoe.FunGame.Testing.Tests
 
                     // 总游戏时长
                     double totalTime = 0;
+                    送礼(actionQueue, totalTime);
 
                     // 总回合数
                     int i = 1;
@@ -431,6 +433,19 @@ namespace Milimoe.FunGame.Testing.Tests
         {
             Msg += str + "\r\n";
             if (PrintOut) Console.WriteLine(str);
+        }
+
+        public static void 送礼(ActionQueue queue, double totalTime)
+        {
+            if (totalTime == 0)
+            {
+                WriteLine("社区送温暖了，现在向所有人发放 [ 攻击之爪 +50 ]！！");
+                foreach (Character character in queue.Queue)
+                {
+                    Item 攻击之爪 = new 攻击之爪50();
+                    queue.Equip(character, EquipItemToSlot.Accessory1, 攻击之爪);
+                }
+            }
         }
     }
 }

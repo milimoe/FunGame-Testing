@@ -36,7 +36,7 @@ namespace Milimoe.FunGame.Testing.Skills
         public override void OnEffectGained(Character character)
         {
             Skill.IsInEffect = true;
-            character.CharacterEffectControlTypes.Add(this, [EffectControlType.Unselectable]);
+            character.CharacterEffectTypes.Add(this, [EffectType.Unselectable]);
             character.UpdateCharacterState();
             character.ExSPD += 100;
             character.ExCritRate += 0.08;
@@ -48,7 +48,7 @@ namespace Milimoe.FunGame.Testing.Skills
             if (!破隐一击)
             {
                 // 在没有打出破隐一击的情况下，恢复角色状态
-                character.CharacterEffectControlTypes.Remove(this);
+                character.CharacterEffectTypes.Remove(this);
                 character.UpdateCharacterState();
             }
             character.ExSPD -= 100;
@@ -61,7 +61,7 @@ namespace Milimoe.FunGame.Testing.Skills
             {
                 首次伤害 = false;
                 破隐一击 = true;
-                character.CharacterEffectControlTypes.Remove(this);
+                character.CharacterEffectTypes.Remove(this);
                 character.UpdateCharacterState();
                 double d = 伤害加成;
                 damage = Calculation.Round2Digits(damage + d);

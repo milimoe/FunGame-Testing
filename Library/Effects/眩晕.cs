@@ -8,7 +8,7 @@ namespace Milimoe.FunGame.Testing.Effects
         public override long Id => 4101;
         public override string Name => "眩晕";
         public override string Description => $"此角色被眩晕了，不能行动。来自：[ {Source} ] 的 [ {Skill.Name} ]";
-        public override EffectControlType ControlType => EffectControlType.Stun;
+        public override EffectType EffectType => EffectType.Stun;
         public override bool TargetSelf => true;
         public override Character Source => _sourceCharacter;
         public override bool Durative => _durative;
