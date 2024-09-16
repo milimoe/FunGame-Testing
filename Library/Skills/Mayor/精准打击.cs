@@ -11,7 +11,7 @@ namespace Milimoe.FunGame.Testing.Skills
         public override string Description => Effects.Count > 0 ? Effects.First().Description : "";
         public override double EPCost => 100;
         public override double CD => 40 - 1 * (Level - 1);
-        public override double HardnessTime => 8;
+        public override double HardnessTime { get; set; } = 8;
 
         public 精准打击(Character character) : base(SkillType.SuperSkill, character)
         {

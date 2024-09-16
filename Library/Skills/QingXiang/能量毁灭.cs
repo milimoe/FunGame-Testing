@@ -11,7 +11,7 @@ namespace Milimoe.FunGame.Testing.Skills
         public override string Description => Effects.Count > 0 ? Effects.First().Description : "";
         public override double EPCost => 100;
         public override double CD => 55 - 3 * (Level - 1);
-        public override double HardnessTime => 25;
+        public override double HardnessTime { get; set; } = 25;
 
         public 能量毁灭(Character character) : base(SkillType.SuperSkill, character)
         {
@@ -30,7 +30,7 @@ namespace Milimoe.FunGame.Testing.Skills
 
         private double 智力系数 => Calculation.Round4Digits(0.55 * Level);
         private double 智力伤害 => Calculation.Round2Digits(智力系数 * Skill.Character?.INT ?? 0);
-        private readonly double 能量系数 = Calculation.Round4Digits(4.5);
+        private double 能量系数 => Calculation.Round4Digits(0.75 * Level);
 
         public override void OnSkillCasted(Character caster, List<Character> enemys, List<Character> teammates, Dictionary<string, object> others)
         {

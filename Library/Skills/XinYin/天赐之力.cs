@@ -11,7 +11,7 @@ namespace Milimoe.FunGame.Testing.Skills
         public override string Description => Effects.Count > 0 ? Effects.First().Description : "";
         public override double EPCost => 100;
         public override double CD => 60;
-        public override double HardnessTime => 15;
+        public override double HardnessTime { get; set; } = 15;
 
         public 天赐之力(Character character) : base(SkillType.SuperSkill, character)
         {

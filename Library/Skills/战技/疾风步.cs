@@ -9,9 +9,9 @@ namespace Milimoe.FunGame.Testing.Skills
         public override long Id => 2001;
         public override string Name => "疾风步";
         public override string Description => Effects.Count > 0 ? Effects.First().Description : "";
-        public override double EPCost => 35;
+        public override double EPCost => 60;
         public override double CD => 35;
-        public override double HardnessTime => 5;
+        public override double HardnessTime { get; set; } = 5;
 
         public 疾风步(Character character) : base(SkillType.Skill, character)
         {

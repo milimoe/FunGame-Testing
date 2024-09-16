@@ -1,4 +1,5 @@
-﻿using Milimoe.FunGame.Core.Entity;
+﻿using FunGame.Testing.Effects;
+using Milimoe.FunGame.Core.Entity;
 using Milimoe.FunGame.Core.Library.Constant;
 
 namespace FunGame.Testing.Items
@@ -48,42 +49,12 @@ namespace FunGame.Testing.Items
         {
             Level = 1;
             Item = item;
-            Effects.Add(new 攻击之爪特效(this, character, item, exATK));
+            Effects.Add(new 攻击力加成(this, character, item, exATK));
         }
 
         public override IEnumerable<Effect> AddInactiveEffectToCharacter()
         {
             return Effects;
-        }
-    }
-
-    public class 攻击之爪特效 : Effect
-    {
-        public override long Id => Skill.Id;
-        public override string Name => Skill.Name;
-        public override string Description => $"增加角色 {攻击力加成} 点攻击力。" + (!TargetSelf ? $"来自：[ {Source} ] 的 [ {Item.Name} ]" : "");
-        public override EffectType EffectType => EffectType.Item;
-        public override bool TargetSelf => true;
-
-        public Item Item { get; }
-        private readonly double 攻击力加成 = 0;
-
-        public override void OnEffectGained(Character character)
-        {
-            character.ExATK2 += 攻击力加成;
-        }
-        
-        public override void OnEffectLost(Character character)
-        {
-            character.ExATK2 -= 攻击力加成;
-        }
-
-        public 攻击之爪特效(Skill skill, Character? source, Item item, double exATK) : base(skill)
-        {
-            ActionQueue = skill.ActionQueue;
-            Source = source;
-            Item = item;
-            攻击力加成 = exATK;
         }
     }
 }

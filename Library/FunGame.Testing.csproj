@@ -14,4 +14,11 @@
     </Reference>
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="Items\Armor\" />
+    <Folder Include="Items\Consumable\" />
+    <Folder Include="Items\MagicCardPack\" />
+    <Folder Include="Items\Shoes\" />
+  </ItemGroup>
+
 </Project>

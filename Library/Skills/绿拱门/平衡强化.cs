@@ -10,7 +10,7 @@ namespace Milimoe.FunGame.Testing.Skills
         public override string Description => Effects.Count > 0 ? Effects.First().Description : "";
         public override double EPCost => 100;
         public override double CD => 55 - (1 * (Level - 1));
-        public override double HardnessTime => 12;
+        public override double HardnessTime { get; set; } = 12;
 
         public 平衡强化(Character character) : base(SkillType.SuperSkill, character)
         {

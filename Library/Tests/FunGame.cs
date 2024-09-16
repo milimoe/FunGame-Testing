@@ -104,9 +104,9 @@ namespace Milimoe.FunGame.Testing.Tests
                         character9, character10, character11, character12
                     ];
 
-                    int clevel = 25;
-                    int slevel = 3;
-                    int mlevel = 4;
+                    int clevel = 60;
+                    int slevel = 6;
+                    int mlevel = 8;
 
                     // 升级和赋能
                     for (int index = 0; index < characters.Count; index++)
@@ -395,16 +395,16 @@ namespace Milimoe.FunGame.Testing.Tests
                     // 赛后统计
                     WriteLine("==== 伤害排行榜 TOP6 ====");
                     Msg = "==== 伤害排行榜 TOP6 ====\r\n";
-                    // 显示前四的角色统计
                     int count = 1;
                     foreach (Character character in actionQueue.CharacterStatistics.OrderByDescending(d => d.Value.TotalDamage).Select(d => d.Key))
                     {
                         StringBuilder builder = new();
                         CharacterStatistics stats = actionQueue.CharacterStatistics[character];
-                        builder.AppendLine($"{count}. [ {character.ToStringWithLevel()} ]");
+                        builder.AppendLine($"{count}. [ {character.ToStringWithLevel()} ] （{stats.Kills} / {stats.Assists}）");
                         builder.AppendLine($"存活时长：{stats.LiveTime} / 存活回合数：{stats.LiveRound} / 行动回合数：{stats.ActionTurn}");
-                        builder.AppendLine($"总计伤害：{stats.TotalDamage} / 每秒伤害：{stats.DamagePerSecond} / 每回合伤害：{stats.DamagePerTurn}");
-                        builder.Append($"总计物理伤害：{stats.TotalPhysicalDamage} / 总计魔法伤害：{stats.TotalMagicDamage}");
+                        builder.AppendLine($"总计伤害：{stats.TotalDamage} / 总计物理伤害：{stats.TotalPhysicalDamage} / 总计魔法伤害：{stats.TotalMagicDamage}");
+                        builder.AppendLine($"总承受伤害：{stats.TotalTakenDamage} / 总承受物理伤害：{stats.TotalTakenPhysicalDamage} / 总承受魔法伤害：{stats.TotalTakenMagicDamage}");
+                        builder.Append($"每秒伤害：{stats.DamagePerSecond} / 每回合伤害：{stats.DamagePerTurn}");
                         if (count++ <= 6)
                         {
                             WriteLine(builder.ToString());

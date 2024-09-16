@@ -11,7 +11,7 @@ namespace Milimoe.FunGame.Testing.Skills
         public override string Description => Effects.Count > 0 ? Effects.First().Description : "";
         public override double EPCost => 100;
         public override double CD => 30;
-        public override double HardnessTime => 10;
+        public override double HardnessTime { get; set; } = 10;
 
         public 变幻之心(Character character) : base(SkillType.SuperSkill, character)
         {
