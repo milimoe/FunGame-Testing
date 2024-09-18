@@ -1,5 +1,7 @@
 using Milimoe.FunGame.Testing.Tests;
 
+FunGameSimulation.LoadModules();
+
 bool printout = true;
 List<string> strs = FunGameSimulation.StartGame(printout);
 if (printout == false)

@@ -10,13 +10,17 @@ namespace Milimoe.FunGame.Testing.Tests
 {
     public class FunGameSimulation
     {
+
+        public static List<Character> Characters { get; } = [];
         public static bool IsRuning { get; set; } = false;
+        public static bool IsWeb { get; set; } = false;
         public static bool PrintOut { get; set; } = false;
         public static string Msg { get; set; } = "";
 
-        public static List<string> StartGame(bool printout)
+        public static List<string> StartGame(bool printout, bool isWeb = false)
         {
             PrintOut = printout;
+            IsWeb = isWeb;
             try
             {
                 if (IsRuning) return ["游戏正在模拟中，请勿重复请求！"];
@@ -27,49 +31,6 @@ namespace Milimoe.FunGame.Testing.Tests
 
                 IsRuning = true;
 
-                PluginLoader plugins = PluginLoader.LoadPlugins([]);
-                foreach (string plugin in plugins.Plugins.Keys)
-                {
-                    Console.WriteLine(plugin + " is loaded.");
-                }
-
-                Dictionary<string, string> plugindllsha512 = [];
-                foreach (string pfp in PluginLoader.PluginFilePaths.Keys)
-                {
-                    string text = Encryption.FileSha512(PluginLoader.PluginFilePaths[pfp]);
-                    plugindllsha512.Add(pfp, text);
-                    if (PrintOut) Console.WriteLine(pfp + $" is {text}.");
-                }
-
-                List<Character> list = [];
-
-                GameModuleLoader modules = GameModuleLoader.LoadGameModules(FunGameInfo.FunGame.FunGame_Desktop, []);
-                foreach (CharacterModule cm in modules.Characters.Values)
-                {
-                    foreach (Character c in cm.Characters)
-                    {
-                        if (PrintOut) Console.WriteLine(c.Name);
-                        list.Add(c);
-                    }
-                }
-
-                Dictionary<string, string> moduledllsha512 = [];
-                foreach (string mfp in GameModuleLoader.ModuleFilePaths.Keys)
-                {
-                    string text = Encryption.FileSha512(GameModuleLoader.ModuleFilePaths[mfp]);
-                    moduledllsha512.Add(mfp, text);
-                    if (PrintOut) Console.WriteLine(mfp + $" is {text}.");
-                }
-
-                foreach (string moduledll in moduledllsha512.Keys)
-                {
-                    string server = moduledllsha512[moduledll];
-                    if (plugindllsha512.TryGetValue(moduledll, out string? client) && client != "" && server == client)
-                    {
-                        Console.WriteLine(moduledll + $" is checked pass.");
-                    }
-                }
-
                 // M = 0, W = 7, P1 = 1, P3 = 1
                 // M = 1, W = 6, P1 = 2, P3 = 0
                 // M = 2, W = 4, P1 = 0, P3 = 2
@@ -78,6 +39,8 @@ namespace Milimoe.FunGame.Testing.Tests
                 // M = 4, W = 2, P1 = 2, P3 = 0
                 // M = 5, W = 0, P1 = 0, P3 = 2
                 // M = 5, W = 1, P1 = 0, P3 = 0
+
+                List<Character> list = new(Characters);
 
                 if (list.Count > 11)
                 {
@@ -321,7 +284,11 @@ namespace Milimoe.FunGame.Testing.Tests
 
                     // 总游戏时长
                     double totalTime = 0;
-                    送礼(actionQueue, totalTime);
+
+                    // 开始空投
+                    Msg = "";
+                    空投(actionQueue, totalTime);
+                    if (isWeb) result.Add("=== 空投 ===\r\n" + Msg);
 
                     // 总回合数
                     int i = 1;
@@ -375,13 +342,17 @@ namespace Milimoe.FunGame.Testing.Tests
                         if (actionQueue.Eliminated.Count > deaths)
                         {
                             deaths = actionQueue.Eliminated.Count;
-                            string roundMsg = Msg;
-                            string[] strs = roundMsg.Split("==== 角色状态 ====");
-                            if (strs.Length > 0)
+                            if (!isWeb)
                             {
-                                roundMsg = strs[0];
+                                string roundMsg = Msg;
+                                string[] strs = roundMsg.Split("==== 角色状态 ====");
+                                if (strs.Length > 0)
+                                {
+                                    roundMsg = strs[0];
+                                }
+                                result.Add(roundMsg);
                             }
-                            result.Add(roundMsg);
+                            else result.Add(Msg);
                         }
                     }
 
@@ -393,8 +364,9 @@ namespace Milimoe.FunGame.Testing.Tests
                     }
 
                     // 赛后统计
-                    WriteLine("==== 伤害排行榜 TOP6 ====");
-                    Msg = "==== 伤害排行榜 TOP6 ====\r\n";
+                    WriteLine("=== 伤害排行榜 ===");
+                    int top = isWeb ? 12 : 6;
+                    Msg = $"=== 伤害排行榜 TOP{top} ===\r\n";
                     int count = 1;
                     foreach (Character character in actionQueue.CharacterStatistics.OrderByDescending(d => d.Value.TotalDamage).Select(d => d.Key))
                     {
@@ -405,7 +377,7 @@ namespace Milimoe.FunGame.Testing.Tests
                         builder.AppendLine($"总计伤害：{stats.TotalDamage} / 总计物理伤害：{stats.TotalPhysicalDamage} / 总计魔法伤害：{stats.TotalMagicDamage}");
                         builder.AppendLine($"总承受伤害：{stats.TotalTakenDamage} / 总承受物理伤害：{stats.TotalTakenPhysicalDamage} / 总承受魔法伤害：{stats.TotalTakenMagicDamage}");
                         builder.Append($"每秒伤害：{stats.DamagePerSecond} / 每回合伤害：{stats.DamagePerTurn}");
-                        if (count++ <= 6)
+                        if (count++ <= top)
                         {
                             WriteLine(builder.ToString());
                         }
@@ -415,6 +387,16 @@ namespace Milimoe.FunGame.Testing.Tests
                         }
                     }
                     result.Add(Msg);
+
+                    // 显示每个角色的信息
+                    if (isWeb)
+                    {
+                        for (i = actionQueue.Eliminated.Count - 1; i >= 0; i--)
+                        {
+                            Character character = actionQueue.Eliminated[i];
+                            result.Add($"=== 角色 [ {character} ] ===\r\n{character.GetInfo()}");
+                        }
+                    }
 
                     IsRuning = false;
                 }
@@ -435,15 +417,63 @@ namespace Milimoe.FunGame.Testing.Tests
             if (PrintOut) Console.WriteLine(str);
         }
 
-        public static void 送礼(ActionQueue queue, double totalTime)
+        public static void 空投(ActionQueue queue, double totalTime)
         {
+            Item[] 这次发放的空投;
             if (totalTime == 0)
             {
                 WriteLine("社区送温暖了，现在向所有人发放 [ 攻击之爪 +50 ]！！");
                 foreach (Character character in queue.Queue)
                 {
-                    Item 攻击之爪 = new 攻击之爪50();
-                    queue.Equip(character, EquipItemToSlot.Accessory1, 攻击之爪);
+                    这次发放的空投 = [new 攻击之爪50()];
+                    foreach (Item item in 这次发放的空投)
+                    {
+                        queue.Equip(character, EquipItemToSlot.Accessory1, item);
+                    }
+                }
+            }
+        }
+
+        public static void LoadModules()
+        {
+            PluginLoader plugins = PluginLoader.LoadPlugins([]);
+            foreach (string plugin in plugins.Plugins.Keys)
+            {
+                Console.WriteLine(plugin + " is loaded.");
+            }
+
+            Dictionary<string, string> plugindllsha512 = [];
+            foreach (string pfp in PluginLoader.PluginFilePaths.Keys)
+            {
+                string text = Encryption.FileSha512(PluginLoader.PluginFilePaths[pfp]);
+                plugindllsha512.Add(pfp, text);
+                if (PrintOut) Console.WriteLine(pfp + $" is {text}.");
+            }
+
+            GameModuleLoader modules = GameModuleLoader.LoadGameModules(FunGameInfo.FunGame.FunGame_Desktop, []);
+            foreach (CharacterModule cm in modules.Characters.Values)
+            {
+                foreach (Character c in cm.Characters)
+                {
+                    if (PrintOut) Console.WriteLine(c.Name);
+                    Characters.Add(c);
+                }
+            }
+
+            Dictionary<string, string> moduledllsha512 = [];
+            foreach (string mfp in GameModuleLoader.ModuleFilePaths.Keys)
+            {
+                string text = Encryption.FileSha512(GameModuleLoader.ModuleFilePaths[mfp]);
+                moduledllsha512.Add(mfp, text);
+                if (PrintOut) Console.WriteLine(mfp + $" is {text}.");
+            }
+
+            foreach (string moduledll in moduledllsha512.Keys)
+            {
+                string server = moduledllsha512[moduledll];
+                if (plugindllsha512.TryGetValue(moduledll, out string? client) && client != "" && server == client)
+                {
+                    Console.WriteLine(moduledll + $" is checked pass.");
                 }
             }
         }
