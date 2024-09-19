@@ -1,5 +1,5 @@
 ﻿using System.Text;
-using FunGame.Testing.Items;
+using Milimoe.FunGame.Testing.Items;
 using Milimoe.FunGame.Core.Api.Utility;
 using Milimoe.FunGame.Core.Entity;
 using Milimoe.FunGame.Core.Library.Common.Addon;

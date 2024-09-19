@@ -1,8 +1,8 @@
-﻿using FunGame.Testing.Effects;
+﻿using Milimoe.FunGame.Testing.Effects;
 using Milimoe.FunGame.Core.Entity;
 using Milimoe.FunGame.Core.Library.Constant;
 
-namespace FunGame.Testing.Items
+namespace Milimoe.FunGame.Testing.Items
 {
     public class 攻击之爪10 : Item
     {

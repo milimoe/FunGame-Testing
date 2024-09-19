@@ -2,7 +2,7 @@
 using Milimoe.FunGame.Core.Entity;
 using Milimoe.FunGame.Core.Library.Constant;
 
-namespace FunGame.Testing.Effects
+namespace Milimoe.FunGame.Testing.Effects
 {
     public class 技能硬直时间减少 : Effect
     {

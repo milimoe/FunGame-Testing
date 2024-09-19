@@ -1,3 +1,5 @@
+using Milimoe.FunGame.Testing.Desktop.Solutions;
+
 namespace Desktop
 {
     internal static class Program
@@ -11,7 +13,8 @@ namespace Desktop
             // To customize application configuration such as set high DPI settings or default font,
             // see https://aka.ms/applicationconfiguration.
             ApplicationConfiguration.Initialize();
-            Application.Run(new ChessBoardExample.ChessBoardExample());
+            //Application.Run(new ChessBoardExample.ChessBoardExample());
+            Application.Run(new EntityCreator());
         }
     }
 }

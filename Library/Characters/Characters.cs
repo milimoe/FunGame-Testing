@@ -2,9 +2,9 @@
 using Milimoe.FunGame.Core.Entity;
 using Milimoe.FunGame.Core.Library.Constant;
 
-namespace FunGame.Testing.Characters
+namespace MilimoeFunGame.Testing.Characters
 {
-    public class Characters
+    public class OshimaCharacters
     {
         public static Character Oshima
         {
