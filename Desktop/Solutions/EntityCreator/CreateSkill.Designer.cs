@@ -127,6 +127,7 @@
             // 
             // ComboSkillType
             // 
+            ComboSkillType.Anchor = AnchorStyles.Bottom | AnchorStyles.Right;
             ComboSkillType.Font = new Font("Microsoft YaHei UI", 14.25F, FontStyle.Regular, GraphicsUnit.Point, 134);
             ComboSkillType.FormattingEnabled = true;
             ComboSkillType.Items.AddRange(new object[] { "魔法", "战技", "爆发技", "被动", "物品" });
@@ -149,6 +150,8 @@
             Controls.Add(TipID);
             Controls.Add(TextID);
             Controls.Add(TipName);
+            FormBorderStyle = FormBorderStyle.FixedSingle;
+            MaximizeBox = false;
             Name = "CreateSkill";
             StartPosition = FormStartPosition.CenterScreen;
             Text = "技能创建器";

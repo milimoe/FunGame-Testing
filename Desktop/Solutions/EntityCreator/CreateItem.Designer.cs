@@ -91,7 +91,7 @@
             // 
             TipItemType.Anchor = AnchorStyles.Bottom | AnchorStyles.Right;
             TipItemType.Font = new Font("等线", 14.25F, FontStyle.Regular, GraphicsUnit.Point, 134);
-            TipItemType.Location = new Point(214, 128);
+            TipItemType.Location = new Point(210, 128);
             TipItemType.Name = "TipItemType";
             TipItemType.Size = new Size(129, 27);
             TipItemType.TabIndex = 41;
@@ -102,7 +102,7 @@
             // 
             TextName.Anchor = AnchorStyles.Bottom | AnchorStyles.Right;
             TextName.Font = new Font("等线", 14.25F);
-            TextName.Location = new Point(349, 78);
+            TextName.Location = new Point(345, 78);
             TextName.Name = "TextName";
             TextName.Size = new Size(201, 27);
             TextName.TabIndex = 1;
@@ -112,7 +112,7 @@
             // 
             TipID.Anchor = AnchorStyles.Bottom | AnchorStyles.Right;
             TipID.Font = new Font("等线", 14.25F, FontStyle.Regular, GraphicsUnit.Point, 134);
-            TipID.Location = new Point(214, 28);
+            TipID.Location = new Point(210, 28);
             TipID.Name = "TipID";
             TipID.Size = new Size(129, 27);
             TipID.TabIndex = 40;
@@ -123,7 +123,7 @@
             // 
             TextID.Anchor = AnchorStyles.Bottom | AnchorStyles.Right;
             TextID.Font = new Font("等线", 14.25F);
-            TextID.Location = new Point(349, 28);
+            TextID.Location = new Point(345, 28);
             TextID.Name = "TextID";
             TextID.Size = new Size(201, 27);
             TextID.TabIndex = 0;
@@ -133,7 +133,7 @@
             // 
             TipName.Anchor = AnchorStyles.Bottom | AnchorStyles.Right;
             TipName.Font = new Font("等线", 14.25F, FontStyle.Regular, GraphicsUnit.Point, 134);
-            TipName.Location = new Point(214, 78);
+            TipName.Location = new Point(210, 78);
             TipName.Name = "TipName";
             TipName.Size = new Size(129, 27);
             TipName.TabIndex = 38;
@@ -282,6 +282,7 @@
             // 
             // DateTimePickerSell
             // 
+            DateTimePickerSell.Anchor = AnchorStyles.Bottom | AnchorStyles.Right;
             DateTimePickerSell.Font = new Font("等线", 14.25F, FontStyle.Regular, GraphicsUnit.Point, 134);
             DateTimePickerSell.Location = new Point(438, 312);
             DateTimePickerSell.Name = "DateTimePickerSell";
@@ -290,6 +291,7 @@
             // 
             // DateTimePickerTrade
             // 
+            DateTimePickerTrade.Anchor = AnchorStyles.Bottom | AnchorStyles.Right;
             DateTimePickerTrade.Font = new Font("等线", 14.25F, FontStyle.Regular, GraphicsUnit.Point, 134);
             DateTimePickerTrade.Location = new Point(438, 352);
             DateTimePickerTrade.Name = "DateTimePickerTrade";
@@ -298,6 +300,7 @@
             // 
             // ComboWeapon
             // 
+            ComboWeapon.Anchor = AnchorStyles.Bottom | AnchorStyles.Right;
             ComboWeapon.Font = new Font("Microsoft YaHei UI", 14.25F, FontStyle.Regular, GraphicsUnit.Point, 134);
             ComboWeapon.FormattingEnabled = true;
             ComboWeapon.Items.AddRange(new object[] { "单手剑", "双手重剑", "弓", "手枪", "步枪", "双持短刀", "法器", "法杖", "长柄", "拳套", "暗器" });
@@ -308,6 +311,7 @@
             // 
             // ComboEquip
             // 
+            ComboEquip.Anchor = AnchorStyles.Bottom | AnchorStyles.Right;
             ComboEquip.Font = new Font("Microsoft YaHei UI", 14.25F, FontStyle.Regular, GraphicsUnit.Point, 134);
             ComboEquip.FormattingEnabled = true;
             ComboEquip.Items.AddRange(new object[] { "魔法卡包", "武器", "防具", "鞋子", "饰品" });
@@ -318,10 +322,11 @@
             // 
             // ComboItemType
             // 
+            ComboItemType.Anchor = AnchorStyles.Bottom | AnchorStyles.Right;
             ComboItemType.Font = new Font("Microsoft YaHei UI", 14.25F, FontStyle.Regular, GraphicsUnit.Point, 134);
             ComboItemType.FormattingEnabled = true;
             ComboItemType.Items.AddRange(new object[] { "魔法卡包", "武器", "防具", "鞋子", "饰品", "消耗品", "魔法卡", "收藏品", "特殊物品", "任务物品", "礼包", "其他" });
-            ComboItemType.Location = new Point(349, 125);
+            ComboItemType.Location = new Point(345, 125);
             ComboItemType.Name = "ComboItemType";
             ComboItemType.Size = new Size(201, 33);
             ComboItemType.TabIndex = 56;
@@ -355,6 +360,8 @@
             Controls.Add(TextCode);
             Controls.Add(LabelCode);
             Controls.Add(BtnCreate);
+            FormBorderStyle = FormBorderStyle.FixedSingle;
+            MaximizeBox = false;
             Name = "CreateItem";
             StartPosition = FormStartPosition.CenterScreen;
             Text = "物品创建器";

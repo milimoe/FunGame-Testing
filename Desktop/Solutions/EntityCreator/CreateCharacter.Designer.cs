@@ -490,6 +490,8 @@
             Controls.Add(TipName);
             Controls.Add(TextName);
             Controls.Add(LabelName);
+            FormBorderStyle = FormBorderStyle.FixedSingle;
+            MaximizeBox = false;
             Name = "CreateCharacter";
             StartPosition = FormStartPosition.CenterScreen;
             Text = "角色创建器";
