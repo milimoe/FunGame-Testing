@@ -25,10 +25,10 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Compile Update="Solutions\EntityCreator\CreateItem.cs">
+    <Compile Update="Solutions\EntityEditor\ItemCreator.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Update="Solutions\EntityCreator\CreateSkill.cs">
+    <Compile Update="Solutions\EntityEditor\SkillCreator.cs">
       <SubType>Form</SubType>
     </Compile>
   </ItemGroup>

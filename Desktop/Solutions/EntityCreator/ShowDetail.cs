@@ -4,18 +4,18 @@ namespace Milimoe.FunGame.Testing.Desktop.Solutions
 {
     public partial class ShowDetail : Form
     {
-        private CharacterCreator? CharacterCreator { get; }
-        private SkillCreator? SkillCreator { get; }
-        private ItemCreator? ItemCreator { get; }
+        private CharacterManager? CharacterManager { get; }
+        private SkillManager? SkillManager { get; }
+        private ItemManager? ItemManager { get; }
         private int NowClick { get; set; } = -1;
         private BaseEntity? BaseEntity { get; set; }
 
-        public ShowDetail(CharacterCreator? characterCreator, SkillCreator? skillCreator, ItemCreator? itemCreator)
+        public ShowDetail(CharacterManager? characterManager, SkillManager? skillManager, ItemManager? itemManager)
         {
             InitializeComponent();
-            CharacterCreator = characterCreator;
-            SkillCreator = skillCreator;
-            ItemCreator = itemCreator;
+            CharacterManager = characterManager;
+            SkillManager = skillManager;
+            ItemManager = itemManager;
             Text = "详细信息查看";
         }
 
@@ -62,32 +62,32 @@ namespace Milimoe.FunGame.Testing.Desktop.Solutions
         {
             if (NowClick == 0 && BaseEntity is Character c)
             {
-                CharacterCreator?.OpenCreator(c);
+                CharacterManager?.OpenCreator(c);
             }
             else if (NowClick == 1 && BaseEntity is Skill s)
             {
-                SkillCreator?.OpenCreator(s);
+                SkillManager?.OpenCreator(s);
             }
             else if (NowClick == 2 && BaseEntity is Item i)
             {
-                ItemCreator?.OpenCreator(i);
+                ItemManager?.OpenCreator(i);
             }
         }
 
         private void 加物品_Click(object sender, EventArgs e)
         {
-            if (NowClick == 0 && ItemCreator != null && BaseEntity is Character c)
+            if (NowClick == 0 && ItemManager != null && BaseEntity is Character c)
             {
-                if (ItemCreator.LoadedItems.Count != 0)
+                if (ItemManager.LoadedItems.Count != 0)
                 {
                     ShowList l = new();
-                    l.AddListItem(ItemCreator.LoadedItems.OrderBy(kv => kv.Value.Id).Select(kv => EntityCreator.GetItemDisplayName(ItemCreator, kv.Key)).ToArray());
+                    l.AddListItem(ItemManager.LoadedItems.OrderBy(kv => kv.Value.Id).Select(kv => EntityEditor.GetItemDisplayName(ItemManager, kv.Key)).ToArray());
                     l.ShowDialog();
                     string selected = l.SelectItem;
-                    Item? i = ItemCreator.LoadedItems.Where(kv => EntityCreator.GetItemDisplayName(ItemCreator, kv.Key) == selected).Select(kv => kv.Value).FirstOrDefault();
+                    Item? i = ItemManager.LoadedItems.Where(kv => EntityEditor.GetItemDisplayName(ItemManager, kv.Key) == selected).Select(kv => kv.Value).FirstOrDefault();
                     if (c != null && i != null)
                     {
-                        Item? i2 = EntityCreator.从模组加载器中获取物品(i.Id, i.Name, i.ItemType);
+                        Item? i2 = EntityEditor.从模组加载器中获取物品(i.Id, i.Name, i.ItemType);
                         if (i2 != null)
                         {
                             i.SetPropertyToItemModuleNew(i2);
@@ -106,18 +106,18 @@ namespace Milimoe.FunGame.Testing.Desktop.Solutions
 
         private void 加技能_Click(object sender, EventArgs e)
         {
-            if (NowClick == 0 && SkillCreator != null && BaseEntity is Character c)
+            if (NowClick == 0 && SkillManager != null && BaseEntity is Character c)
             {
-                if (SkillCreator.LoadedSkills.Count != 0)
+                if (SkillManager.LoadedSkills.Count != 0)
                 {
                     ShowList l = new();
-                    l.AddListItem(SkillCreator.LoadedSkills.OrderBy(kv => kv.Value.Id).Where(kv => kv.Value.SkillType != Core.Library.Constant.SkillType.Item).Select(kv => EntityCreator.GetSkillDisplayName(SkillCreator, kv.Key)).ToArray());
+                    l.AddListItem(SkillManager.LoadedSkills.OrderBy(kv => kv.Value.Id).Where(kv => kv.Value.SkillType != Core.Library.Constant.SkillType.Item).Select(kv => EntityEditor.GetSkillDisplayName(SkillManager, kv.Key)).ToArray());
                     l.ShowDialog();
                     string selected = l.SelectItem;
-                    Skill? s = SkillCreator.LoadedSkills.Where(kv => EntityCreator.GetSkillDisplayName(SkillCreator, kv.Key) == selected).Select(kv => kv.Value).FirstOrDefault();
+                    Skill? s = SkillManager.LoadedSkills.Where(kv => EntityEditor.GetSkillDisplayName(SkillManager, kv.Key) == selected).Select(kv => kv.Value).FirstOrDefault();
                     if (c != null && s != null)
                     {
-                        Skill? s2 = EntityCreator.从模组加载器中获取技能(s.Id, s.Name, s.SkillType);
+                        Skill? s2 = EntityEditor.从模组加载器中获取技能(s.Id, s.Name, s.SkillType);
                         if (s2 != null)
                         {
                             s = s2;

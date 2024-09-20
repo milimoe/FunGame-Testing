@@ -1,6 +1,6 @@
 ﻿namespace Milimoe.FunGame.Testing.Desktop.Solutions
 {
-    partial class EntityCreator
+    partial class EntityEditor
     {
         /// <summary>
         /// Required designer variable.
@@ -275,7 +275,7 @@
             删除角色技能.UseVisualStyleBackColor = true;
             删除角色技能.Click += 删除角色技能_Click;
             // 
-            // EntityCreator
+            // EntityEditor
             // 
             AutoScaleDimensions = new SizeF(7F, 17F);
             AutoScaleMode = AutoScaleMode.Font;
@@ -299,9 +299,11 @@
             Controls.Add(查看现有物品);
             Controls.Add(查看现有技能);
             Controls.Add(查看现有角色);
-            Name = "EntityCreator";
+            FormBorderStyle = FormBorderStyle.FixedSingle;
+            MaximizeBox = false;
+            Name = "EntityEditor";
             StartPosition = FormStartPosition.CenterScreen;
-            Text = "实体创建器";
+            Text = "实体编辑器";
             列表.ResumeLayout(false);
             ResumeLayout(false);
         }

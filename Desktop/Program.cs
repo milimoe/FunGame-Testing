@@ -14,7 +14,7 @@ namespace Desktop
             // see https://aka.ms/applicationconfiguration.
             ApplicationConfiguration.Initialize();
             //Application.Run(new ChessBoardExample.ChessBoardExample());
-            Application.Run(new EntityCreator());
+            Application.Run(new EntityEditor());
         }
     }
 }

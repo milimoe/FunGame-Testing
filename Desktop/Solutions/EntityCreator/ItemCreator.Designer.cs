@@ -1,6 +1,6 @@
 ﻿namespace Milimoe.FunGame.Testing.Desktop.Solutions
 {
-    partial class CreateItem
+    partial class ItemCreator
     {
         /// <summary>
         /// Required designer variable.

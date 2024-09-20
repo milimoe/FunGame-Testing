@@ -1,27 +1,26 @@
-﻿using Microsoft.VisualBasic;
-using Milimoe.FunGame.Core.Api.Utility;
+﻿using Milimoe.FunGame.Core.Api.Utility;
 using Milimoe.FunGame.Core.Entity;
 using Milimoe.FunGame.Core.Library.Common.Addon;
 using Milimoe.FunGame.Core.Library.Constant;
 
 namespace Milimoe.FunGame.Testing.Desktop.Solutions
 {
-    public partial class EntityCreator : Form
+    public partial class EntityEditor : Form
     {
         private static GameModuleLoader? GameModuleLoader { get; set; } = null;
-        private CharacterCreator CharacterCreator { get; } = new();
-        private SkillCreator SkillCreator { get; } = new();
-        private ItemCreator ItemCreator { get; } = new();
+        private CharacterManager CharacterManager { get; } = new();
+        private SkillManager SkillManager { get; } = new();
+        private ItemManager ItemManager { get; } = new();
         private bool CheckSelectedIndex => 实际列表.SelectedIndex != -1 && 实际列表.SelectedIndex < 实际列表.Items.Count;
         private int nowClick = 0;
 
-        public EntityCreator()
+        public EntityEditor()
         {
             InitializeComponent();
             GameModuleLoader = LoadModules();
-            CharacterCreator.Load();
-            SkillCreator.Load();
-            ItemCreator.Load();
+            CharacterManager.Load();
+            SkillManager.Load();
+            ItemManager.Load();
             查看现有技能方法();
             查看现有物品方法();
             查看现有角色方法();
@@ -30,9 +29,9 @@ namespace Milimoe.FunGame.Testing.Desktop.Solutions
         private void 查看现有角色方法()
         {
             实际列表.Items.Clear();
-            foreach (string name in CharacterCreator.LoadedCharacters.Keys)
+            foreach (string name in CharacterManager.LoadedCharacters.Keys)
             {
-                实际列表.Items.Add(CharacterCreator.LoadedCharacters[name]);
+                实际列表.Items.Add(CharacterManager.LoadedCharacters[name]);
             }
             nowClick = 0;
         }
@@ -40,9 +39,9 @@ namespace Milimoe.FunGame.Testing.Desktop.Solutions
         private void 查看现有技能方法()
         {
             实际列表.Items.Clear();
-            foreach (string name in SkillCreator.LoadedSkills.OrderBy(kv => kv.Value.Id).Select(kv => kv.Key))
+            foreach (string name in SkillManager.LoadedSkills.OrderBy(kv => kv.Value.Id).Select(kv => kv.Key))
             {
-                实际列表.Items.Add(GetSkillDisplayName(SkillCreator, name));
+                实际列表.Items.Add(GetSkillDisplayName(SkillManager, name));
             }
             nowClick = 1;
         }
@@ -50,9 +49,9 @@ namespace Milimoe.FunGame.Testing.Desktop.Solutions
         private void 查看现有物品方法()
         {
             实际列表.Items.Clear();
-            foreach (string name in ItemCreator.LoadedItems.OrderBy(kv => kv.Value.Id).Select(kv => kv.Key))
+            foreach (string name in ItemManager.LoadedItems.OrderBy(kv => kv.Value.Id).Select(kv => kv.Key))
             {
-                实际列表.Items.Add(GetItemDisplayName(ItemCreator, name));
+                实际列表.Items.Add(GetItemDisplayName(ItemManager, name));
             }
             nowClick = 2;
         }
@@ -83,27 +82,27 @@ namespace Milimoe.FunGame.Testing.Desktop.Solutions
 
         private void 全部保存_Click(object sender, EventArgs e)
         {
-            CharacterCreator.Save();
-            SkillCreator.Save();
-            ItemCreator.Save();
+            CharacterManager.Save();
+            SkillManager.Save();
+            ItemManager.Save();
             MessageBox.Show("保存成功！");
         }
 
         private void 保存角色_Click(object sender, EventArgs e)
         {
-            CharacterCreator.Save();
+            CharacterManager.Save();
             MessageBox.Show("保存成功！");
         }
 
         private void 保存技能_Click(object sender, EventArgs e)
         {
-            SkillCreator.Save();
+            SkillManager.Save();
             MessageBox.Show("保存成功！");
         }
 
         private void 保存物品_Click(object sender, EventArgs e)
         {
-            ItemCreator.Save();
+            ItemManager.Save();
             MessageBox.Show("保存成功！");
         }
 
@@ -143,16 +142,16 @@ namespace Milimoe.FunGame.Testing.Desktop.Solutions
         {
             if (CheckSelectedIndex)
             {
-                ShowDetail d = new(CharacterCreator, SkillCreator, ItemCreator);
+                ShowDetail d = new(CharacterManager, SkillManager, ItemManager);
                 switch (nowClick)
                 {
                     case 0:
-                        Character? character = CharacterCreator.LoadedCharacters.Values.Where(c => c.ToString() == 实际列表.Items[实际列表.SelectedIndex].ToString()).FirstOrDefault();
+                        Character? character = CharacterManager.LoadedCharacters.Values.Where(c => c.ToString() == 实际列表.Items[实际列表.SelectedIndex].ToString()).FirstOrDefault();
                         d.SetText(nowClick, character, character?.GetInfo() ?? "");
                         d.ShowDialog();
                         break;
                     case 1:
-                        Skill? s = SkillCreator.LoadedSkills.Where(kv => GetSkillDisplayName(SkillCreator, kv.Key) == 实际列表.Items[实际列表.SelectedIndex].ToString()).Select(kv => kv.Value).FirstOrDefault();
+                        Skill? s = SkillManager.LoadedSkills.Where(kv => GetSkillDisplayName(SkillManager, kv.Key) == 实际列表.Items[实际列表.SelectedIndex].ToString()).Select(kv => kv.Value).FirstOrDefault();
                         if (s != null)
                         {
                             Skill? s2 = 从模组加载器中获取技能(s.Id, s.Name, s.SkillType);
@@ -165,7 +164,7 @@ namespace Milimoe.FunGame.Testing.Desktop.Solutions
                         }
                         break;
                     case 2:
-                        Item? i = ItemCreator.LoadedItems.Where(kv => GetItemDisplayName(ItemCreator, kv.Key) == 实际列表.Items[实际列表.SelectedIndex].ToString()).Select(kv => kv.Value).FirstOrDefault();
+                        Item? i = ItemManager.LoadedItems.Where(kv => GetItemDisplayName(ItemManager, kv.Key) == 实际列表.Items[实际列表.SelectedIndex].ToString()).Select(kv => kv.Value).FirstOrDefault();
                         if (i != null)
                         {
                             Item? i2 = 从模组加载器中获取物品(i.Id, i.Name, i.ItemType);
@@ -187,14 +186,14 @@ namespace Milimoe.FunGame.Testing.Desktop.Solutions
 
         private void 为角色添加技能方法()
         {
-            if (SkillCreator.LoadedSkills.Count != 0)
+            if (SkillManager.LoadedSkills.Count != 0)
             {
                 ShowList l = new();
-                l.AddListItem(SkillCreator.LoadedSkills.OrderBy(kv => kv.Value.Id).Where(kv => kv.Value.SkillType != SkillType.Item).Select(kv => GetSkillDisplayName(SkillCreator, kv.Key)).ToArray());
+                l.AddListItem(SkillManager.LoadedSkills.OrderBy(kv => kv.Value.Id).Where(kv => kv.Value.SkillType != SkillType.Item).Select(kv => GetSkillDisplayName(SkillManager, kv.Key)).ToArray());
                 l.ShowDialog();
                 string selected = l.SelectItem;
-                Character? c = CharacterCreator.LoadedCharacters.Values.Where(c => c.ToString() == 实际列表.Items[实际列表.SelectedIndex].ToString()).FirstOrDefault();
-                Skill? s = SkillCreator.LoadedSkills.Where(kv => GetSkillDisplayName(SkillCreator, kv.Key) == selected).Select(kv => kv.Value).FirstOrDefault();
+                Character? c = CharacterManager.LoadedCharacters.Values.Where(c => c.ToString() == 实际列表.Items[实际列表.SelectedIndex].ToString()).FirstOrDefault();
+                Skill? s = SkillManager.LoadedSkills.Where(kv => GetSkillDisplayName(SkillManager, kv.Key) == selected).Select(kv => kv.Value).FirstOrDefault();
                 if (c != null && s != null)
                 {
                     Skill? s2 = 从模组加载器中获取技能(s.Id, s.Name, s.SkillType);
@@ -214,14 +213,14 @@ namespace Milimoe.FunGame.Testing.Desktop.Solutions
 
         private void 为角色添加物品方法()
         {
-            if (ItemCreator.LoadedItems.Count != 0)
+            if (ItemManager.LoadedItems.Count != 0)
             {
                 ShowList l = new();
-                l.AddListItem(ItemCreator.LoadedItems.OrderBy(kv => kv.Value.Id).Select(kv => GetItemDisplayName(ItemCreator, kv.Key)).ToArray());
+                l.AddListItem(ItemManager.LoadedItems.OrderBy(kv => kv.Value.Id).Select(kv => GetItemDisplayName(ItemManager, kv.Key)).ToArray());
                 l.ShowDialog();
                 string selected = l.SelectItem;
-                Character? c = CharacterCreator.LoadedCharacters.Values.Where(c => c.ToString() == 实际列表.Items[实际列表.SelectedIndex].ToString()).FirstOrDefault();
-                Item? i = ItemCreator.LoadedItems.Where(kv => GetItemDisplayName(ItemCreator, kv.Key) == selected).Select(kv => kv.Value).FirstOrDefault();
+                Character? c = CharacterManager.LoadedCharacters.Values.Where(c => c.ToString() == 实际列表.Items[实际列表.SelectedIndex].ToString()).FirstOrDefault();
+                Item? i = ItemManager.LoadedItems.Where(kv => GetItemDisplayName(ItemManager, kv.Key) == selected).Select(kv => kv.Value).FirstOrDefault();
                 if (c != null && i != null)
                 {
                     Item? i2 = 从模组加载器中获取物品(i.Id, i.Name, i.ItemType);
@@ -241,7 +240,7 @@ namespace Milimoe.FunGame.Testing.Desktop.Solutions
 
         private void 删除角色技能方法()
         {
-            Character? c = CharacterCreator.LoadedCharacters.Values.Where(c => c.ToString() == 实际列表.Items[实际列表.SelectedIndex].ToString()).FirstOrDefault();
+            Character? c = CharacterManager.LoadedCharacters.Values.Where(c => c.ToString() == 实际列表.Items[实际列表.SelectedIndex].ToString()).FirstOrDefault();
             if (c != null)
             {
                 if (c.Skills.Count != 0)
@@ -262,7 +261,7 @@ namespace Milimoe.FunGame.Testing.Desktop.Solutions
 
         private void 删除角色物品方法()
         {
-            Character? c = CharacterCreator.LoadedCharacters.Values.Where(c => c.ToString() == 实际列表.Items[实际列表.SelectedIndex].ToString()).FirstOrDefault();
+            Character? c = CharacterManager.LoadedCharacters.Values.Where(c => c.ToString() == 实际列表.Items[实际列表.SelectedIndex].ToString()).FirstOrDefault();
             if (c != null)
             {
                 if (c.Items.Count != 0)
@@ -318,19 +317,19 @@ namespace Milimoe.FunGame.Testing.Desktop.Solutions
 
         private void 创建角色_Click(object sender, EventArgs e)
         {
-            CharacterCreator.OpenCreator();
+            CharacterManager.OpenCreator();
             查看现有角色方法();
         }
 
         private void 创建技能_Click(object sender, EventArgs e)
         {
-            SkillCreator.OpenCreator();
+            SkillManager.OpenCreator();
             查看现有技能方法();
         }
 
         private void 创建物品_Click(object sender, EventArgs e)
         {
-            ItemCreator.OpenCreator();
+            ItemManager.OpenCreator();
             查看现有物品方法();
         }
 
@@ -338,8 +337,8 @@ namespace Milimoe.FunGame.Testing.Desktop.Solutions
         {
             if (CheckSelectedIndex && nowClick == 0 && MessageBox.Show("是否删除", "删除", MessageBoxButtons.YesNo) == DialogResult.Yes)
             {
-                string name = CharacterCreator.LoadedCharacters.Where(ky => ky.Value.ToString() == 实际列表.Items[实际列表.SelectedIndex].ToString()).FirstOrDefault().Key ?? "";
-                if (CharacterCreator.Remove(name))
+                string name = CharacterManager.LoadedCharacters.Where(ky => ky.Value.ToString() == 实际列表.Items[实际列表.SelectedIndex].ToString()).FirstOrDefault().Key ?? "";
+                if (CharacterManager.Remove(name))
                 {
                     MessageBox.Show("删除成功！");
                     查看现有角色方法();
@@ -355,8 +354,8 @@ namespace Milimoe.FunGame.Testing.Desktop.Solutions
         {
             if (CheckSelectedIndex && nowClick == 1 && MessageBox.Show("是否删除", "删除", MessageBoxButtons.YesNo) == DialogResult.Yes)
             {
-                string name = SkillCreator.LoadedSkills.Where(kv => GetSkillDisplayName(SkillCreator, kv.Key) == 实际列表.Items[实际列表.SelectedIndex].ToString()).FirstOrDefault().Key ?? "";
-                if (SkillCreator.Remove(name))
+                string name = SkillManager.LoadedSkills.Where(kv => GetSkillDisplayName(SkillManager, kv.Key) == 实际列表.Items[实际列表.SelectedIndex].ToString()).FirstOrDefault().Key ?? "";
+                if (SkillManager.Remove(name))
                 {
                     MessageBox.Show("删除成功！");
                     查看现有技能方法();
@@ -372,8 +371,8 @@ namespace Milimoe.FunGame.Testing.Desktop.Solutions
         {
             if (CheckSelectedIndex && nowClick == 2 && MessageBox.Show("是否删除", "删除", MessageBoxButtons.YesNo) == DialogResult.Yes)
             {
-                string name = ItemCreator.LoadedItems.Where(kv => GetItemDisplayName(ItemCreator, kv.Key) == 实际列表.Items[实际列表.SelectedIndex].ToString()).FirstOrDefault().Key ?? "";
-                if (ItemCreator.Remove(name))
+                string name = ItemManager.LoadedItems.Where(kv => GetItemDisplayName(ItemManager, kv.Key) == 实际列表.Items[实际列表.SelectedIndex].ToString()).FirstOrDefault().Key ?? "";
+                if (ItemManager.Remove(name))
                 {
                     MessageBox.Show("删除成功！");
                     查看现有物品方法();
@@ -389,16 +388,16 @@ namespace Milimoe.FunGame.Testing.Desktop.Solutions
         {
             if (MessageBox.Show("重新读取会丢失未保存的数据，是否确认重新读取全部？", "重新读取全部", MessageBoxButtons.YesNo) == DialogResult.Yes)
             {
-                CharacterCreator.Load();
-                SkillCreator.Load();
-                ItemCreator.Load();
+                CharacterManager.Load();
+                SkillManager.Load();
+                ItemManager.Load();
                 查看现有技能方法();
                 查看现有物品方法();
                 查看现有角色方法();
             }
         }
 
-        public static string GetSkillDisplayName(SkillCreator skillCreator, string name)
+        public static string GetSkillDisplayName(SkillManager skillCreator, string name)
         {
             if (skillCreator.LoadedSkills.TryGetValue(name, out Skill? skill) && skill != null)
             {
@@ -407,7 +406,7 @@ namespace Milimoe.FunGame.Testing.Desktop.Solutions
             return "";
         }
 
-        public static string GetItemDisplayName(ItemCreator itemCreator, string name)
+        public static string GetItemDisplayName(ItemManager itemCreator, string name)
         {
             if (itemCreator.LoadedItems.TryGetValue(name, out Item? item) && item != null)
             {
