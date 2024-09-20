@@ -10,8 +10,9 @@ namespace Milimoe.FunGame.Testing.Tests
 {
     public class FunGameSimulation
     {
-
         public static List<Character> Characters { get; } = [];
+        public static Dictionary<Character, CharacterStatistics> CharacterStatistics { get; } = [];
+        public static PluginConfig StatsConfig { get; } = new(nameof(FunGameSimulation), nameof(CharacterStatistics));
         public static bool IsRuning { get; set; } = false;
         public static bool IsWeb { get; set; } = false;
         public static bool PrintOut { get; set; } = false;
@@ -385,6 +386,51 @@ namespace Milimoe.FunGame.Testing.Tests
                         {
                             if (PrintOut) Console.WriteLine(builder.ToString());
                         }
+
+                        CharacterStatistics? totalStats = CharacterStatistics.Where(kv => kv.Key.GetName() == character.GetName()).Select(kv => kv.Value).FirstOrDefault();
+                        if (totalStats != null)
+                        {
+                            // 统计此角色的所有数据
+                            totalStats.TotalDamage = Calculation.Round2Digits(totalStats.TotalDamage + stats.TotalDamage);
+                            totalStats.TotalPhysicalDamage = Calculation.Round2Digits(totalStats.TotalPhysicalDamage + stats.TotalPhysicalDamage);
+                            totalStats.TotalMagicDamage = Calculation.Round2Digits(totalStats.TotalMagicDamage + stats.TotalMagicDamage);
+                            totalStats.TotalRealDamage = Calculation.Round2Digits(totalStats.TotalRealDamage + stats.TotalRealDamage);
+                            totalStats.TotalTakenDamage = Calculation.Round2Digits(totalStats.TotalTakenDamage + stats.TotalTakenDamage);
+                            totalStats.TotalTakenPhysicalDamage = Calculation.Round2Digits(totalStats.TotalTakenPhysicalDamage + stats.TotalTakenPhysicalDamage);
+                            totalStats.TotalTakenMagicDamage = Calculation.Round2Digits(totalStats.TotalTakenMagicDamage + stats.TotalTakenMagicDamage);
+                            totalStats.TotalTakenRealDamage = Calculation.Round2Digits(totalStats.TotalTakenRealDamage + stats.TotalTakenRealDamage);
+                            totalStats.LiveRound += stats.LiveRound;
+                            totalStats.ActionTurn += stats.ActionTurn;
+                            totalStats.LiveTime = Calculation.Round2Digits(totalStats.LiveTime + stats.LiveTime);
+                            totalStats.TotalEarnedMoney += stats.TotalEarnedMoney;
+                            totalStats.Kills += stats.Kills;
+                            totalStats.Deaths += stats.Deaths;
+                            totalStats.Assists += stats.Assists;
+                            totalStats.Plays += stats.Plays;
+                            totalStats.Wins += stats.Wins;
+                            totalStats.Top3s += stats.Top3s;
+                            totalStats.Loses += stats.Loses;
+                            if (totalStats.Plays != 0)
+                            {
+                                totalStats.AvgDamage = Calculation.Round2Digits(totalStats.TotalDamage / totalStats.Plays);
+                                totalStats.AvgPhysicalDamage = Calculation.Round2Digits(totalStats.TotalPhysicalDamage / totalStats.Plays);
+                                totalStats.AvgMagicDamage = Calculation.Round2Digits(totalStats.TotalMagicDamage / totalStats.Plays);
+                                totalStats.AvgRealDamage = Calculation.Round2Digits(totalStats.TotalRealDamage / totalStats.Plays);
+                                totalStats.AvgTakenDamage = Calculation.Round2Digits(totalStats.TotalTakenDamage / totalStats.Plays);
+                                totalStats.AvgTakenPhysicalDamage = Calculation.Round2Digits(totalStats.TotalTakenPhysicalDamage / totalStats.Plays);
+                                totalStats.AvgTakenMagicDamage = Calculation.Round2Digits(totalStats.TotalTakenMagicDamage / totalStats.Plays);
+                                totalStats.AvgTakenRealDamage = Calculation.Round2Digits(totalStats.TotalTakenRealDamage / totalStats.Plays);
+                                totalStats.AvgLiveRound = totalStats.LiveRound / totalStats.Plays;
+                                totalStats.AvgActionTurn = totalStats.ActionTurn / totalStats.Plays;
+                                totalStats.AvgLiveTime = Calculation.Round2Digits(totalStats.LiveTime / totalStats.Plays);
+                                totalStats.AvgEarnedMoney = totalStats.TotalEarnedMoney / totalStats.Plays;
+                                totalStats.Winrates = Calculation.Round4Digits(Convert.ToDouble(totalStats.Wins) / Convert.ToDouble(totalStats.Plays));
+                                totalStats.Top3rates = Calculation.Round4Digits(Convert.ToDouble(totalStats.Top3s) / Convert.ToDouble(totalStats.Plays));
+                            }
+                            if (totalStats.LiveRound != 0) totalStats.DamagePerRound = Calculation.Round2Digits(totalStats.TotalDamage / totalStats.LiveRound);
+                            if (totalStats.ActionTurn != 0) totalStats.DamagePerTurn = Calculation.Round2Digits(totalStats.TotalDamage / totalStats.ActionTurn);
+                            if (totalStats.LiveTime !=0) totalStats.DamagePerSecond = Calculation.Round2Digits(totalStats.TotalDamage / totalStats.LiveTime);
+                        }
                     }
                     result.Add(Msg);
 
@@ -396,6 +442,15 @@ namespace Milimoe.FunGame.Testing.Tests
                             Character character = actionQueue.Eliminated[i];
                             result.Add($"=== 角色 [ {character} ] ===\r\n{character.GetInfo()}");
                         }
+                    }
+
+                    lock (StatsConfig)
+                    {
+                        foreach (Character c in CharacterStatistics.Keys)
+                        {
+                            StatsConfig.Add(c.ToStringWithOutUser(), CharacterStatistics[c]);
+                        }
+                        StatsConfig.SaveConfig();
                     }
 
                     IsRuning = false;
@@ -457,6 +512,16 @@ namespace Milimoe.FunGame.Testing.Tests
                 {
                     if (PrintOut) Console.WriteLine(c.Name);
                     Characters.Add(c);
+                    CharacterStatistics.Add(c, new());
+                }
+            }
+
+            StatsConfig.LoadConfig();
+            foreach (Character character in CharacterStatistics.Keys)
+            {
+                if (StatsConfig.ContainsKey(character.ToStringWithOutUser()))
+                {
+                    CharacterStatistics[character] = StatsConfig.Get<CharacterStatistics>(character.ToStringWithOutUser()) ?? CharacterStatistics[character];
                 }
             }
 
