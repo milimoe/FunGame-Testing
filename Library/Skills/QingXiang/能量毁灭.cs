@@ -6,14 +6,14 @@ namespace Milimoe.FunGame.Testing.Skills
 {
     public class 能量毁灭 : Skill
     {
-        public override long Id => 3008;
+        public override long Id => (long)SuperSkillID.能量毁灭;
         public override string Name => "能量毁灭";
         public override string Description => Effects.Count > 0 ? Effects.First().Description : "";
         public override double EPCost => 100;
         public override double CD => 55 - 3 * (Level - 1);
         public override double HardnessTime { get; set; } = 25;
 
-        public 能量毁灭(Character character) : base(SkillType.SuperSkill, character)
+        public 能量毁灭(Character? character = null) : base(SkillType.SuperSkill, character)
         {
             Effects.Add(new 能量毁灭特效(this));
         }

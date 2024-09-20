@@ -6,11 +6,11 @@ namespace Milimoe.FunGame.Testing.Skills
 {
     public class META马 : Skill
     {
-        public override long Id => 4001;
+        public override long Id => (long)PassiveID.META马;
         public override string Name => "META马";
         public override string Description => Effects.Count > 0 ? Effects.First().Description : "";
 
-        public META马(Character character) : base(SkillType.Passive, character)
+        public META马(Character? character = null) : base(SkillType.Passive, character)
         {
             Effects.Add(new META马特效(this));
         }

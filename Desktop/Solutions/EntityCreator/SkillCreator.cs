@@ -9,7 +9,7 @@ namespace Milimoe.FunGame.Testing.Desktop.Solutions
 
         public void Load()
         {
-            EntityModuleConfig<Skill> config = new("redbud.fun.entitycreator", "skillcreator");
+            EntityModuleConfig<Skill> config = new("EntityCreator", "skill.creator");
             config.LoadConfig();
             LoadedSkills = new(config);
         }
@@ -26,12 +26,18 @@ namespace Milimoe.FunGame.Testing.Desktop.Solutions
 
         public void Save()
         {
-            EntityModuleConfig<Skill> config = new("redbud.fun.entitycreator", "skillcreator");
+            EntityModuleConfig<Skill> config = new("EntityCreator", "skill.creator");
             foreach (string key in LoadedSkills.Keys)
             {
                 config.Add(key, LoadedSkills[key]);
             }
             config.SaveConfig();
+        }
+
+        public void OpenCreator(Skill? skill = null)
+        {
+            CreateSkill creator = new(this, skill);
+            creator.ShowDialog();
         }
     }
 }

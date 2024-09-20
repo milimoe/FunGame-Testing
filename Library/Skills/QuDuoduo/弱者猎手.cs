@@ -6,11 +6,11 @@ namespace Milimoe.FunGame.Testing.Skills
 {
     public class 弱者猎手 : Skill
     {
-        public override long Id => 4012;
+        public override long Id => (long)PassiveID.弱者猎手;
         public override string Name => "弱者猎手";
         public override string Description => Effects.Count > 0 ? Effects.First().Description : "";
 
-        public 弱者猎手(Character character) : base(SkillType.Passive, character)
+        public 弱者猎手(Character? character = null) : base(SkillType.Passive, character)
         {
             Effects.Add(new 弱者猎手特效(this));
         }

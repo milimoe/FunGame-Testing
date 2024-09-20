@@ -6,11 +6,11 @@ namespace Milimoe.FunGame.Testing.Skills
 {
     public class 心灵之火 : Skill
     {
-        public override long Id => 4002;
+        public override long Id => (long)PassiveID.心灵之火;
         public override string Name => "心灵之火";
         public override string Description => Effects.Count > 0 ? Effects.First().Description : "";
 
-        public 心灵之火(Character character) : base(SkillType.Passive, character)
+        public 心灵之火(Character? character = null) : base(SkillType.Passive, character)
         {
             Effects.Add(new 心灵之火特效(this));
         }

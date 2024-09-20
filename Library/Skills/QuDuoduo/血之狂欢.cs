@@ -7,14 +7,14 @@ namespace Milimoe.FunGame.Testing.Skills
 {
     public class 血之狂欢 : Skill
     {
-        public override long Id => 4012;
+        public override long Id => (long)SuperSkillID.血之狂欢;
         public override string Name => "血之狂欢";
         public override string Description => Effects.Count > 0 ? Effects.First().Description : "";
         public override double EPCost => 100;
         public override double CD => 45;
         public override double HardnessTime { get; set; } = 7;
 
-        public 血之狂欢(Character character) : base(SkillType.SuperSkill, character)
+        public 血之狂欢(Character? character = null) : base(SkillType.SuperSkill, character)
         {
             Effects.Add(new 血之狂欢特效(this));
         }

@@ -24,4 +24,13 @@
     </Reference>
   </ItemGroup>
 
+  <ItemGroup>
+    <Compile Update="Solutions\EntityCreator\CreateItem.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Update="Solutions\EntityCreator\CreateSkill.cs">
+      <SubType>Form</SubType>
+    </Compile>
+  </ItemGroup>
+
 </Project>

@@ -5,14 +5,14 @@ namespace Milimoe.FunGame.Testing.Skills
 {
     public class 三重叠加 : Skill
     {
-        public override long Id => 3004;
+        public override long Id => (long)SuperSkillID.三重叠加;
         public override string Name => "三重叠加";
         public override string Description => Effects.Count > 0 ? Effects.First().Description : "";
         public override double EPCost => 100;
         public override double CD => 35 - 2 * (Level - 1);
         public override double HardnessTime { get; set; } = 10;
 
-        public 三重叠加(Character character) : base(SkillType.SuperSkill, character)
+        public 三重叠加(Character? character = null) : base(SkillType.SuperSkill, character)
         {
             Effects.Add(new 三重叠加特效(this));
         }

@@ -6,14 +6,14 @@ namespace Milimoe.FunGame.Testing.Skills
 {
     public class 精准打击 : Skill
     {
-        public override long Id => 3006;
+        public override long Id => (long)SuperSkillID.精准打击;
         public override string Name => "精准打击";
         public override string Description => Effects.Count > 0 ? Effects.First().Description : "";
         public override double EPCost => 100;
         public override double CD => 40 - 1 * (Level - 1);
         public override double HardnessTime { get; set; } = 8;
 
-        public 精准打击(Character character) : base(SkillType.SuperSkill, character)
+        public 精准打击(Character? character = null) : base(SkillType.SuperSkill, character)
         {
             Effects.Add(new 精准打击特效(this));
         }

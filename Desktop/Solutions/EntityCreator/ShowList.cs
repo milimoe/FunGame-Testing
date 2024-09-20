@@ -1,12 +1,13 @@
 ﻿namespace Milimoe.FunGame.Testing.Desktop.Solutions
 {
-    public partial class Showlist : Form
+    public partial class ShowList : Form
     {
         public string SelectItem { get; set; } = "";
 
-        public Showlist()
+        public ShowList()
         {
             InitializeComponent();
+            Text = "双击选择一项";
         }
 
         public void AddListItem(object[] items)

@@ -9,9 +9,13 @@ namespace Milimoe.FunGame.Testing.Desktop.Solutions
 
         public void Load()
         {
-            EntityModuleConfig<Character> config = new("redbud.fun.entitycreator", "charactercreator");
+            EntityModuleConfig<Character> config = new("EntityCreator", "character.creator");
             config.LoadConfig();
             LoadedCharacters = new(config);
+            foreach (Character c in LoadedCharacters.Values)
+            {
+                c.Recovery();
+            }
         }
 
         public bool Add(string name, Character character)
@@ -26,12 +30,18 @@ namespace Milimoe.FunGame.Testing.Desktop.Solutions
 
         public void Save()
         {
-            EntityModuleConfig<Character> config = new("redbud.fun.entitycreator", "charactercreator");
+            EntityModuleConfig<Character> config = new("EntityCreator", "character.creator");
             foreach (string key in LoadedCharacters.Keys)
             {
                 config.Add(key, LoadedCharacters[key]);
             }
             config.SaveConfig();
+        }
+
+        public void OpenCreator(Character? character = null)
+        {
+            CreateCharacter creator = new(this, character);
+            creator.ShowDialog();
         }
     }
 }

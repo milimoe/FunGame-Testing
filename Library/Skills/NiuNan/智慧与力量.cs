@@ -5,11 +5,11 @@ namespace Milimoe.FunGame.Testing.Skills
 {
     public class 智慧与力量 : Skill
     {
-        public override long Id => 4005;
+        public override long Id => (long)PassiveID.智慧与力量;
         public override string Name => "智慧与力量";
         public override string Description => Effects.Count > 0 ? Effects.First().Description : "";
 
-        public 智慧与力量(Character character) : base(SkillType.Passive, character)
+        public 智慧与力量(Character? character = null) : base(SkillType.Passive, character)
         {
             Effects.Add(new 智慧与力量特效(this));
         }

@@ -6,11 +6,11 @@ namespace Milimoe.FunGame.Testing.Skills
 {
     public class 毁灭之势 : Skill
     {
-        public override long Id => 4007;
+        public override long Id => (long)PassiveID.毁灭之势;
         public override string Name => "毁灭之势";
         public override string Description => Effects.Count > 0 ? Effects.First().Description : "";
 
-        public 毁灭之势(Character character) : base(SkillType.Passive, character)
+        public 毁灭之势(Character? character = null) : base(SkillType.Passive, character)
         {
             Effects.Add(new 毁灭之势特效(this));
         }

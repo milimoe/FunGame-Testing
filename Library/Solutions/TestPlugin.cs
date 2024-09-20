@@ -78,6 +78,8 @@ namespace Addons
 
             EntityModuleConfig<Item> config3 = new(ExampleGameModuleConstant.Example, ExampleGameModuleConstant.ExampleItem)
             {
+                { "攻击之爪10", new 攻击之爪10() },
+                { "攻击之爪30", new 攻击之爪30() },
                 { "攻击之爪50", new 攻击之爪50() }
             };
             config3.SaveConfig();

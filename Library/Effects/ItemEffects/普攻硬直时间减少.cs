@@ -8,11 +8,11 @@ namespace Milimoe.FunGame.Testing.Effects
     {
         public override long Id => Skill.Id;
         public override string Name => Skill.Name;
-        public override string Description => $"减少角色的普通攻击 {实际硬直时间减少} 硬直时间。" + (!TargetSelf ? $"来自：[ {Source} ] 的 [ {Item.Name} ]" : "");
+        public override string Description => $"减少角色的普通攻击 {实际硬直时间减少} 硬直时间。" + (!TargetSelf ? $"来自：[ {Source} ]" + (Item != null ? $" 的 [ {Item.Name} ]" : "") : "");
         public override EffectType EffectType => EffectType.Item;
         public override bool TargetSelf => true;
 
-        public Item Item { get; }
+        public Item? Item { get; }
         private readonly double 实际硬直时间减少 = 2;
 
         public override void OnEffectGained(Character character)
@@ -25,7 +25,7 @@ namespace Milimoe.FunGame.Testing.Effects
             character.NormalAttack.HardnessTime = Calculation.Round2Digits(character.NormalAttack.HardnessTime + 实际硬直时间减少); ;
         }
 
-        public 普攻硬直时间减少(Skill skill, Character? source, Item item, double reduce) : base(skill)
+        public 普攻硬直时间减少(Skill skill, Character? source, Item? item, double reduce) : base(skill)
         {
             ActionQueue = skill.ActionQueue;
             Source = source;

@@ -6,11 +6,11 @@ namespace Milimoe.FunGame.Testing.Skills
 {
     public class 敏捷之刃 : Skill
     {
-        public override long Id => 4011;
+        public override long Id => (long)PassiveID.敏捷之刃;
         public override string Name => "敏捷之刃";
         public override string Description => Effects.Count > 0 ? Effects.First().Description : "";
 
-        public 敏捷之刃(Character character) : base(SkillType.Passive, character)
+        public 敏捷之刃(Character? character = null) : base(SkillType.Passive, character)
         {
             Effects.Add(new 敏捷之刃特效(this));
         }

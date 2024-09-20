@@ -6,11 +6,11 @@ namespace Milimoe.FunGame.Testing.Skills
 {
     public class 玻璃大炮 : Skill
     {
-        public override long Id => 4009;
+        public override long Id => (long)PassiveID.玻璃大炮;
         public override string Name => "玻璃大炮";
         public override string Description => Effects.Count > 0 ? Effects.First().Description : "";
 
-        public 玻璃大炮(Character character) : base(SkillType.Passive, character)
+        public 玻璃大炮(Character? character = null) : base(SkillType.Passive, character)
         {
             Effects.Add(new 玻璃大炮特效(this));
         }

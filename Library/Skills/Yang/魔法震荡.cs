@@ -6,11 +6,11 @@ namespace Milimoe.FunGame.Testing.Skills
 {
     public class 魔法震荡 : Skill
     {
-        public override long Id => 4003;
+        public override long Id => (long)PassiveID.魔法震荡;
         public override string Name => "魔法震荡";
         public override string Description => Effects.Count > 0 ? Effects.First().Description : "";
 
-        public 魔法震荡(Character character) : base(SkillType.Passive, character)
+        public 魔法震荡(Character? character = null) : base(SkillType.Passive, character)
         {
             Effects.Add(new 魔法震荡特效(this));
         }

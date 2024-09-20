@@ -6,14 +6,14 @@ namespace Milimoe.FunGame.Testing.Skills
 {
     public class 疾风步 : Skill
     {
-        public override long Id => 2001;
+        public override long Id => (long)SkillID.疾风步;
         public override string Name => "疾风步";
         public override string Description => Effects.Count > 0 ? Effects.First().Description : "";
         public override double EPCost => 60;
         public override double CD => 35;
         public override double HardnessTime { get; set; } = 5;
 
-        public 疾风步(Character character) : base(SkillType.Skill, character)
+        public 疾风步(Character? character = null) : base(SkillType.Skill, character)
         {
             Effects.Add(new 疾风步特效(this));
         }

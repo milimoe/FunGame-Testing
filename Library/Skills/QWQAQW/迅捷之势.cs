@@ -6,14 +6,14 @@ namespace Milimoe.FunGame.Testing.Skills
 {
     public class 迅捷之势 : Skill
     {
-        public override long Id => 3009;
+        public override long Id => (long)SuperSkillID.迅捷之势;
         public override string Name => "迅捷之势";
         public override string Description => Effects.Count > 0 ? Effects.First().Description : "";
         public override double EPCost => 100;
         public override double CD => 60 - 2 * (Level - 1);
         public override double HardnessTime { get; set; } = 15;
 
-        public 迅捷之势(Character character) : base(SkillType.SuperSkill, character)
+        public 迅捷之势(Character? character = null) : base(SkillType.SuperSkill, character)
         {
             Effects.Add(new 迅捷之势特效(this));
         }

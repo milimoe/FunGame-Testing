@@ -6,14 +6,14 @@ namespace Milimoe.FunGame.Testing.Skills
 {
     public class 力量爆发 : Skill
     {
-        public override long Id => 3002;
+        public override long Id => (long)SuperSkillID.力量爆发;
         public override string Name => "力量爆发";
         public override string Description => Effects.Count > 0 ? Effects.First().Description : "";
         public override double EPCost => 100;
         public override double CD => 55;
         public override double HardnessTime { get; set; } = 0;
 
-        public 力量爆发(Character character) : base(SkillType.SuperSkill, character)
+        public 力量爆发(Character? character = null) : base(SkillType.SuperSkill, character)
         {
             Effects.Add(new 力量爆发特效(this));
         }

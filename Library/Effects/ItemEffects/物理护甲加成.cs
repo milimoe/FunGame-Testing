@@ -7,11 +7,11 @@ namespace Milimoe.FunGame.Testing.Effects
     {
         public override long Id => Skill.Id;
         public override string Name => Skill.Name;
-        public override string Description => $"增加角色 {实际物理护甲加成} 点物理护甲。" + (!TargetSelf ? $"来自：[ {Source} ] 的 [ {Item.Name} ]" : "");
+        public override string Description => $"增加角色 {实际物理护甲加成} 点物理护甲。" + (!TargetSelf ? $"来自：[ {Source} ]" + (Item != null ? $" 的 [ {Item.Name} ]" : "") : "");
         public override EffectType EffectType => EffectType.Item;
         public override bool TargetSelf => true;
 
-        public Item Item { get; }
+        public Item? Item { get; }
         private readonly double 实际物理护甲加成 = 0;
 
         public override void OnEffectGained(Character character)
@@ -24,7 +24,7 @@ namespace Milimoe.FunGame.Testing.Effects
             character.ExDEF2 -= 实际物理护甲加成;
         }
 
-        public 物理护甲加成(Skill skill, Character? source, Item item, double exDef) : base(skill)
+        public 物理护甲加成(Skill skill, Character? source, Item? item, double exDef) : base(skill)
         {
             ActionQueue = skill.ActionQueue;
             Source = source;

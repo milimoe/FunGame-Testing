@@ -6,11 +6,11 @@ namespace Milimoe.FunGame.Testing.Skills
 {
     public class 灵能反射 : Skill
     {
-        public override long Id => 4004;
+        public override long Id => (long)PassiveID.灵能反射;
         public override string Name => "灵能反射";
         public override string Description => Effects.Count > 0 ? Effects.First().Description : "";
 
-        public 灵能反射(Character character) : base(SkillType.Passive, character)
+        public 灵能反射(Character? character = null) : base(SkillType.Passive, character)
         {
             Effects.Add(new 灵能反射特效(this));
         }

@@ -6,14 +6,14 @@ namespace Milimoe.FunGame.Testing.Skills
 {
     public class 天赐之力 : Skill
     {
-        public override long Id => 3001;
+        public override long Id => (long)SuperSkillID.天赐之力;
         public override string Name => "天赐之力";
         public override string Description => Effects.Count > 0 ? Effects.First().Description : "";
         public override double EPCost => 100;
         public override double CD => 60;
         public override double HardnessTime { get; set; } = 15;
 
-        public 天赐之力(Character character) : base(SkillType.SuperSkill, character)
+        public 天赐之力(Character? character = null) : base(SkillType.SuperSkill, character)
         {
             Effects.Add(new 天赐之力特效(this));
         }

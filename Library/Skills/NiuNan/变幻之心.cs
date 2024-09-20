@@ -6,14 +6,14 @@ namespace Milimoe.FunGame.Testing.Skills
 {
     public class 变幻之心 : Skill
     {
-        public override long Id => 3005;
+        public override long Id => (long)SuperSkillID.变幻之心;
         public override string Name => "变幻之心";
         public override string Description => Effects.Count > 0 ? Effects.First().Description : "";
         public override double EPCost => 100;
         public override double CD => 30;
         public override double HardnessTime { get; set; } = 10;
 
-        public 变幻之心(Character character) : base(SkillType.SuperSkill, character)
+        public 变幻之心(Character? character = null) : base(SkillType.SuperSkill, character)
         {
             Effects.Add(new 变幻之心特效(this));
         }

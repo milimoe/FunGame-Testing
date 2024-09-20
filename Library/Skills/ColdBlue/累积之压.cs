@@ -7,11 +7,11 @@ namespace Milimoe.FunGame.Testing.Skills
 {
     public class 累积之压 : Skill
     {
-        public override long Id => 4010;
+        public override long Id => (long)PassiveID.累积之压;
         public override string Name => "累积之压";
         public override string Description => Effects.Count > 0 ? Effects.First().Description : "";
 
-        public 累积之压(Character character) : base(SkillType.Passive, character)
+        public 累积之压(Character? character = null) : base(SkillType.Passive, character)
         {
             Effects.Add(new 累积之压特效(this));
         }

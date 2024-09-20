@@ -5,11 +5,11 @@ namespace Milimoe.FunGame.Testing.Skills
 {
     public class 致命打击 : Skill
     {
-        public override long Id => 4006;
+        public override long Id => (long)PassiveID.致命打击;
         public override string Name => "致命打击";
         public override string Description => Effects.Count > 0 ? Effects.First().Description : "";
 
-        public 致命打击(Character character) : base(SkillType.Passive, character)
+        public 致命打击(Character? character = null) : base(SkillType.Passive, character)
         {
             Effects.Add(new 致命打击特效(this));
         }

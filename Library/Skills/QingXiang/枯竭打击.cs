@@ -6,11 +6,11 @@ namespace Milimoe.FunGame.Testing.Skills
 {
     public class 枯竭打击 : Skill
     {
-        public override long Id => 4008;
+        public override long Id => (long)PassiveID.枯竭打击;
         public override string Name => "枯竭打击";
         public override string Description => Effects.Count > 0 ? Effects.First().Description : "";
 
-        public 枯竭打击(Character character) : base(SkillType.Passive, character)
+        public 枯竭打击(Character? character = null) : base(SkillType.Passive, character)
         {
             Effects.Add(new 枯竭打击特效(this));
         }

@@ -422,10 +422,10 @@ namespace Milimoe.FunGame.Testing.Tests
             Item[] 这次发放的空投;
             if (totalTime == 0)
             {
-                WriteLine("社区送温暖了，现在向所有人发放 [ 攻击之爪 +50 ]！！");
+                WriteLine("社区送温暖了，现在向所有人发放 [ 攻击之爪 +10 ]！！");
                 foreach (Character character in queue.Queue)
                 {
-                    这次发放的空投 = [new 攻击之爪50()];
+                    这次发放的空投 = [new 攻击之爪10()];
                     foreach (Item item in 这次发放的空投)
                     {
                         queue.Equip(character, EquipItemToSlot.Accessory1, item);

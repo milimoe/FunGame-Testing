@@ -6,7 +6,7 @@ namespace Milimoe.FunGame.Testing.Skills
 {
     public class 冰霜攻击 : Skill
     {
-        public override long Id => 2001;
+        public override long Id => (long)MagicID.冰霜攻击;
         public override string Name => "冰霜攻击";
         public override string Description => Effects.Count > 0 ? Effects.First().Description : "";
         public override double MPCost => 30 + (50 * (Level - 1));
@@ -14,7 +14,7 @@ namespace Milimoe.FunGame.Testing.Skills
         public override double CastTime => 6;
         public override double HardnessTime { get; set; } = 3;
 
-        public 冰霜攻击(Character character) : base(SkillType.Magic, character)
+        public 冰霜攻击(Character? character = null) : base(SkillType.Magic, character)
         {
             Effects.Add(new 冰霜攻击特效(this));
         }

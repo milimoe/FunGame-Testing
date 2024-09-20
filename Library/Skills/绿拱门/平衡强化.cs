@@ -5,14 +5,14 @@ namespace Milimoe.FunGame.Testing.Skills
 {
     public class 平衡强化 : Skill
     {
-        public override long Id => 4011;
+        public override long Id => (long)SuperSkillID.平衡强化;
         public override string Name => "平衡强化";
         public override string Description => Effects.Count > 0 ? Effects.First().Description : "";
         public override double EPCost => 100;
         public override double CD => 55 - (1 * (Level - 1));
         public override double HardnessTime { get; set; } = 12;
 
-        public 平衡强化(Character character) : base(SkillType.SuperSkill, character)
+        public 平衡强化(Character? character = null) : base(SkillType.SuperSkill, character)
         {
             Effects.Add(new 平衡强化特效(this));
         }

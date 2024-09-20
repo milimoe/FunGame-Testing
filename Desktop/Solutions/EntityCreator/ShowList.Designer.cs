@@ -1,6 +1,6 @@
 ﻿namespace Milimoe.FunGame.Testing.Desktop.Solutions
 {
-    partial class ShowDetail
+    partial class ShowList
     {
         /// <summary>
         /// Required designer variable.
@@ -28,32 +28,34 @@
         /// </summary>
         private void InitializeComponent()
         {
-            richTextBox1 = new RichTextBox();
+            选择表 = new ListBox();
             SuspendLayout();
             // 
-            // richTextBox1
+            // 选择表
             // 
-            richTextBox1.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
-            richTextBox1.Location = new Point(12, 12);
-            richTextBox1.Name = "richTextBox1";
-            richTextBox1.ReadOnly = true;
-            richTextBox1.Size = new Size(622, 453);
-            richTextBox1.TabIndex = 0;
-            richTextBox1.Text = "";
+            选择表.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
+            选择表.FormattingEnabled = true;
+            选择表.ItemHeight = 17;
+            选择表.Location = new Point(12, 12);
+            选择表.Name = "选择表";
+            选择表.Size = new Size(484, 429);
+            选择表.TabIndex = 0;
+            选择表.MouseDoubleClick += 选择表_MouseDoubleClick;
             // 
-            // ShowDetail
+            // Showlist
             // 
             AutoScaleDimensions = new SizeF(7F, 17F);
             AutoScaleMode = AutoScaleMode.Font;
-            ClientSize = new Size(646, 477);
-            Controls.Add(richTextBox1);
-            Name = "ShowDetail";
-            Text = "ShowDetail";
+            ClientSize = new Size(508, 450);
+            Controls.Add(选择表);
+            Name = "ShowList";
+            Text = "ShowList";
+            StartPosition = FormStartPosition.CenterScreen;
             ResumeLayout(false);
         }
 
         #endregion
 
-        private RichTextBox richTextBox1;
+        private ListBox 选择表;
     }
 }
