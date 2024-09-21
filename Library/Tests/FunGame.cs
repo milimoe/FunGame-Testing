@@ -406,7 +406,10 @@ namespace Milimoe.FunGame.Testing.Tests
                             totalStats.Kills += stats.Kills;
                             totalStats.Deaths += stats.Deaths;
                             totalStats.Assists += stats.Assists;
+                            totalStats.LastRank = stats.LastRank;
+                            double totalRank = totalStats.AvgRank * totalStats.Plays + totalStats.LastRank;
                             totalStats.Plays += stats.Plays;
+                            if (totalStats.Plays != 0) totalStats.AvgRank = Calculation.Round2Digits(totalRank / totalStats.Plays);
                             totalStats.Wins += stats.Wins;
                             totalStats.Top3s += stats.Top3s;
                             totalStats.Loses += stats.Loses;
