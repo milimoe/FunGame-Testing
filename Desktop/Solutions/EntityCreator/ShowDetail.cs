@@ -87,13 +87,18 @@ namespace Milimoe.FunGame.Testing.Desktop.Solutions
                     Item? i = ItemManager.LoadedItems.Where(kv => EntityEditor.GetItemDisplayName(ItemManager, kv.Key) == selected).Select(kv => kv.Value).FirstOrDefault();
                     if (c != null && i != null)
                     {
-                        Item? i2 = EntityEditor.从模组加载器中获取物品(i.Id, i.Name, i.ItemType);
-                        if (i2 != null)
+                        if (i.Equipable)
                         {
-                            i.SetPropertyToItemModuleNew(i2);
-                            i = i2;
+                            Item? i2 = EntityEditor.从模组加载器中获取物品(i.Id, i.Name, i.ItemType);
+                            if (i2 != null)
+                            {
+                                i.SetPropertyToItemModuleNew(i2);
+                                i = i2;
+                            }
+                            if (i.Equipable) c.Equip(i);
+                            else c.Items.Add(i);
                         }
-                        c.Equip(i);
+                        else c.Items.Add(i);
                         详细内容.Text = c.GetInfo();
                     }
                 }
@@ -144,7 +149,7 @@ namespace Milimoe.FunGame.Testing.Desktop.Solutions
             {
                 if (c != null)
                 {
-                    if (c.Items.Count != 0)
+                    if (c.Items.Count != 0 || c.EquipSlot.Any())
                     {
                         ShowList l = new();
                         l.AddListItem(c.Items.OrderBy(i => i.Id).Select(i => i.GetIdName()).ToArray());
@@ -153,7 +158,8 @@ namespace Milimoe.FunGame.Testing.Desktop.Solutions
                         Item? i = c.Items.Where(i => i.GetIdName() == selected).FirstOrDefault();
                         if (i != null)
                         {
-                            c.UnEquip(c.EquipSlot.GetEquipItemToSlot(i));
+                            if (i.Equipable) c.UnEquip(c.EquipSlot.GetEquipItemToSlot(i));
+                            else c.Items.Remove(i);
                             详细内容.Text = c.GetInfo();
                         }
                     }

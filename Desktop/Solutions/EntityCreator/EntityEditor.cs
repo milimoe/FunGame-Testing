@@ -21,6 +21,101 @@ namespace Milimoe.FunGame.Testing.Desktop.Solutions
             CharacterManager.Load();
             SkillManager.Load();
             ItemManager.Load();
+            foreach (Character character in CharacterManager.LoadedCharacters.Values)
+            {
+                Skill[] skills = [.. character.Skills];
+                for (int i = 0; i < skills.Length; i++)
+                {
+                    Skill skill = skills[i];
+                    character.Skills.Remove(skill);
+                    Skill? s = 从模组加载器中获取技能(skill.Id, skill.Name, skill.SkillType);
+                    if (s != null)
+                    {
+                        skill = s.Copy();
+                        skill.Character = character;
+                    }
+                    character.Skills.Add(skill);
+                }
+                if (character.EquipSlot.MagicCardPack != null)
+                {
+                    Item item = character.EquipSlot.MagicCardPack;
+                    Item? i = 从模组加载器中获取物品(item.Id, item.Name, item.ItemType);
+                    if (i != null)
+                    {
+                        item.SetPropertyToItemModuleNew(i);
+                        item = i.Copy();
+                        character.Equip(item);
+                    }
+                }
+                if (character.EquipSlot.Weapon != null)
+                {
+                    Item item = character.EquipSlot.Weapon;
+                    Item? i = 从模组加载器中获取物品(item.Id, item.Name, item.ItemType);
+                    if (i != null)
+                    {
+                        item.SetPropertyToItemModuleNew(i);
+                        item = i.Copy();
+                        character.Equip(item);
+                    }
+                }
+                if (character.EquipSlot.Armor != null)
+                {
+                    Item item = character.EquipSlot.Armor;
+                    Item? i = 从模组加载器中获取物品(item.Id, item.Name, item.ItemType);
+                    if (i != null)
+                    {
+                        item.SetPropertyToItemModuleNew(i);
+                        item = i.Copy();
+                        character.Equip(item);
+                    }
+                }
+                if (character.EquipSlot.Shoes != null)
+                {
+                    Item item = character.EquipSlot.Shoes;
+                    Item? i = 从模组加载器中获取物品(item.Id, item.Name, item.ItemType);
+                    if (i != null)
+                    {
+                        item.SetPropertyToItemModuleNew(i);
+                        item = i.Copy();
+                        character.Equip(item);
+                    }
+                }
+                if (character.EquipSlot.Accessory1 != null)
+                {
+                    Item item = character.EquipSlot.Accessory1;
+                    Item? i = 从模组加载器中获取物品(item.Id, item.Name, item.ItemType);
+                    if (i != null)
+                    {
+                        item.SetPropertyToItemModuleNew(i);
+                        item = i.Copy();
+                        character.Equip(item);
+                    }
+                }
+                if (character.EquipSlot.Accessory2 != null)
+                {
+                    Item item = character.EquipSlot.Accessory2;
+                    Item? i = 从模组加载器中获取物品(item.Id, item.Name, item.ItemType);
+                    if (i != null)
+                    {
+                        item.SetPropertyToItemModuleNew(i);
+                        item = i.Copy();
+                        character.Equip(item);
+                    }
+                }
+                Item[] items = [.. character.Items];
+                for (int j = 0; j < items.Length; j++)
+                {
+                    Item item = items[j];
+                    character.Items.Remove(item);
+                    Item? i = 从模组加载器中获取物品(item.Id, item.Name, item.ItemType);
+                    if (i != null)
+                    {
+                        item.SetPropertyToItemModuleNew(i);
+                        item = i.Copy();
+                        item.Character = character;
+                    }
+                }
+            }
             查看现有技能方法();
             查看现有物品方法();
             查看现有角色方法();
@@ -223,13 +318,18 @@ namespace Milimoe.FunGame.Testing.Desktop.Solutions
                 Item? i = ItemManager.LoadedItems.Where(kv => GetItemDisplayName(ItemManager, kv.Key) == selected).Select(kv => kv.Value).FirstOrDefault();
                 if (c != null && i != null)
                 {
-                    Item? i2 = 从模组加载器中获取物品(i.Id, i.Name, i.ItemType);
-                    if (i2 != null)
+                    if (i.Equipable)
                     {
-                        i.SetPropertyToItemModuleNew(i2);
-                        i = i2;
+                        Item? i2 = 从模组加载器中获取物品(i.Id, i.Name, i.ItemType);
+                        if (i2 != null)
+                        {
+                            i.SetPropertyToItemModuleNew(i2);
+                            i = i2;
+                        }
+                        if (i.Equipable) c.Equip(i);
+                        else c.Items.Add(i);
                     }
-                    c.Equip(i);
+                    else c.Items.Add(i);
                 }
             }
             else
@@ -264,7 +364,7 @@ namespace Milimoe.FunGame.Testing.Desktop.Solutions
             Character? c = CharacterManager.LoadedCharacters.Values.Where(c => c.ToString() == 实际列表.Items[实际列表.SelectedIndex].ToString()).FirstOrDefault();
             if (c != null)
             {
-                if (c.Items.Count != 0)
+                if (c.Items.Count != 0 || c.EquipSlot.Any())
                 {
                     ShowList l = new();
                     l.AddListItem(c.Items.Select(s => s.GetIdName()).ToArray());
@@ -273,7 +373,8 @@ namespace Milimoe.FunGame.Testing.Desktop.Solutions
                     Item? i = c.Items.Where(i => i.GetIdName() == selected).FirstOrDefault();
                     if (i != null)
                     {
-                        c.UnEquip(c.EquipSlot.GetEquipItemToSlot(i));
+                        if (i.Equipable) c.UnEquip(c.EquipSlot.GetEquipItemToSlot(i));
+                        else c.Items.Remove(i);
                     }
                 }
                 else
@@ -413,16 +514,6 @@ namespace Milimoe.FunGame.Testing.Desktop.Solutions
                 return $"[ {name} ] {item.GetIdName()}";
             }
             return "";
-        }
-
-        private static ItemType SelectItemType()
-        {
-            ShowList l = new();
-            l.AddListItem([ItemType.MagicCardPack, ItemType.Weapon, ItemType.Armor, ItemType.Shoes, ItemType.Accessory,
-                ItemType.Consumable, ItemType.MagicCard, ItemType.Collectible, ItemType.SpecialItem, ItemType.QuestItem, ItemType.GiftBox, ItemType.Others]);
-            l.Text = "选择一个物品类型";
-            l.ShowDialog();
-            return Enum.TryParse(l.SelectItem, out ItemType type) ? type : ItemType.Others;
         }
 
         private static GameModuleLoader LoadModules()
