@@ -11,12 +11,14 @@ namespace Milimoe.FunGame.Testing.Desktop.Solutions
         private CharacterManager CharacterManager { get; } = new();
         private SkillManager SkillManager { get; } = new();
         private ItemManager ItemManager { get; } = new();
+        private SetConfigName ConfigSettings { get; }
         private bool CheckSelectedIndex => 实际列表.SelectedIndex != -1 && 实际列表.SelectedIndex < 实际列表.Items.Count;
         private int nowClick = 0;
 
         public EntityEditor()
         {
             InitializeComponent();
+            ConfigSettings = new(CharacterManager, SkillManager, ItemManager);
             GameModuleLoader = LoadModules();
             CharacterManager.Load();
             SkillManager.Load();
@@ -525,6 +527,11 @@ namespace Milimoe.FunGame.Testing.Desktop.Solutions
             }
 
             return GameModuleLoader.LoadGameModules(FunGameInfo.FunGame.FunGame_Desktop, []);
+        }
+
+        private void 模组名称设置_Click(object sender, EventArgs e)
+        {
+            ConfigSettings.Show();
         }
     }
 }

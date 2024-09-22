@@ -5,11 +5,13 @@ namespace Milimoe.FunGame.Testing.Desktop.Solutions
 {
     public class ItemManager
     {
+        public string ModuleName { get; set; } = "EntityEditor";
+        public string ConfigName { get; set; } = "items";
         public Dictionary<string, Item> LoadedItems { get; set; } = [];
 
         public void Load()
         {
-            EntityModuleConfig<Item> config = new("EntityEditor", "items");
+            EntityModuleConfig<Item> config = new(ModuleName, ConfigName);
             config.LoadConfig();
             LoadedItems = new(config);
         }
@@ -26,7 +28,7 @@ namespace Milimoe.FunGame.Testing.Desktop.Solutions
 
         public void Save()
         {
-            EntityModuleConfig<Item> config = new("EntityEditor", "items");
+            EntityModuleConfig<Item> config = new(ModuleName, ConfigName);
             foreach (string key in LoadedItems.Keys)
             {
                 config.Add(key, LoadedItems[key]);

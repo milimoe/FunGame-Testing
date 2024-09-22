@@ -25,6 +25,9 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Compile Update="Solutions\EntityCreator\SetConfigName.cs">
+      <SubType>Form</SubType>
+    </Compile>
     <Compile Update="Solutions\EntityEditor\ItemCreator.cs">
       <SubType>Form</SubType>
     </Compile>

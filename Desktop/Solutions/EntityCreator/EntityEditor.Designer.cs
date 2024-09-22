@@ -48,6 +48,7 @@
             重新读取全部 = new Button();
             删除角色物品 = new Button();
             删除角色技能 = new Button();
+            模组名称设置 = new Button();
             列表.SuspendLayout();
             SuspendLayout();
             // 
@@ -275,11 +276,24 @@
             删除角色技能.UseVisualStyleBackColor = true;
             删除角色技能.Click += 删除角色技能_Click;
             // 
+            // 设置配置名称
+            // 
+            模组名称设置.Anchor = AnchorStyles.Bottom | AnchorStyles.Right;
+            模组名称设置.Font = new Font("Microsoft YaHei UI", 8F);
+            模组名称设置.Location = new Point(460, 185);
+            模组名称设置.Name = "模组名称设置";
+            模组名称设置.Size = new Size(98, 35);
+            模组名称设置.TabIndex = 18;
+            模组名称设置.Text = "模组名称设置";
+            模组名称设置.UseVisualStyleBackColor = true;
+            模组名称设置.Click += 模组名称设置_Click;
+            // 
             // EntityEditor
             // 
             AutoScaleDimensions = new SizeF(7F, 17F);
             AutoScaleMode = AutoScaleMode.Font;
             ClientSize = new Size(674, 437);
+            Controls.Add(模组名称设置);
             Controls.Add(删除角色物品);
             Controls.Add(删除角色技能);
             Controls.Add(重新读取全部);
@@ -330,5 +344,6 @@
         private Button 重新读取全部;
         private Button 删除角色物品;
         private Button 删除角色技能;
+        private Button 模组名称设置;
     }
 }

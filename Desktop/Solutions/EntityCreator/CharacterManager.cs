@@ -5,11 +5,13 @@ namespace Milimoe.FunGame.Testing.Desktop.Solutions
 {
     public class CharacterManager
     {
+        public string ModuleName { get; set; } = "EntityEditor";
+        public string ConfigName { get; set; } = "characters";
         public Dictionary<string, Character> LoadedCharacters { get; set; } = [];
 
         public void Load()
         {
-            EntityModuleConfig<Character> config = new("EntityEditor", "characters");
+            EntityModuleConfig<Character> config = new(ModuleName, ConfigName);
             config.LoadConfig();
             LoadedCharacters = new(config);
             foreach (Character c in LoadedCharacters.Values)
@@ -30,7 +32,7 @@ namespace Milimoe.FunGame.Testing.Desktop.Solutions
 
         public void Save()
         {
-            EntityModuleConfig<Character> config = new("EntityEditor", "characters");
+            EntityModuleConfig<Character> config = new(ModuleName, ConfigName);
             foreach (string key in LoadedCharacters.Keys)
             {
                 config.Add(key, LoadedCharacters[key]);

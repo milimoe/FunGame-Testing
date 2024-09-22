@@ -5,11 +5,13 @@ namespace Milimoe.FunGame.Testing.Desktop.Solutions
 {
     public class SkillManager
     {
+        public string ModuleName { get; set; } = "EntityEditor";
+        public string ConfigName { get; set; } = "skills";
         public Dictionary<string, Skill> LoadedSkills { get; set; } = [];
 
         public void Load()
         {
-            EntityModuleConfig<Skill> config = new("EntityEditor", "skills");
+            EntityModuleConfig<Skill> config = new(ModuleName, ConfigName);
             config.LoadConfig();
             LoadedSkills = new(config);
         }
@@ -26,7 +28,7 @@ namespace Milimoe.FunGame.Testing.Desktop.Solutions
 
         public void Save()
         {
-            EntityModuleConfig<Skill> config = new("EntityEditor", "skills");
+            EntityModuleConfig<Skill> config = new(ModuleName, ConfigName);
             foreach (string key in LoadedSkills.Keys)
             {
                 config.Add(key, LoadedSkills[key]);
