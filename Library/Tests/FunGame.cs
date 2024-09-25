@@ -10,6 +10,23 @@ namespace Milimoe.FunGame.Testing.Tests
 {
     public class FunGameSimulation
     {
+        public FunGameSimulation()
+        {
+            LoadModules();
+
+            bool printout = true;
+            List<string> strs = StartGame(printout);
+            if (printout == false)
+            {
+                foreach (string str in strs)
+                {
+                    Console.WriteLine(str);
+                }
+            }
+
+            Console.ReadKey();
+        }
+
         public static List<Character> Characters { get; } = [];
         public static Dictionary<Character, CharacterStatistics> CharacterStatistics { get; } = [];
         public static PluginConfig StatsConfig { get; } = new(nameof(FunGameSimulation), nameof(CharacterStatistics));
