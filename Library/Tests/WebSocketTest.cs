@@ -1,5 +1,4 @@
-﻿using System.Collections;
-using Milimoe.FunGame.Core.Api.Utility;
+﻿using Milimoe.FunGame.Core.Api.Utility;
 using Milimoe.FunGame.Core.Library.Common.Network;
 
 namespace Milimoe.FunGame.Testing.Tests
@@ -8,23 +7,36 @@ namespace Milimoe.FunGame.Testing.Tests
     {
         public WebSocketTest()
         {
+            bool quit = false;
+            HTTPClient? client = null;
             TaskUtility.NewTask(async () =>
             {
-                HTTPClient client = await HTTPClient.Connect("localhost", 22223, false, "ws");
-                ArrayList list = [];
-                list.Add(new string[] { "oshima.fungame.fastauto" });
-                list.Add(false);
-                Console.WriteLine(NetworkUtility.JsonSerialize(new SocketObject(Core.Library.Constant.SocketMessageType.Connect, Guid.NewGuid(), list)));
-                await client.Send(Core.Library.Constant.SocketMessageType.Connect, list);
-                while (true)
+                string[] strings = ["oshima.fungame.fastauto"];
+                client = await HTTPClient.Connect("localhost", 5000, false, "ws", strings, false);
+                if (client.Connected)
                 {
-                    await Task.Delay(1000);
-                    await client.Send(Core.Library.Constant.SocketMessageType.HeartBeat);
+                    client.AddSocketObjectHandler(obj =>
+                    {
+                        Console.WriteLine(NetworkUtility.JsonSerialize(obj));
+                        if (obj.SocketType == Core.Library.Constant.SocketMessageType.Connect)
+                        {
+                            client.Token = obj.GetParam<Guid>(2);
+                        }
+                        if (obj.SocketType == Core.Library.Constant.SocketMessageType.Disconnect)
+                        {
+                            quit = true;
+                            client.Close();
+                        }
+                    });
                 }
             }).OnError(Console.WriteLine);
-            while (true)
+            while (!quit)
             {
                 string str = Console.ReadLine() ?? "";
+                if (str == "quit")
+                {
+                    client?.Send(Core.Library.Constant.SocketMessageType.Disconnect);
+                }
             }
         }
     }
