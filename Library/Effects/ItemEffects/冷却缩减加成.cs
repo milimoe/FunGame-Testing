@@ -26,7 +26,7 @@ namespace Milimoe.FunGame.Testing.Effects
 
         public 冷却缩减加成(Skill skill, Character? source, Item? item, double exCdr) : base(skill)
         {
-            ActionQueue = skill.ActionQueue;
+            GamingQueue = skill.GamingQueue;
             Source = source;
             Item = item;
             实际冷却缩减加成 = exCdr;

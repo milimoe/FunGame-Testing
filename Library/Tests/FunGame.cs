@@ -1,9 +1,10 @@
 ﻿using System.Text;
-using Milimoe.FunGame.Testing.Items;
 using Milimoe.FunGame.Core.Api.Utility;
 using Milimoe.FunGame.Core.Entity;
 using Milimoe.FunGame.Core.Library.Common.Addon;
 using Milimoe.FunGame.Core.Library.Constant;
+using Milimoe.FunGame.Core.Model;
+using Milimoe.FunGame.Testing.Items;
 using Milimoe.FunGame.Testing.Skills;
 
 namespace Milimoe.FunGame.Testing.Tests
@@ -293,11 +294,11 @@ namespace Milimoe.FunGame.Testing.Tests
                     if (PrintOut) characters.ForEach(c => Console.WriteLine(c.GetInfo()));
 
                     // 创建顺序表并排序
-                    ActionQueue actionQueue = new(characters, WriteLine);
+                    ActionQueue ActionQueue = new(characters, WriteLine);
                     if (PrintOut) Console.WriteLine();
 
                     // 显示初始顺序表
-                    actionQueue.DisplayQueue();
+                    ActionQueue.DisplayQueue();
                     if (PrintOut) Console.WriteLine();
 
                     // 总游戏时长
@@ -305,7 +306,7 @@ namespace Milimoe.FunGame.Testing.Tests
 
                     // 开始空投
                     Msg = "";
-                    空投(actionQueue, totalTime);
+                    空投(ActionQueue, totalTime);
                     if (isWeb) result.Add("=== 空投 ===\r\n" + Msg);
 
                     // 总回合数
@@ -327,15 +328,15 @@ namespace Milimoe.FunGame.Testing.Tests
                             foreach (Character c in characters.Where(c => c != winner && c.HP > 0))
                             {
                                 WriteLine("[ " + winner + " ] 对 [ " + c + " ] 造成了 99999999999 点真实伤害。");
-                                actionQueue.DeathCalculation(winner, c);
+                                ActionQueue.DeathCalculation(winner, c);
                             }
-                            actionQueue.EndGameInfo(winner);
+                            ActionQueue.EndGameInfo(winner);
                             result.Add(Msg);
                             break;
                         }
 
                         // 检查是否有角色可以行动
-                        Character? characterToAct = actionQueue.NextCharacter();
+                        Character? characterToAct = ActionQueue.NextCharacter();
 
                         // 处理回合
                         if (characterToAct != null)
@@ -343,23 +344,23 @@ namespace Milimoe.FunGame.Testing.Tests
                             WriteLine($"=== Round {i++} ===");
                             WriteLine("现在是 [ " + characterToAct + " ] 的回合！");
 
-                            bool isGameEnd = actionQueue.ProcessTurn(characterToAct);
+                            bool isGameEnd = ActionQueue.ProcessTurn(characterToAct);
                             if (isGameEnd)
                             {
                                 result.Add(Msg);
                                 break;
                             }
 
-                            actionQueue.DisplayQueue();
+                            ActionQueue.DisplayQueue();
                             WriteLine("");
                         }
 
                         // 模拟时间流逝
-                        totalTime += actionQueue.TimeLapse();
+                        totalTime += ActionQueue.TimeLapse();
 
-                        if (actionQueue.Eliminated.Count > deaths)
+                        if (ActionQueue.Eliminated.Count > deaths)
                         {
-                            deaths = actionQueue.Eliminated.Count;
+                            deaths = ActionQueue.Eliminated.Count;
                             if (!isWeb)
                             {
                                 string roundMsg = Msg;
@@ -386,10 +387,10 @@ namespace Milimoe.FunGame.Testing.Tests
                     int top = isWeb ? 12 : 6;
                     Msg = $"=== 伤害排行榜 TOP{top} ===\r\n";
                     int count = 1;
-                    foreach (Character character in actionQueue.CharacterStatistics.OrderByDescending(d => d.Value.TotalDamage).Select(d => d.Key))
+                    foreach (Character character in ActionQueue.CharacterStatistics.OrderByDescending(d => d.Value.TotalDamage).Select(d => d.Key))
                     {
                         StringBuilder builder = new();
-                        CharacterStatistics stats = actionQueue.CharacterStatistics[character];
+                        CharacterStatistics stats = ActionQueue.CharacterStatistics[character];
                         builder.AppendLine($"{count}. [ {character.ToStringWithLevel()} ] （{stats.Kills} / {stats.Assists}）");
                         builder.AppendLine($"存活时长：{stats.LiveTime} / 存活回合数：{stats.LiveRound} / 行动回合数：{stats.ActionTurn}");
                         builder.AppendLine($"总计伤害：{stats.TotalDamage} / 总计物理伤害：{stats.TotalPhysicalDamage} / 总计魔法伤害：{stats.TotalMagicDamage}");
@@ -457,9 +458,9 @@ namespace Milimoe.FunGame.Testing.Tests
                     // 显示每个角色的信息
                     if (isWeb)
                     {
-                        for (i = actionQueue.Eliminated.Count - 1; i >= 0; i--)
+                        for (i = ActionQueue.Eliminated.Count - 1; i >= 0; i--)
                         {
-                            Character character = actionQueue.Eliminated[i];
+                            Character character = ActionQueue.Eliminated[i];
                             result.Add($"=== 角色 [ {character} ] ===\r\n{character.GetInfo()}");
                         }
                     }

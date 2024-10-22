@@ -20,7 +20,7 @@ namespace Addons
 
         public override string Author => "FunGamer";
 
-        protected override bool BeforeLoad()
+        protected override bool BeforeLoad(params object[] objs)
         {
             EntityModuleConfig<Character> config = new(ExampleGameModuleConstant.Example, ExampleGameModuleConstant.ExampleCharacter)
             {
