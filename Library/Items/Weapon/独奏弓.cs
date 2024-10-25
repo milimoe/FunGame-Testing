@@ -1,6 +1,6 @@
-﻿using Milimoe.FunGame.Testing.Effects;
-using Milimoe.FunGame.Core.Entity;
+﻿using Milimoe.FunGame.Core.Entity;
 using Milimoe.FunGame.Core.Library.Constant;
+using Milimoe.FunGame.Testing.ItemEffects;
 
 namespace FunGame.Testing.Items
 {
@@ -22,7 +22,6 @@ namespace FunGame.Testing.Items
         public override long Id => 5002;
         public override string Name => "独奏弓";
         public override string Description => $"增加角色 {攻击力加成} 点攻击力，减少普通攻击 {硬直时间减少} 硬直时间。";
-        public Item Item { get; }
 
         private readonly double 攻击力加成 = 80;
         private readonly double 硬直时间减少 = 2;
@@ -31,8 +30,8 @@ namespace FunGame.Testing.Items
         {
             Level = 1;
             Item = item;
-            Effects.Add(new 攻击力加成(this, character, item, 攻击力加成));
-            Effects.Add(new 普攻硬直时间减少(this, character, item, 硬直时间减少));
+            Effects.Add(new 攻击力加成(this, 攻击力加成, character, item));
+            Effects.Add(new 普攻硬直时间减少(this, 硬直时间减少, character, item));
         }
 
         public override IEnumerable<Effect> AddInactiveEffectToCharacter()

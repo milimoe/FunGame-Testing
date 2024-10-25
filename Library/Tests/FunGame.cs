@@ -1,11 +1,11 @@
 ﻿using System.Text;
 using Milimoe.FunGame.Core.Api.Utility;
 using Milimoe.FunGame.Core.Entity;
-using Milimoe.FunGame.Core.Library.Common.Addon;
-using Milimoe.FunGame.Core.Library.Constant;
 using Milimoe.FunGame.Core.Model;
-using Milimoe.FunGame.Testing.Items;
 using Milimoe.FunGame.Testing.Skills;
+using Milimoe.FunGame.Testing.Items;
+using MilimoeFunGame.Testing.Characters;
+using Milimoe.FunGame.Core.Interface.Entity;
 
 namespace Milimoe.FunGame.Testing.Tests
 {
@@ -13,7 +13,7 @@ namespace Milimoe.FunGame.Testing.Tests
     {
         public FunGameSimulation()
         {
-            LoadModules();
+            InitCharacter();
 
             bool printout = true;
             List<string> strs = StartGame(printout);
@@ -29,6 +29,7 @@ namespace Milimoe.FunGame.Testing.Tests
         }
 
         public static List<Character> Characters { get; } = [];
+        public static List<Item> Items { get; } = [];
         public static Dictionary<Character, CharacterStatistics> CharacterStatistics { get; } = [];
         public static PluginConfig StatsConfig { get; } = new(nameof(FunGameSimulation), nameof(CharacterStatistics));
         public static bool IsRuning { get; set; } = false;
@@ -294,11 +295,11 @@ namespace Milimoe.FunGame.Testing.Tests
                     if (PrintOut) characters.ForEach(c => Console.WriteLine(c.GetInfo()));
 
                     // 创建顺序表并排序
-                    ActionQueue ActionQueue = new(characters, WriteLine);
+                    ActionQueue actionQueue = new(characters, WriteLine);
                     if (PrintOut) Console.WriteLine();
 
                     // 显示初始顺序表
-                    ActionQueue.DisplayQueue();
+                    actionQueue.DisplayQueue();
                     if (PrintOut) Console.WriteLine();
 
                     // 总游戏时长
@@ -306,8 +307,9 @@ namespace Milimoe.FunGame.Testing.Tests
 
                     // 开始空投
                     Msg = "";
-                    空投(ActionQueue, totalTime);
+                    空投(actionQueue);
                     if (isWeb) result.Add("=== 空投 ===\r\n" + Msg);
+                    double 下一次空投 = 80;
 
                     // 总回合数
                     int i = 1;
@@ -320,7 +322,7 @@ namespace Milimoe.FunGame.Testing.Tests
                             Dictionary<Character, double> 他们的血量百分比 = [];
                             foreach (Character c in characters)
                             {
-                                他们的血量百分比.TryAdd(c, Calculation.Round4Digits(c.HP / c.MaxHP));
+                                他们的血量百分比.TryAdd(c, c.HP / c.MaxHP);
                             }
                             double max = 他们的血量百分比.Values.Max();
                             Character winner = 他们的血量百分比.Keys.Where(c => 他们的血量百分比[c] == max).First();
@@ -328,15 +330,15 @@ namespace Milimoe.FunGame.Testing.Tests
                             foreach (Character c in characters.Where(c => c != winner && c.HP > 0))
                             {
                                 WriteLine("[ " + winner + " ] 对 [ " + c + " ] 造成了 99999999999 点真实伤害。");
-                                ActionQueue.DeathCalculation(winner, c);
+                                actionQueue.DeathCalculation(winner, c);
                             }
-                            ActionQueue.EndGameInfo(winner);
+                            actionQueue.EndGameInfo(winner);
                             result.Add(Msg);
                             break;
                         }
 
                         // 检查是否有角色可以行动
-                        Character? characterToAct = ActionQueue.NextCharacter();
+                        Character? characterToAct = actionQueue.NextCharacter();
 
                         // 处理回合
                         if (characterToAct != null)
@@ -344,23 +346,34 @@ namespace Milimoe.FunGame.Testing.Tests
                             WriteLine($"=== Round {i++} ===");
                             WriteLine("现在是 [ " + characterToAct + " ] 的回合！");
 
-                            bool isGameEnd = ActionQueue.ProcessTurn(characterToAct);
+                            bool isGameEnd = actionQueue.ProcessTurn(characterToAct);
                             if (isGameEnd)
                             {
                                 result.Add(Msg);
                                 break;
                             }
 
-                            ActionQueue.DisplayQueue();
+                            actionQueue.DisplayQueue();
                             WriteLine("");
                         }
 
                         // 模拟时间流逝
-                        totalTime += ActionQueue.TimeLapse();
+                        double timeLapse = actionQueue.TimeLapse();
+                        totalTime += timeLapse;
+                        下一次空投 -= timeLapse;
 
-                        if (ActionQueue.Eliminated.Count > deaths)
+                        if (下一次空投 <= 0)
                         {
-                            deaths = ActionQueue.Eliminated.Count;
+                            // 空投
+                            Msg = "";
+                            空投(actionQueue);
+                            if (isWeb) result.Add("=== 空投 ===\r\n" + Msg);
+                            下一次空投 = 100;
+                        }
+
+                        if (actionQueue.Eliminated.Count > deaths)
+                        {
+                            deaths = actionQueue.Eliminated.Count;
                             if (!isWeb)
                             {
                                 string roundMsg = Msg;
@@ -378,7 +391,7 @@ namespace Milimoe.FunGame.Testing.Tests
                     if (PrintOut)
                     {
                         Console.WriteLine("--- End ---");
-                        Console.WriteLine("总游戏时长：" + Calculation.Round2Digits(totalTime));
+                        Console.WriteLine($"总游戏时长：{totalTime:0.##}");
                         Console.WriteLine("");
                     }
 
@@ -387,10 +400,10 @@ namespace Milimoe.FunGame.Testing.Tests
                     int top = isWeb ? 12 : 6;
                     Msg = $"=== 伤害排行榜 TOP{top} ===\r\n";
                     int count = 1;
-                    foreach (Character character in ActionQueue.CharacterStatistics.OrderByDescending(d => d.Value.TotalDamage).Select(d => d.Key))
+                    foreach (Character character in actionQueue.CharacterStatistics.OrderByDescending(d => d.Value.TotalDamage).Select(d => d.Key))
                     {
                         StringBuilder builder = new();
-                        CharacterStatistics stats = ActionQueue.CharacterStatistics[character];
+                        CharacterStatistics stats = actionQueue.CharacterStatistics[character];
                         builder.AppendLine($"{count}. [ {character.ToStringWithLevel()} ] （{stats.Kills} / {stats.Assists}）");
                         builder.AppendLine($"存活时长：{stats.LiveTime} / 存活回合数：{stats.LiveRound} / 行动回合数：{stats.ActionTurn}");
                         builder.AppendLine($"总计伤害：{stats.TotalDamage} / 总计物理伤害：{stats.TotalPhysicalDamage} / 总计魔法伤害：{stats.TotalMagicDamage}");
@@ -450,7 +463,7 @@ namespace Milimoe.FunGame.Testing.Tests
                             }
                             if (totalStats.LiveRound != 0) totalStats.DamagePerRound = Calculation.Round2Digits(totalStats.TotalDamage / totalStats.LiveRound);
                             if (totalStats.ActionTurn != 0) totalStats.DamagePerTurn = Calculation.Round2Digits(totalStats.TotalDamage / totalStats.ActionTurn);
-                            if (totalStats.LiveTime !=0) totalStats.DamagePerSecond = Calculation.Round2Digits(totalStats.TotalDamage / totalStats.LiveTime);
+                            if (totalStats.LiveTime != 0) totalStats.DamagePerSecond = Calculation.Round2Digits(totalStats.TotalDamage / totalStats.LiveTime);
                         }
                     }
                     result.Add(Msg);
@@ -458,10 +471,19 @@ namespace Milimoe.FunGame.Testing.Tests
                     // 显示每个角色的信息
                     if (isWeb)
                     {
-                        for (i = ActionQueue.Eliminated.Count - 1; i >= 0; i--)
+                        for (i = actionQueue.Eliminated.Count - 1; i >= 0; i--)
                         {
-                            Character character = ActionQueue.Eliminated[i];
+                            Character character = actionQueue.Eliminated[i];
                             result.Add($"=== 角色 [ {character} ] ===\r\n{character.GetInfo()}");
+                        }
+                    }
+                    else
+                    {
+                        Character? character = actionQueue.Eliminated.LastOrDefault();
+                        if (character != null)
+                        {
+                            Msg = "";
+                            WriteLine($"\r\n\r\n=== 本次冠军角色 [ {character} ] ===\r\n{character.GetInfo()}");
                         }
                     }
 
@@ -493,48 +515,40 @@ namespace Milimoe.FunGame.Testing.Tests
             if (PrintOut) Console.WriteLine(str);
         }
 
-        public static void 空投(ActionQueue queue, double totalTime)
+        public static void 空投(ActionQueue queue)
         {
-            Item[] 这次发放的空投;
-            if (totalTime == 0)
+            Item a = Items[Random.Shared.Next(Items.Count)];
+            a.SetGamingQueue(queue);
+            Item[] 这次发放的空投 = [a];
+            WriteLine($"社区送温暖了，现在向所有人发放 [ {a.Name} ]！！");
+            foreach (Character character in queue.Queue)
             {
-                WriteLine("社区送温暖了，现在向所有人发放 [ 攻击之爪 +10 ]！！");
-                foreach (Character character in queue.Queue)
+                foreach (Item item in 这次发放的空投)
                 {
-                    这次发放的空投 = [new 攻击之爪10()];
-                    foreach (Item item in 这次发放的空投)
-                    {
-                        queue.Equip(character, EquipItemToSlot.Accessory1, item);
-                    }
+                    queue.Equip(character, item.Copy(1));
                 }
             }
+            WriteLine("");
         }
 
-        public static void LoadModules()
+        public static void InitCharacter()
         {
-            PluginLoader plugins = PluginLoader.LoadPlugins([]);
-            foreach (string plugin in plugins.Plugins.Keys)
-            {
-                Console.WriteLine(plugin + " is loaded.");
-            }
+            Characters.Add(OshimaCharacters.Oshima);
+            Characters.Add(OshimaCharacters.Xinyin);
+            Characters.Add(OshimaCharacters.Yang);
+            Characters.Add(OshimaCharacters.NanGanyu);
+            Characters.Add(OshimaCharacters.NiuNan);
+            Characters.Add(OshimaCharacters.Mayor);
+            Characters.Add(OshimaCharacters.马猴烧酒);
+            Characters.Add(OshimaCharacters.QingXiang);
+            Characters.Add(OshimaCharacters.QWQAQW);
+            Characters.Add(OshimaCharacters.ColdBlue);
+            Characters.Add(OshimaCharacters.绿拱门);
+            Characters.Add(OshimaCharacters.QuDuoduo);
 
-            Dictionary<string, string> plugindllsha512 = [];
-            foreach (string pfp in PluginLoader.PluginFilePaths.Keys)
+            foreach (Character c in Characters)
             {
-                string text = Encryption.FileSha512(PluginLoader.PluginFilePaths[pfp]);
-                plugindllsha512.Add(pfp, text);
-                if (PrintOut) Console.WriteLine(pfp + $" is {text}.");
-            }
-
-            GameModuleLoader modules = GameModuleLoader.LoadGameModules(FunGameInfo.FunGame.FunGame_Desktop, []);
-            foreach (CharacterModule cm in modules.Characters.Values)
-            {
-                foreach (Character c in cm.Characters)
-                {
-                    if (PrintOut) Console.WriteLine(c.Name);
-                    Characters.Add(c);
-                    CharacterStatistics.Add(c, new());
-                }
+                CharacterStatistics.Add(c, new());
             }
 
             StatsConfig.LoadConfig();
@@ -546,22 +560,9 @@ namespace Milimoe.FunGame.Testing.Tests
                 }
             }
 
-            Dictionary<string, string> moduledllsha512 = [];
-            foreach (string mfp in GameModuleLoader.ModuleFilePaths.Keys)
-            {
-                string text = Encryption.FileSha512(GameModuleLoader.ModuleFilePaths[mfp]);
-                moduledllsha512.Add(mfp, text);
-                if (PrintOut) Console.WriteLine(mfp + $" is {text}.");
-            }
-
-            foreach (string moduledll in moduledllsha512.Keys)
-            {
-                string server = moduledllsha512[moduledll];
-                if (plugindllsha512.TryGetValue(moduledll, out string? client) && client != "" && server == client)
-                {
-                    Console.WriteLine(moduledll + $" is checked pass.");
-                }
-            }
+            Dictionary<string, Item> exitem = Factory.GetGameModuleInstances<Item>(nameof(SkillJSONTest), nameof(Item));
+            Items.AddRange(exitem.Values);
+            Items.AddRange([new 攻击之爪10(), new 攻击之爪30(), new 攻击之爪50()]);
         }
     }
 }

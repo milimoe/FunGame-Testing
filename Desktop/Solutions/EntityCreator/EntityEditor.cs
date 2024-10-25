@@ -205,33 +205,33 @@ namespace Milimoe.FunGame.Testing.Desktop.Solutions
 
         public static Skill? 从模组加载器中获取技能(long id, string name, SkillType type)
         {
-            if (GameModuleLoader != null)
-            {
-                foreach (SkillModule module in GameModuleLoader.Skills.Values)
-                {
-                    Skill? s = module.GetSkill(id, name, type);
-                    if (s != null)
-                    {
-                        return s;
-                    }
-                }
-            }
+            //if (GameModuleLoader != null)
+            //{
+            //    foreach (SkillModule module in GameModuleLoader.Skills.Values)
+            //    {
+            //        Skill? s = module.GetSkill(id, name, type);
+            //        if (s != null)
+            //        {
+            //            return s;
+            //        }
+            //    }
+            //}
             return null;
         }
 
         public static Item? 从模组加载器中获取物品(long id, string name, ItemType type)
         {
-            if (GameModuleLoader != null)
-            {
-                foreach (ItemModule module in GameModuleLoader.Items.Values)
-                {
-                    Item? i = module.GetItem(id, name, type);
-                    if (i != null)
-                    {
-                        return i;
-                    }
-                }
-            }
+            //if (GameModuleLoader != null)
+            //{
+            //    foreach (ItemModule module in GameModuleLoader.Items.Values)
+            //    {
+            //        Item? i = module.GetItem(id, name, type);
+            //        if (i != null)
+            //        {
+            //            return i;
+            //        }
+            //    }
+            //}
             return null;
         }
 

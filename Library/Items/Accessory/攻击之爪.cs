@@ -1,7 +1,7 @@
-﻿using Milimoe.FunGame.Testing.Effects;
-using Milimoe.FunGame.Core.Entity;
+﻿using Milimoe.FunGame.Core.Entity;
 using Milimoe.FunGame.Core.Library.Constant;
 using Milimoe.FunGame.Testing.Skills;
+using Milimoe.FunGame.Testing.ItemEffects;
 
 namespace Milimoe.FunGame.Testing.Items
 {
@@ -52,7 +52,7 @@ namespace Milimoe.FunGame.Testing.Items
         {
             Level = 1;
             Item = item;
-            Effects.Add(new 攻击力加成(this, character, item, exATK));
+            Effects.Add(new 攻击力加成(this, exATK, character, item));
         }
 
         public override IEnumerable<Effect> AddInactiveEffectToCharacter()

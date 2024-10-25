@@ -1,7 +1,7 @@
 ﻿using Milimoe.FunGame.Core.Api.Utility;
 using Milimoe.FunGame.Core.Entity;
 using Milimoe.FunGame.Core.Library.Common.Addon;
-using Milimoe.FunGame.Core.Library.Constant;
+using Milimoe.FunGame.Testing.OpenEffects;
 using Milimoe.FunGame.Testing.Items;
 using Milimoe.FunGame.Testing.Skills;
 
@@ -25,13 +25,13 @@ namespace Addons
 
         public override string Author => "FunGamer";
 
-        public override List<Character> Characters
+        public override Dictionary<string, Character> Characters
         {
             get
             {
                 EntityModuleConfig<Character> config = new(ExampleGameModuleConstant.Example, ExampleGameModuleConstant.ExampleCharacter);
                 config.LoadConfig();
-                return [.. config.Values];
+                return config;
             }
         }
     }
@@ -46,113 +46,97 @@ namespace Addons
 
         public override string Author => "FunGamer";
 
-        public override List<Skill> Skills
+        public override Dictionary<string, Skill> Skills
         {
             get
             {
-                EntityModuleConfig<Skill> config = new(ExampleGameModuleConstant.Example, ExampleGameModuleConstant.ExampleSkill);
-                config.LoadConfig();
-                foreach (string key in config.Keys)
-                {
-                    Skill prev = config[key];
-                    Skill? next = GetSkill(prev.Id, prev.Name, prev.SkillType);
-                    if (next != null)
-                    {
-                        config[key] = next;
-                    }
-                }
-                return [.. config.Values];
+                return Factory.GetGameModuleInstances<Skill>(ExampleGameModuleConstant.Example, ExampleGameModuleConstant.ExampleSkill);
             }
         }
 
-        public override Skill? GetSkill(long id, string name, SkillType type)
+        protected override Factory.EntityFactoryDelegate<Skill> SkillFactory()
         {
-            if (type == SkillType.Magic)
+            return (id, name, args) =>
             {
-                switch ((MagicID)id)
+                Skill skill = id switch
                 {
-                    case MagicID.冰霜攻击:
-                        return new 冰霜攻击();
-                }
-            }
+                    (long)MagicID.冰霜攻击 => new 冰霜攻击(),
+                    (long)SkillID.疾风步 => new 疾风步(),
+                    (long)SuperSkillID.力量爆发 => new 力量爆发(),
+                    (long)SuperSkillID.天赐之力 => new 天赐之力(),
+                    (long)SuperSkillID.魔法涌流 => new 魔法涌流(),
+                    (long)SuperSkillID.三重叠加 => new 三重叠加(),
+                    (long)SuperSkillID.变幻之心 => new 变幻之心(),
+                    (long)SuperSkillID.精准打击 => new 精准打击(),
+                    (long)SuperSkillID.绝对领域 => new 绝对领域(),
+                    (long)SuperSkillID.能量毁灭 => new 能量毁灭(),
+                    (long)SuperSkillID.迅捷之势 => new 迅捷之势(),
+                    (long)SuperSkillID.嗜血本能 => new 嗜血本能(),
+                    (long)SuperSkillID.平衡强化 => new 平衡强化(),
+                    (long)SuperSkillID.血之狂欢 => new 血之狂欢(),
+                    (long)PassiveID.META马 => new META马(),
+                    (long)PassiveID.心灵之火 => new 心灵之火(),
+                    (long)PassiveID.魔法震荡 => new 魔法震荡(),
+                    (long)PassiveID.灵能反射 => new 灵能反射(),
+                    (long)PassiveID.智慧与力量 => new 智慧与力量(),
+                    (long)PassiveID.致命打击 => new 致命打击(),
+                    (long)PassiveID.毁灭之势 => new 毁灭之势(),
+                    (long)PassiveID.枯竭打击 => new 枯竭打击(),
+                    (long)PassiveID.玻璃大炮 => new 玻璃大炮(),
+                    (long)PassiveID.累积之压 => new 累积之压(),
+                    (long)PassiveID.敏捷之刃 => new 敏捷之刃(),
+                    (long)PassiveID.弱者猎手 => new 弱者猎手(),
+                    (long)ItemPassiveID.攻击之爪 => new 攻击之爪技能(),
+                    _ => new OpenSkill(id, name)
+                };
 
-            if (type == SkillType.Skill)
+                if (skill is OpenSkill && args.TryGetValue("others", out object? value) && value is Dictionary<string, object> dict)
+                {
+                    foreach (string key in dict.Keys)
+                    {
+                        skill.OtherArgs[key] = dict[key];
+                    }
+                }
+
+                return skill;
+            };
+        }
+
+        protected override Factory.EntityFactoryDelegate<Effect> EffectFactory()
+        {
+            return (id, name, args) =>
             {
-                switch ((SkillID)id)
+                if (args.TryGetValue("skill", out object? value) && value is Skill skill)
                 {
-                    case SkillID.疾风步:
-                        return new 疾风步();
+                    return (EffectID)id switch
+                    {
+                        EffectID.ExATK => new ExATK(skill),
+                        EffectID.ExDEF => new ExDEF(skill),
+                        EffectID.ExSTR => new ExSTR(skill),
+                        EffectID.ExAGI => new ExAGI(skill),
+                        EffectID.ExINT => new ExINT(skill),
+                        EffectID.SkillHardTimeReduce => new SkillHardTimeReduce(skill),
+                        EffectID.NormalAttackHardTimeReduce => new NormalAttackHardTimeReduce(skill),
+                        EffectID.AccelerationCoefficient => new AccelerationCoefficient(skill),
+                        EffectID.ExSPD => new ExSPD(skill),
+                        EffectID.ExActionCoefficient => new ExActionCoefficient(skill),
+                        EffectID.ExCDR => new ExCDR(skill),
+                        EffectID.ExMaxHP => new ExMaxHP(skill),
+                        EffectID.ExMaxMP => new ExMaxMP(skill),
+                        EffectID.ExCritRate => new ExCritRate(skill),
+                        EffectID.ExCritDMG => new ExCritDMG(skill),
+                        EffectID.ExEvadeRate => new ExEvadeRate(skill),
+                        EffectID.PhysicalPenetration => new PhysicalPenetration(skill),
+                        EffectID.MagicalPenetration => new MagicalPenetration(skill),
+                        EffectID.ExPDR => new ExPDR(skill),
+                        EffectID.ExMDF => new ExMDF(skill),
+                        EffectID.ExHR => new ExHR(skill),
+                        EffectID.ExMR => new ExMR(skill),
+                        _ => null
+                    };
                 }
-            }
-
-            if (type == SkillType.SuperSkill)
-            {
-                switch ((SuperSkillID)id)
-                {
-                    case SuperSkillID.力量爆发:
-                        return new 力量爆发();
-                    case SuperSkillID.天赐之力:
-                        return new 天赐之力();
-                    case SuperSkillID.魔法涌流:
-                        return new 魔法涌流();
-                    case SuperSkillID.三重叠加:
-                        return new 三重叠加();
-                    case SuperSkillID.变幻之心:
-                        return new 变幻之心();
-                    case SuperSkillID.精准打击:
-                        return new 精准打击();
-                    case SuperSkillID.绝对领域:
-                        return new 绝对领域();
-                    case SuperSkillID.能量毁灭:
-                        return new 能量毁灭();
-                    case SuperSkillID.迅捷之势:
-                        return new 迅捷之势();
-                    case SuperSkillID.嗜血本能:
-                        return new 嗜血本能();
-                    case SuperSkillID.平衡强化:
-                        return new 平衡强化();
-                    case SuperSkillID.血之狂欢:
-                        return new 血之狂欢();
-                }
-            }
-
-            if (type == SkillType.Passive)
-            {
-                switch ((PassiveID)id)
-                {
-                    case PassiveID.META马:
-                        return new META马();
-                    case PassiveID.心灵之火:
-                        return new 心灵之火();
-                    case PassiveID.魔法震荡:
-                        return new 魔法震荡();
-                    case PassiveID.灵能反射:
-                        return new 灵能反射();
-                    case PassiveID.智慧与力量:
-                        return new 智慧与力量();
-                    case PassiveID.致命打击:
-                        return new 致命打击();
-                    case PassiveID.毁灭之势:
-                        return new 毁灭之势();
-                    case PassiveID.枯竭打击:
-                        return new 枯竭打击();
-                    case PassiveID.玻璃大炮:
-                        return new 玻璃大炮();
-                    case PassiveID.累积之压:
-                        return new 累积之压();
-                    case PassiveID.敏捷之刃:
-                        return new 敏捷之刃();
-                    case PassiveID.弱者猎手:
-                        return new 弱者猎手();
-                }
-                switch ((ItemPassiveID)id)
-                {
-                    case ItemPassiveID.攻击之爪:
-                        return new 攻击之爪技能();
-                }
-            }
-
-            return null;
+                return null;
+            };
         }
     }
 
@@ -166,47 +150,26 @@ namespace Addons
 
         public override string Author => "FunGamer";
 
-        public override List<Item> Items
+        public override Dictionary<string, Item> Items
         {
             get
             {
-                EntityModuleConfig<Item> config = new(ExampleGameModuleConstant.Example, ExampleGameModuleConstant.ExampleItem);
-                config.LoadConfig();
-                foreach (string key in config.Keys)
-                {
-                    Item prev = config[key];
-                    Item? next = GetItem(prev.Id, prev.Name, prev.ItemType);
-                    if (next != null)
-                    {
-                        prev.SetPropertyToItemModuleNew(next);
-                        config[key] = next;
-                    }
-                }
-                return [.. config.Values];
+                return Factory.GetGameModuleInstances<Item>(ExampleGameModuleConstant.Example, ExampleGameModuleConstant.ExampleItem);
             }
         }
 
-        public override Item? GetItem(long id, string name, ItemType type)
+        protected override Factory.EntityFactoryDelegate<Item> ItemFactory()
         {
-            if (type == ItemType.MagicCardPack)
+            return (id, name, args) =>
             {
-
-            }
-
-            if (type == ItemType.Accessory)
-            {
-                switch ((AccessoryID)id)
+                return id switch
                 {
-                    case AccessoryID.攻击之爪10:
-                        return new 攻击之爪10();
-                    case AccessoryID.攻击之爪30:
-                        return new 攻击之爪30();
-                    case AccessoryID.攻击之爪50:
-                        return new 攻击之爪50();
-                }
-            }
-
-            return null;
+                    (long)AccessoryID.攻击之爪10 => new 攻击之爪10(),
+                    (long)AccessoryID.攻击之爪30 => new 攻击之爪30(),
+                    (long)AccessoryID.攻击之爪50 => new 攻击之爪50(),
+                    _ => null,
+                };
+            };
         }
     }
 }

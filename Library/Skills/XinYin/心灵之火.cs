@@ -1,5 +1,4 @@
-﻿using Milimoe.FunGame.Core.Api.Utility;
-using Milimoe.FunGame.Core.Entity;
+﻿using Milimoe.FunGame.Core.Entity;
 using Milimoe.FunGame.Core.Library.Constant;
 
 namespace Milimoe.FunGame.Testing.Skills
@@ -53,7 +52,7 @@ namespace Milimoe.FunGame.Testing.Skills
         {
             if (冷却时间 > 0)
             {
-                冷却时间 = Calculation.Round2Digits(冷却时间 - elapsed);
+                冷却时间 -= elapsed;
                 if (冷却时间 <= 0)
                 {
                     冷却时间 = 0;
@@ -63,7 +62,7 @@ namespace Milimoe.FunGame.Testing.Skills
 
         public override void AlterHardnessTimeAfterNormalAttack(Character character, ref double baseHardnessTime, ref bool isCheckProtected)
         {
-            baseHardnessTime = Calculation.Round2Digits(baseHardnessTime * 0.8);
+            baseHardnessTime *= 0.8;
         }
     }
 }

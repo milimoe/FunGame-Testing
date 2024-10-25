@@ -1,18 +1,18 @@
 ﻿using Milimoe.FunGame.Core.Entity;
 using Milimoe.FunGame.Core.Library.Constant;
 
-namespace Milimoe.FunGame.Testing.ItemEffects
+namespace Milimoe.FunGame.Testing.OpenEffects
 {
-    public class 技能硬直时间减少 : Effect
+    public class SkillHardTimeReduce : Effect
     {
-        public override long Id => Skill.Id;
+        public override long Id => (long)EffectID.SkillHardTimeReduce;
         public override string Name => Skill.Name;
         public override string Description => $"减少角色的所有主动技能 {实际硬直时间减少:0.##} 硬直时间。" + (!TargetSelf ? $"来自：[ {Source} ]" + (Item != null ? $" 的 [ {Item.Name} ]" : "") : "");
         public override EffectType EffectType => EffectType.Item;
         public override bool TargetSelf => true;
 
         public Item? Item { get; }
-        private readonly double 实际硬直时间减少 = 2;
+        private readonly double 实际硬直时间减少 = 0;
 
         public override void OnEffectGained(Character character)
         {
@@ -40,12 +40,19 @@ namespace Milimoe.FunGame.Testing.ItemEffects
             }
         }
 
-        public 技能硬直时间减少(Skill skill, double reduce, Character? source = null, Item? item = null) : base(skill)
+        public SkillHardTimeReduce(Skill skill, Character? source = null, Item? item = null) : base(skill)
         {
             GamingQueue = skill.GamingQueue;
-            实际硬直时间减少 = reduce;
             Source = source;
             Item = item;
+            if (skill.OtherArgs.Count > 0)
+            {
+                string key = skill.OtherArgs.Keys.FirstOrDefault(s => s.Equals("shtr", StringComparison.CurrentCultureIgnoreCase)) ?? "";
+                if (key.Length > 0 && double.TryParse(skill.OtherArgs[key].ToString(), out double shtr))
+                {
+                    实际硬直时间减少 = shtr;
+                }
+            }
         }
     }
 }

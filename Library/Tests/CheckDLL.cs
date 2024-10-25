@@ -38,7 +38,7 @@ namespace Milimoe.FunGame.Testing.Tests
             GameModuleLoader modules = GameModuleLoader.LoadGameModules(FunGameInfo.FunGame.FunGame_Desktop, []);
             foreach (CharacterModule cm in modules.Characters.Values)
             {
-                foreach (Character c in cm.Characters)
+                foreach (Character c in cm.Characters.Values)
                 {
                     Console.WriteLine(c.Name);
                     list.Add(c);

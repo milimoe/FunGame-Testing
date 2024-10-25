@@ -1,7 +1,7 @@
 ﻿using Milimoe.FunGame.Core.Entity;
 using Milimoe.FunGame.Core.Library.Constant;
 
-namespace Milimoe.FunGame.Testing.Effects
+namespace Milimoe.FunGame.Testing.ItemEffects
 {
     public class 冷却缩减加成 : Effect
     {
@@ -24,12 +24,12 @@ namespace Milimoe.FunGame.Testing.Effects
             character.ExCDR -= 实际冷却缩减加成;
         }
 
-        public 冷却缩减加成(Skill skill, Character? source, Item? item, double exCdr) : base(skill)
+        public 冷却缩减加成(Skill skill, double exCdr, Character? source = null, Item? item = null) : base(skill)
         {
             GamingQueue = skill.GamingQueue;
+            实际冷却缩减加成 = exCdr;
             Source = source;
             Item = item;
-            实际冷却缩减加成 = exCdr;
         }
     }
 }

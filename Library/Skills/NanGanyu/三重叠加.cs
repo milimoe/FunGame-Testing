@@ -40,7 +40,7 @@ namespace Milimoe.FunGame.Testing.Skills
                 e.释放次数 = 0;
             }
         }
-        
+
         public override void OnEffectLost(Character character)
         {
             IEnumerable<Effect> effects = character.Effects.Where(e => e is 灵能反射特效);
