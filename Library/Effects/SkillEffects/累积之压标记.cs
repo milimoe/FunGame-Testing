@@ -1,7 +1,7 @@
 ﻿using Milimoe.FunGame.Core.Entity;
 using Milimoe.FunGame.Core.Library.Constant;
 
-namespace Milimoe.FunGame.Testing.Effects
+namespace Milimoe.FunGame.Testing.Effects.SkillEffects
 {
     public class 累积之压标记 : Effect
     {

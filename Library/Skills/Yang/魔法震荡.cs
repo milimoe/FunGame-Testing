@@ -1,6 +1,6 @@
 ﻿using Milimoe.FunGame.Core.Entity;
 using Milimoe.FunGame.Core.Library.Constant;
-using Milimoe.FunGame.Testing.Effects;
+using Milimoe.FunGame.Testing.Effects.SkillEffects;
 
 namespace Milimoe.FunGame.Testing.Skills
 {

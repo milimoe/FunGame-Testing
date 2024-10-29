@@ -1,7 +1,7 @@
 ﻿using Milimoe.FunGame.Core.Entity;
 using Milimoe.FunGame.Core.Library.Constant;
 
-namespace Milimoe.FunGame.Testing.OpenEffects
+namespace Milimoe.FunGame.Testing.Effects.OpenEffects
 {
     public class ExMDF : Effect
     {
@@ -45,15 +45,7 @@ namespace Milimoe.FunGame.Testing.OpenEffects
                     break;
                 case MagicType.None:
                 default:
-                    character.MDF.None += 实际加成;
-                    character.MDF.Starmark += 实际加成;
-                    character.MDF.PurityNatural += 实际加成;
-                    character.MDF.PurityContemporary += 实际加成;
-                    character.MDF.Bright += 实际加成;
-                    character.MDF.Shadow += 实际加成;
-                    character.MDF.Element += 实际加成;
-                    character.MDF.Fleabane += 实际加成;
-                    character.MDF.Particle += 实际加成;
+                    character.MDF.SetAllValue(实际加成, false);
                     break;
             }
         }
@@ -88,20 +80,20 @@ namespace Milimoe.FunGame.Testing.OpenEffects
                     break;
                 case MagicType.None:
                 default:
-                    character.MDF.None -= 实际加成;
+                    character.MDF.SetAllValue(-实际加成, false);
                     break;
             }
         }
 
-        public ExMDF(Skill skill, Character? source = null, Item? item = null) : base(skill)
+        public ExMDF(Skill skill, Dictionary<string, object> args, Character? source = null, Item? item = null) : base(skill, args)
         {
             GamingQueue = skill.GamingQueue;
             Source = source;
             Item = item;
-            if (skill.OtherArgs.Count > 0)
+            if (Values.Count > 0)
             {
-                string key = skill.OtherArgs.Keys.FirstOrDefault(s => s.Equals("mdfType", StringComparison.CurrentCultureIgnoreCase)) ?? "";
-                if (key.Length > 0 && int.TryParse(skill.OtherArgs[key].ToString(), out int mdfType))
+                string key = Values.Keys.FirstOrDefault(s => s.Equals("mdfType", StringComparison.CurrentCultureIgnoreCase)) ?? "";
+                if (key.Length > 0 && int.TryParse(Values[key].ToString(), out int mdfType))
                 {
                     if (Enum.IsDefined(typeof(MagicType), mdfType))
                     {
@@ -112,8 +104,8 @@ namespace Milimoe.FunGame.Testing.OpenEffects
                         魔法类型 = MagicType.None;
                     }
                 }
-                key = skill.OtherArgs.Keys.FirstOrDefault(s => s.Equals("mdfvalue", StringComparison.CurrentCultureIgnoreCase)) ?? "";
-                if (key.Length > 0 && double.TryParse(skill.OtherArgs[key].ToString(), out double mdfValue))
+                key = Values.Keys.FirstOrDefault(s => s.Equals("mdfvalue", StringComparison.CurrentCultureIgnoreCase)) ?? "";
+                if (key.Length > 0 && double.TryParse(Values[key].ToString(), out double mdfValue))
                 {
                     实际加成 = mdfValue;
                 }

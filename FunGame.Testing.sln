@@ -15,6 +15,10 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FunGame.Testing.Desktop", "
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FunGame.Core", "..\FunGame.Core\FunGame.Core.csproj", "{94B564CD-7A1E-4B3C-AF78-23EBCD5D627E}"
 EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "OshimaModules", "..\OshimaGameModule\OshimaModules\OshimaModules.csproj", "{35136317-2FBC-41C1-A3A0-C56B198FA440}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "OshimaCore", "..\OshimaGameModule\OshimaCore\OshimaCore.csproj", "{A0EDE123-21D0-4886-8960-0802677FBC04}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -33,6 +37,14 @@ Global
 		{94B564CD-7A1E-4B3C-AF78-23EBCD5D627E}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{94B564CD-7A1E-4B3C-AF78-23EBCD5D627E}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{94B564CD-7A1E-4B3C-AF78-23EBCD5D627E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{35136317-2FBC-41C1-A3A0-C56B198FA440}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{35136317-2FBC-41C1-A3A0-C56B198FA440}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{35136317-2FBC-41C1-A3A0-C56B198FA440}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{35136317-2FBC-41C1-A3A0-C56B198FA440}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A0EDE123-21D0-4886-8960-0802677FBC04}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A0EDE123-21D0-4886-8960-0802677FBC04}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A0EDE123-21D0-4886-8960-0802677FBC04}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A0EDE123-21D0-4886-8960-0802677FBC04}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

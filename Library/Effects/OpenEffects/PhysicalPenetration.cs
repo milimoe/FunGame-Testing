@@ -1,7 +1,7 @@
 ﻿using Milimoe.FunGame.Core.Entity;
 using Milimoe.FunGame.Core.Library.Constant;
 
-namespace Milimoe.FunGame.Testing.OpenEffects
+namespace Milimoe.FunGame.Testing.Effects.OpenEffects
 {
     public class PhysicalPenetration : Effect
     {
@@ -24,17 +24,17 @@ namespace Milimoe.FunGame.Testing.OpenEffects
             character.PhysicalPenetration -= 实际加成;
         }
 
-        public PhysicalPenetration(Skill skill, Character? source = null, Item? item = null) : base(skill)
+        public PhysicalPenetration(Skill skill, Dictionary<string, object> args, Character? source = null, Item? item = null) : base(skill, args)
         {
             GamingQueue = skill.GamingQueue;
             Source = source;
             Item = item;
-            if (skill.OtherArgs.Count > 0)
+            if (Values.Count > 0)
             {
-                string key = skill.OtherArgs.Keys.FirstOrDefault(s => s.Equals("expp", StringComparison.CurrentCultureIgnoreCase)) ?? "";
-                if (key.Length > 0 && double.TryParse(skill.OtherArgs[key].ToString(), out double exPP))
+                string key = Values.Keys.FirstOrDefault(s => s.Equals("exppt", StringComparison.CurrentCultureIgnoreCase)) ?? "";
+                if (key.Length > 0 && double.TryParse(Values[key].ToString(), out double exPPT))
                 {
-                    实际加成 = exPP;
+                    实际加成 = exPPT;
                 }
             }
         }

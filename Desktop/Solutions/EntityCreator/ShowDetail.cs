@@ -145,30 +145,30 @@ namespace Milimoe.FunGame.Testing.Desktop.Solutions
 
         private void 删物品_Click(object sender, EventArgs e)
         {
-            if (NowClick == 0 && BaseEntity is Character c)
-            {
-                if (c != null)
-                {
-                    if (c.Items.Count != 0 || c.EquipSlot.Any())
-                    {
-                        ShowList l = new();
-                        l.AddListItem(c.Items.OrderBy(i => i.Id).Select(i => i.GetIdName()).ToArray());
-                        l.ShowDialog();
-                        string selected = l.SelectItem;
-                        Item? i = c.Items.Where(i => i.GetIdName() == selected).FirstOrDefault();
-                        if (i != null)
-                        {
-                            if (i.Equipable) c.UnEquip(c.EquipSlot.GetEquipItemToSlot(i));
-                            else c.Items.Remove(i);
-                            详细内容.Text = c.GetInfo();
-                        }
-                    }
-                    else
-                    {
-                        MessageBox.Show("物品列表为空！");
-                    }
-                }
-            }
+            //if (NowClick == 0 && BaseEntity is Character c)
+            //{
+            //    if (c != null)
+            //    {
+            //        if (c.Items.Count != 0 || c.EquipSlot.Any())
+            //        {
+            //            ShowList l = new();
+            //            l.AddListItem(c.Items.OrderBy(i => i.Id).Select(i => i.GetIdName()).ToArray());
+            //            l.ShowDialog();
+            //            string selected = l.SelectItem;
+            //            Item? i = c.Items.Where(i => i.GetIdName() == selected).FirstOrDefault();
+            //            if (i != null)
+            //            {
+            //                if (i.Equipable) c.UnEquip(c.EquipSlot.GetEquipItemToSlot(i));
+            //                else c.Items.Remove(i);
+            //                详细内容.Text = c.GetInfo();
+            //            }
+            //        }
+            //        else
+            //        {
+            //            MessageBox.Show("物品列表为空！");
+            //        }
+            //    }
+            //}
         }
 
         private void 删技能_Click(object sender, EventArgs e)

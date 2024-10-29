@@ -1,7 +1,7 @@
 ﻿using Milimoe.FunGame.Core.Entity;
 using Milimoe.FunGame.Core.Library.Constant;
 
-namespace Milimoe.FunGame.Testing.OpenEffects
+namespace Milimoe.FunGame.Testing.Effects.OpenEffects
 {
     public class ExHR : Effect
     {
@@ -24,15 +24,15 @@ namespace Milimoe.FunGame.Testing.OpenEffects
             character.ExHR -= 实际加成;
         }
 
-        public ExHR(Skill skill, Character? source = null, Item? item = null) : base(skill)
+        public ExHR(Skill skill, Dictionary<string, object> args, Character? source = null, Item? item = null) : base(skill, args)
         {
             GamingQueue = skill.GamingQueue;
             Source = source;
             Item = item;
-            if (skill.OtherArgs.Count > 0)
+            if (Values.Count > 0)
             {
-                string key = skill.OtherArgs.Keys.FirstOrDefault(s => s.Equals("exhr", StringComparison.CurrentCultureIgnoreCase)) ?? "";
-                if (key.Length > 0 && double.TryParse(skill.OtherArgs[key].ToString(), out double exHR))
+                string key = Values.Keys.FirstOrDefault(s => s.Equals("exhr", StringComparison.CurrentCultureIgnoreCase)) ?? "";
+                if (key.Length > 0 && double.TryParse(Values[key].ToString(), out double exHR))
                 {
                     实际加成 = exHR;
                 }

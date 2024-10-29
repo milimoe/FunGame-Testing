@@ -1,3 +1,12 @@
-using Milimoe.FunGame.Testing.Tests;
+using Oshima.Core.Utils;
+using Oshima.FunGame.OshimaModules;
 
-_ = new SkillJSONTest();
+CharacterModule cm = new();
+cm.Load();
+SkillModule sm = new();
+sm.Load();
+ItemModule im = new();
+im.Load();
+
+FunGameSimulation.InitCharacter();
+FunGameSimulation.StartGame(true, true);

@@ -295,7 +295,7 @@ namespace Milimoe.FunGame.Testing.Tests
                     if (PrintOut) characters.ForEach(c => Console.WriteLine(c.GetInfo()));
 
                     // 创建顺序表并排序
-                    ActionQueue actionQueue = new(characters, WriteLine);
+                    ActionQueue actionQueue = new(characters, false, WriteLine);
                     if (PrintOut) Console.WriteLine();
 
                     // 显示初始顺序表

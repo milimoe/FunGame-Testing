@@ -1,9 +1,9 @@
 ﻿using Milimoe.FunGame.Core.Api.Utility;
 using Milimoe.FunGame.Core.Entity;
 using Milimoe.FunGame.Core.Library.Common.Addon;
-using Milimoe.FunGame.Testing.OpenEffects;
 using Milimoe.FunGame.Testing.Items;
 using Milimoe.FunGame.Testing.Skills;
+using Milimoe.FunGame.Testing.Effects.OpenEffects;
 
 namespace Addons
 {
@@ -87,14 +87,14 @@ namespace Addons
                     (long)PassiveID.敏捷之刃 => new 敏捷之刃(),
                     (long)PassiveID.弱者猎手 => new 弱者猎手(),
                     (long)ItemPassiveID.攻击之爪 => new 攻击之爪技能(),
-                    _ => new OpenSkill(id, name)
+                    _ => new OpenSkill(id, name, args)
                 };
 
-                if (skill is OpenSkill && args.TryGetValue("others", out object? value) && value is Dictionary<string, object> dict)
+                if (skill is OpenSkill && args.TryGetValue("values", out object? value) && value is Dictionary<string, object> dict)
                 {
                     foreach (string key in dict.Keys)
                     {
-                        skill.OtherArgs[key] = dict[key];
+                        skill.Values[key] = dict[key];
                     }
                 }
 
@@ -106,32 +106,32 @@ namespace Addons
         {
             return (id, name, args) =>
             {
-                if (args.TryGetValue("skill", out object? value) && value is Skill skill)
+                if (args.TryGetValue("skill", out object? value) && value is Skill skill && args.TryGetValue("values", out value) && value is Dictionary<string, object> dict)
                 {
                     return (EffectID)id switch
                     {
-                        EffectID.ExATK => new ExATK(skill),
-                        EffectID.ExDEF => new ExDEF(skill),
-                        EffectID.ExSTR => new ExSTR(skill),
-                        EffectID.ExAGI => new ExAGI(skill),
-                        EffectID.ExINT => new ExINT(skill),
-                        EffectID.SkillHardTimeReduce => new SkillHardTimeReduce(skill),
-                        EffectID.NormalAttackHardTimeReduce => new NormalAttackHardTimeReduce(skill),
-                        EffectID.AccelerationCoefficient => new AccelerationCoefficient(skill),
-                        EffectID.ExSPD => new ExSPD(skill),
-                        EffectID.ExActionCoefficient => new ExActionCoefficient(skill),
-                        EffectID.ExCDR => new ExCDR(skill),
-                        EffectID.ExMaxHP => new ExMaxHP(skill),
-                        EffectID.ExMaxMP => new ExMaxMP(skill),
-                        EffectID.ExCritRate => new ExCritRate(skill),
-                        EffectID.ExCritDMG => new ExCritDMG(skill),
-                        EffectID.ExEvadeRate => new ExEvadeRate(skill),
-                        EffectID.PhysicalPenetration => new PhysicalPenetration(skill),
-                        EffectID.MagicalPenetration => new MagicalPenetration(skill),
-                        EffectID.ExPDR => new ExPDR(skill),
-                        EffectID.ExMDF => new ExMDF(skill),
-                        EffectID.ExHR => new ExHR(skill),
-                        EffectID.ExMR => new ExMR(skill),
+                        EffectID.ExATK => new ExATK(skill, dict),
+                        EffectID.ExDEF => new ExDEF(skill, dict),
+                        EffectID.ExSTR => new ExSTR(skill, dict),
+                        EffectID.ExAGI => new ExAGI(skill, dict),
+                        EffectID.ExINT => new ExINT(skill, dict),
+                        EffectID.SkillHardTimeReduce => new SkillHardTimeReduce(skill, dict),
+                        EffectID.NormalAttackHardTimeReduce => new NormalAttackHardTimeReduce(skill, dict),
+                        EffectID.AccelerationCoefficient => new AccelerationCoefficient(skill, dict),
+                        EffectID.ExSPD => new ExSPD(skill, dict),
+                        EffectID.ExActionCoefficient => new ExActionCoefficient(skill, dict),
+                        EffectID.ExCDR => new ExCDR(skill, dict),
+                        EffectID.ExMaxHP => new ExMaxHP(skill, dict),
+                        EffectID.ExMaxMP => new ExMaxMP(skill, dict),
+                        EffectID.ExCritRate => new ExCritRate(skill, dict),
+                        EffectID.ExCritDMG => new ExCritDMG(skill, dict),
+                        EffectID.ExEvadeRate => new ExEvadeRate(skill, dict),
+                        EffectID.PhysicalPenetration => new PhysicalPenetration(skill, dict),
+                        EffectID.MagicalPenetration => new MagicalPenetration(skill, dict),
+                        EffectID.ExPDR => new ExPDR(skill, dict),
+                        EffectID.ExMDF => new ExMDF(skill, dict),
+                        EffectID.ExHR => new ExHR(skill, dict),
+                        EffectID.ExMR => new ExMR(skill, dict),
                         _ => null
                     };
                 }

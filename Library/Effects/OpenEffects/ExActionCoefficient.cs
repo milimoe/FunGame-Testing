@@ -1,7 +1,7 @@
 ﻿using Milimoe.FunGame.Core.Entity;
 using Milimoe.FunGame.Core.Library.Constant;
 
-namespace Milimoe.FunGame.Testing.OpenEffects
+namespace Milimoe.FunGame.Testing.Effects.OpenEffects
 {
     public class ExActionCoefficient : Effect
     {
@@ -24,15 +24,15 @@ namespace Milimoe.FunGame.Testing.OpenEffects
             character.ExActionCoefficient -= 实际加成;
         }
 
-        public ExActionCoefficient(Skill skill, Character? source = null, Item? item = null) : base(skill)
+        public ExActionCoefficient(Skill skill, Dictionary<string, object> args, Character? source = null, Item? item = null) : base(skill, args)
         {
             GamingQueue = skill.GamingQueue;
             Source = source;
             Item = item;
-            if (skill.OtherArgs.Count > 0)
+            if (Values.Count > 0)
             {
-                string key = skill.OtherArgs.Keys.FirstOrDefault(s => s.Equals("exac", StringComparison.CurrentCultureIgnoreCase)) ?? "";
-                if (key.Length > 0 && double.TryParse(skill.OtherArgs[key].ToString(), out double exAC))
+                string key = Values.Keys.FirstOrDefault(s => s.Equals("exac", StringComparison.CurrentCultureIgnoreCase)) ?? "";
+                if (key.Length > 0 && double.TryParse(Values[key].ToString(), out double exAC))
                 {
                     实际加成 = exAC;
                 }

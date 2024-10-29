@@ -30,4 +30,9 @@
     <Folder Include="Items\Shoes\" />
   </ItemGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\..\OshimaGameModule\OshimaCore\OshimaCore.csproj" />
+    <ProjectReference Include="..\..\OshimaGameModule\OshimaModules\OshimaModules.csproj" />
+  </ItemGroup>
+
 </Project>
