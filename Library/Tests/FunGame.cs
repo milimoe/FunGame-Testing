@@ -2,10 +2,9 @@
 using Milimoe.FunGame.Core.Api.Utility;
 using Milimoe.FunGame.Core.Entity;
 using Milimoe.FunGame.Core.Model;
-using Milimoe.FunGame.Testing.Skills;
 using Milimoe.FunGame.Testing.Items;
+using Milimoe.FunGame.Testing.Skills;
 using MilimoeFunGame.Testing.Characters;
-using Milimoe.FunGame.Core.Interface.Entity;
 
 namespace Milimoe.FunGame.Testing.Tests
 {

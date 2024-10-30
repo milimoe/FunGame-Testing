@@ -5,7 +5,10 @@ VisualStudioVersion = 17.5.33516.290
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FunGame.Testing", "Library\FunGame.Testing.csproj", "{6F6B4A21-8F39-4B0D-84E8-98AE3E93F06F}"
 	ProjectSection(ProjectDependencies) = postProject
+		{63333F35-4433-4710-9D83-048B553ADD5F} = {63333F35-4433-4710-9D83-048B553ADD5F}
 		{94B564CD-7A1E-4B3C-AF78-23EBCD5D627E} = {94B564CD-7A1E-4B3C-AF78-23EBCD5D627E}
+		{D74DF3A2-52E7-4C18-8854-81114558D4B2} = {D74DF3A2-52E7-4C18-8854-81114558D4B2}
+		{EFB418D0-EB57-4D71-AF74-205A5A3138E8} = {EFB418D0-EB57-4D71-AF74-205A5A3138E8}
 	EndProjectSection
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FunGame.Testing.Desktop", "Desktop\FunGame.Testing.Desktop.csproj", "{05FA61CB-22AA-4834-8C45-1161C42DF2C7}"
@@ -16,8 +19,29 @@ EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FunGame.Core", "..\FunGame.Core\FunGame.Core.csproj", "{94B564CD-7A1E-4B3C-AF78-23EBCD5D627E}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "OshimaModules", "..\OshimaGameModule\OshimaModules\OshimaModules.csproj", "{35136317-2FBC-41C1-A3A0-C56B198FA440}"
+	ProjectSection(ProjectDependencies) = postProject
+		{94B564CD-7A1E-4B3C-AF78-23EBCD5D627E} = {94B564CD-7A1E-4B3C-AF78-23EBCD5D627E}
+	EndProjectSection
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "OshimaCore", "..\OshimaGameModule\OshimaCore\OshimaCore.csproj", "{A0EDE123-21D0-4886-8960-0802677FBC04}"
+	ProjectSection(ProjectDependencies) = postProject
+		{94B564CD-7A1E-4B3C-AF78-23EBCD5D627E} = {94B564CD-7A1E-4B3C-AF78-23EBCD5D627E}
+	EndProjectSection
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FunGame.Implement", "..\FunGame.Server\FunGame.Implement\FunGame.Implement.csproj", "{EFB418D0-EB57-4D71-AF74-205A5A3138E8}"
+	ProjectSection(ProjectDependencies) = postProject
+		{94B564CD-7A1E-4B3C-AF78-23EBCD5D627E} = {94B564CD-7A1E-4B3C-AF78-23EBCD5D627E}
+	EndProjectSection
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FunGame.Server", "..\FunGame.Server\FunGame.Server\FunGame.Server.csproj", "{63333F35-4433-4710-9D83-048B553ADD5F}"
+	ProjectSection(ProjectDependencies) = postProject
+		{94B564CD-7A1E-4B3C-AF78-23EBCD5D627E} = {94B564CD-7A1E-4B3C-AF78-23EBCD5D627E}
+	EndProjectSection
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FunGame.WebAPI", "..\FunGame.Server\FunGame.WebAPI\FunGame.WebAPI.csproj", "{D74DF3A2-52E7-4C18-8854-81114558D4B2}"
+	ProjectSection(ProjectDependencies) = postProject
+		{94B564CD-7A1E-4B3C-AF78-23EBCD5D627E} = {94B564CD-7A1E-4B3C-AF78-23EBCD5D627E}
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -45,6 +69,18 @@ Global
 		{A0EDE123-21D0-4886-8960-0802677FBC04}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{A0EDE123-21D0-4886-8960-0802677FBC04}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{A0EDE123-21D0-4886-8960-0802677FBC04}.Release|Any CPU.Build.0 = Release|Any CPU
+		{EFB418D0-EB57-4D71-AF74-205A5A3138E8}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{EFB418D0-EB57-4D71-AF74-205A5A3138E8}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{EFB418D0-EB57-4D71-AF74-205A5A3138E8}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{EFB418D0-EB57-4D71-AF74-205A5A3138E8}.Release|Any CPU.Build.0 = Release|Any CPU
+		{63333F35-4433-4710-9D83-048B553ADD5F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{63333F35-4433-4710-9D83-048B553ADD5F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{63333F35-4433-4710-9D83-048B553ADD5F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{63333F35-4433-4710-9D83-048B553ADD5F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D74DF3A2-52E7-4C18-8854-81114558D4B2}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D74DF3A2-52E7-4C18-8854-81114558D4B2}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D74DF3A2-52E7-4C18-8854-81114558D4B2}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D74DF3A2-52E7-4C18-8854-81114558D4B2}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

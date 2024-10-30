@@ -1,7 +1,7 @@
 ﻿using Milimoe.FunGame.Core.Entity;
 using Milimoe.FunGame.Core.Library.Constant;
-using Milimoe.FunGame.Testing.Skills;
 using Milimoe.FunGame.Testing.Effects.ItemEffects;
+using Milimoe.FunGame.Testing.Skills;
 
 namespace Milimoe.FunGame.Testing.Items
 {

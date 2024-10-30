@@ -1,7 +1,7 @@
 ﻿using Milimoe.FunGame.Core.Api.Transmittal;
 using Milimoe.FunGame.Core.Interface;
-using Milimoe.FunGame.Core.Library.Common.Event;
 using Milimoe.FunGame.Core.Library.Common.Addon;
+using Milimoe.FunGame.Core.Library.Common.Event;
 
 namespace FunGame.Testing.Solutions
 {
@@ -17,7 +17,7 @@ namespace FunGame.Testing.Solutions
 
         public MyPlugin()
         {
-            
+
         }
 
         public void AfterLoginEvent(object sender, LoginEventArgs e)
@@ -62,7 +62,7 @@ namespace FunGame.Testing.Solutions
 
         public void BeforeIntoRoomEvent(object sender, RoomEventArgs e)
         {
-            
+
         }
 
         public void AfterIntoRoomEvent(object sender, RoomEventArgs e)
@@ -84,7 +84,7 @@ namespace FunGame.Testing.Solutions
 
         public void FailedIntoRoomEvent(object sender, RoomEventArgs e)
         {
-            
+
         }
     }
 }

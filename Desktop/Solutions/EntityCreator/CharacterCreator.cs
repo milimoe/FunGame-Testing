@@ -59,7 +59,7 @@ namespace Milimoe.FunGame.Testing.Desktop.Solutions
                 MessageBox.Show("姓不能为空。");
                 return;
             }
-            
+
             if (TextCode.Text.Trim() != "")
             {
                 name = TextCode.Text.Trim();
@@ -69,42 +69,42 @@ namespace Milimoe.FunGame.Testing.Desktop.Solutions
                 MessageBox.Show("角色存档标识不能为空。");
                 return;
             }
-            
+
             if (TextFirstName.Text.Trim() != "")
             {
                 c.FirstName = TextFirstName.Text.Trim();
             }
-            
+
             if (TextNickName.Text.Trim() != "")
             {
                 c.NickName = TextNickName.Text.Trim();
             }
-            
+
             if (TextATK.Text.Trim() != "" && double.TryParse(TextATK.Text.Trim(), out double atk))
             {
                 c.InitialATK = atk;
             }
-            
+
             if (TextHP.Text.Trim() != "" && double.TryParse(TextHP.Text.Trim(), out double hp))
             {
                 c.InitialHP = hp;
             }
-            
+
             if (TextMP.Text.Trim() != "" && double.TryParse(TextMP.Text.Trim(), out double mp))
             {
                 c.InitialMP = mp;
             }
-            
+
             if (TextHR.Text.Trim() != "" && double.TryParse(TextHR.Text.Trim(), out double hr))
             {
                 c.InitialHR = hr;
             }
-            
+
             if (TextMR.Text.Trim() != "" && double.TryParse(TextMR.Text.Trim(), out double mr))
             {
                 c.InitialMR = mr;
             }
-            
+
             if (ComboPA.Text.Trim() != "")
             {
                 string pa = ComboPA.Text.Trim();
@@ -126,32 +126,32 @@ namespace Milimoe.FunGame.Testing.Desktop.Solutions
             {
                 c.InitialSTR = str;
             }
-            
+
             if (TextGrowthSTR.Text.Trim() != "" && double.TryParse(TextGrowthSTR.Text.Trim(), out double strg))
             {
                 c.STRGrowth = strg;
             }
-            
+
             if (TextAGI.Text.Trim() != "" && double.TryParse(TextAGI.Text.Trim(), out double agi))
             {
                 c.InitialAGI = agi;
             }
-            
+
             if (TextGrowthAGI.Text.Trim() != "" && double.TryParse(TextGrowthAGI.Text.Trim(), out double agig))
             {
                 c.AGIGrowth = agig;
             }
-            
+
             if (TextINT.Text.Trim() != "" && double.TryParse(TextINT.Text.Trim(), out double @int))
             {
                 c.InitialINT = @int;
             }
-            
+
             if (TextGrowthINT.Text.Trim() != "" && double.TryParse(TextGrowthINT.Text.Trim(), out double intg))
             {
                 c.INTGrowth = intg;
             }
-            
+
             if (TextSPD.Text.Trim() != "" && double.TryParse(TextSPD.Text.Trim(), out double spd))
             {
                 c.InitialSPD = spd;

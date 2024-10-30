@@ -67,7 +67,7 @@ namespace Milimoe.FunGame.Testing.Desktop.Solutions
                 MessageBox.Show("技能存档标识不能为空。");
                 return;
             }
-            
+
             if (EditSkill != null)
             {
                 MessageBox.Show("保存成功！");

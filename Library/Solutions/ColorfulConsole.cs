@@ -1,5 +1,3 @@
-using System;
-
 namespace Milimoe.FunGame.Testing.Solutions
 {
     class ColorfulConsole

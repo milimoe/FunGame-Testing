@@ -1,5 +1,4 @@
-﻿using System.Collections.Generic;
-using Milimoe.FunGame.Core.Api.Utility;
+﻿using Milimoe.FunGame.Core.Api.Utility;
 using Milimoe.FunGame.Core.Entity;
 using Milimoe.FunGame.Core.Interface;
 using Milimoe.FunGame.Core.Library.Common.Addon;

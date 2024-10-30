@@ -1,9 +1,9 @@
 ﻿using Milimoe.FunGame.Core.Api.Utility;
 using Milimoe.FunGame.Core.Entity;
 using Milimoe.FunGame.Core.Library.Common.Addon;
+using Milimoe.FunGame.Testing.Effects.OpenEffects;
 using Milimoe.FunGame.Testing.Items;
 using Milimoe.FunGame.Testing.Skills;
-using Milimoe.FunGame.Testing.Effects.OpenEffects;
 
 namespace Addons
 {
