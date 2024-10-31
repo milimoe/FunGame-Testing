@@ -4,9 +4,9 @@ using System.Text.Json.Serialization;
 
 namespace DataSetJsonConverter
 {
-    class Program
+    public class DataSetTest
     {
-        static void Main(string[] args)
+        public DataSetTest()
         {
             Person p1 = new(1, "YES", DateTime.Now);
             Person p2 = new(2, "NO", DateTime.Now);
@@ -23,7 +23,7 @@ namespace DataSetJsonConverter
 
             jsonString = "[" + jsonString.Replace("}{", "},{") + "]";
 
-            var people = JsonSerializer.Deserialize<Person[]>(jsonString, options);
+            Person[] people = JsonSerializer.Deserialize<Person[]>(jsonString, options) ?? [];
 
             foreach (var person in people)
             {
@@ -45,13 +45,13 @@ namespace DataSetJsonConverter
             {
                 if (reader.TokenType == JsonTokenType.PropertyName)
                 {
-                    string propertyName = reader.GetString();
+                    string propertyName = reader.GetString() ?? "";
 
                     switch (propertyName)
                     {
                         case "TableName":
                             reader.Read();
-                            string tableName = reader.GetString();
+                            string tableName = reader.GetString() ?? "";
                             dataTable = new DataTable(tableName);
                             dataSet.Tables.Add(dataTable);
                             break;
@@ -197,7 +197,7 @@ namespace DataSetJsonConverter
                     {
                         if (reader.TokenType == JsonTokenType.PropertyName)
                         {
-                            string propertyName = reader.GetString();
+                            string propertyName = reader.GetString() ?? "";
 
                             switch (propertyName)
                             {
@@ -208,7 +208,7 @@ namespace DataSetJsonConverter
 
                                 case "DataType":
                                     reader.Read();
-                                    Type dataType = Type.GetType(reader.GetString());
+                                    Type dataType = Type.GetType(reader.GetString() ?? "") ?? typeof(string);
                                     column.DataType = dataType;
                                     break;
                             }
@@ -258,11 +258,11 @@ namespace DataSetJsonConverter
                                 break;
 
                             case "System.Char":
-                                values[index] = reader.GetString()[0];
+                                values[index] = (reader.GetString() ?? "")[0];
                                 break;
 
                             case "System.DateTime":
-                                string dateString = reader.GetString();
+                                string dateString = reader.GetString() ?? "";
                                 if (DateTime.TryParseExact(dateString, _format, null, System.Globalization.DateTimeStyles.None, out DateTime result))
                                 {
                                     values[index] = result;
@@ -278,7 +278,7 @@ namespace DataSetJsonConverter
                                 break;
 
                             case "System.Guid":
-                                values[index] = Guid.Parse(reader.GetString());
+                                values[index] = Guid.Parse(reader.GetString() ?? "");
                                 break;
 
                             case "System.Int16":
@@ -302,7 +302,7 @@ namespace DataSetJsonConverter
                                 break;
 
                             case "System.String":
-                                values[index] = reader.GetString();
+                                values[index] = reader.GetString() ?? "";
                                 break;
 
                             case "System.UInt16":
@@ -336,7 +336,7 @@ namespace DataSetJsonConverter
                 throw new JsonException();
             }
 
-            string dateString = reader.GetString();
+            string dateString = reader.GetString() ?? "";
 
             if (DateTime.TryParseExact(dateString, _format, null, System.Globalization.DateTimeStyles.None, out DateTime result))
             {

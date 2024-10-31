@@ -40,11 +40,11 @@ namespace Milimoe.FunGame.Testing.Skills
             }
         }
 
-        public override void OnSkillCasted(Character caster, List<Character> enemys, List<Character> teammates, Dictionary<string, object> others)
+        public override void OnSkillCasted(Character caster, List<Character> targets, Dictionary<string, object> others)
         {
-            if (enemys.Count > 0)
+            if (targets.Count > 0)
             {
-                Character enemy = enemys[new Random().Next(enemys.Count)];
+                Character enemy = targets[0];
                 DamageToEnemy(caster, enemy, true, MagicType, Damage);
             }
         }

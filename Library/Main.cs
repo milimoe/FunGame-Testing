@@ -12,8 +12,9 @@ ItemModule im = new();
 im.Load();
 
 FunGameSimulation.InitCharacter();
+FunGameSimulation.StartGame(true, false, true);
 
-Stopwatch stopwatch = new Stopwatch();
+Stopwatch stopwatch = new();
 stopwatch.Start();
 
 for (int i = 0; i < 300; i++)
