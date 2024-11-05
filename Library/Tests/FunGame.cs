@@ -524,7 +524,9 @@ namespace Milimoe.FunGame.Testing.Tests
             {
                 foreach (Item item in 这次发放的空投)
                 {
-                    queue.Equip(character, item.Copy(1));
+                    Item newItem = item.Copy();
+                    newItem.SetLevel(1);
+                    queue.Equip(character, newItem);
                 }
             }
             WriteLine("");
