@@ -12,14 +12,20 @@ ItemModule im = new();
 im.Load();
 
 FunGameSimulation.InitCharacter();
-//FunGameSimulation.StartGame(true, false, true);
+FunGameSimulation.StartGame(true, false, true);
 
-foreach (Skill s in FunGameSimulation.Magics)
-{
-    Skill s2 = s.Copy();
-    s2.Level++;
-    Console.WriteLine(s2);
-}
+//Character c = FunGameSimulation.Characters[1].Copy();
+//foreach (Skill s in FunGameSimulation.Magics)
+//{
+//    Skill s2 = s.Copy();
+//    s2.Character = c;
+//    Console.WriteLine(s2);
+//    s2.Level++;
+//    Console.WriteLine(s2);
+//    c.Level = 60;
+//    s2.Level = 8;
+//    Console.WriteLine(s2);
+//}
 
 //Stopwatch stopwatch = new();
 //stopwatch.Start();
