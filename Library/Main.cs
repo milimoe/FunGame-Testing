@@ -12,7 +12,8 @@ ItemModule im = new();
 im.Load();
 
 FunGameSimulation.InitCharacter();
-FunGameSimulation.StartGame(true, false, true);
+List<string> strings = FunGameSimulation.StartGame(false, false, true);
+strings.ForEach(Console.WriteLine);
 
 //Character c = FunGameSimulation.Characters[1].Copy();
 //foreach (Skill s in FunGameSimulation.Magics)
@@ -30,8 +31,9 @@ FunGameSimulation.StartGame(true, false, true);
 //Stopwatch stopwatch = new();
 //stopwatch.Start();
 
-//for (int i = 0; i < 30; i++)
+//for (int i = 0; i < 2000; i++)
 //{
+//    Console.WriteLine($"{i}/2000");
 //    FunGameSimulation.StartGame(false, false, false);
 //    FunGameSimulation.StartGame(false, false, true);
 //}

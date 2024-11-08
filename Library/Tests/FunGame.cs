@@ -2,8 +2,6 @@
 using Milimoe.FunGame.Core.Api.Utility;
 using Milimoe.FunGame.Core.Entity;
 using Milimoe.FunGame.Core.Model;
-using Milimoe.FunGame.Testing.Items;
-using Milimoe.FunGame.Testing.Skills;
 using MilimoeFunGame.Testing.Characters;
 
 namespace Milimoe.FunGame.Testing.Tests
@@ -86,209 +84,209 @@ namespace Milimoe.FunGame.Testing.Tests
                         character9, character10, character11, character12
                     ];
 
-                    int clevel = 60;
-                    int slevel = 6;
-                    int mlevel = 8;
+                    //int clevel = 60;
+                    //int slevel = 6;
+                    //int mlevel = 8;
 
                     // 升级和赋能
-                    for (int index = 0; index < characters.Count; index++)
-                    {
-                        Character c = characters[index];
-                        c.Level = clevel;
-                        c.NormalAttack.Level = mlevel;
+                    //for (int index = 0; index < characters.Count; index++)
+                    //{
+                    //    Character c = characters[index];
+                    //    c.Level = clevel;
+                    //    c.NormalAttack.Level = mlevel;
 
-                        Skill 冰霜攻击 = new 冰霜攻击(c)
-                        {
-                            Level = mlevel
-                        };
-                        c.Skills.Add(冰霜攻击);
+                    //    Skill 冰霜攻击 = new 冰霜攻击(c)
+                    //    {
+                    //        Level = mlevel
+                    //    };
+                    //    c.Skills.Add(冰霜攻击);
 
-                        Skill 疾风步 = new 疾风步(c)
-                        {
-                            Level = slevel
-                        };
-                        c.Skills.Add(疾风步);
+                    //    Skill 疾风步 = new 疾风步(c)
+                    //    {
+                    //        Level = slevel
+                    //    };
+                    //    c.Skills.Add(疾风步);
 
-                        if (c == character1)
-                        {
-                            Skill META马 = new META马(c)
-                            {
-                                Level = 1
-                            };
-                            c.Skills.Add(META马);
+                    //    if (c == character1)
+                    //    {
+                    //        Skill META马 = new META马(c)
+                    //        {
+                    //            Level = 1
+                    //        };
+                    //        c.Skills.Add(META马);
 
-                            Skill 力量爆发 = new 力量爆发(c)
-                            {
-                                Level = mlevel
-                            };
-                            c.Skills.Add(力量爆发);
-                        }
+                    //        Skill 力量爆发 = new 力量爆发(c)
+                    //        {
+                    //            Level = mlevel
+                    //        };
+                    //        c.Skills.Add(力量爆发);
+                    //    }
 
-                        if (c == character2)
-                        {
-                            Skill 心灵之火 = new 心灵之火(c)
-                            {
-                                Level = 1
-                            };
-                            c.Skills.Add(心灵之火);
+                    //    if (c == character2)
+                    //    {
+                    //        Skill 心灵之火 = new 心灵之火(c)
+                    //        {
+                    //            Level = 1
+                    //        };
+                    //        c.Skills.Add(心灵之火);
 
-                            Skill 天赐之力 = new 天赐之力(c)
-                            {
-                                Level = slevel
-                            };
-                            c.Skills.Add(天赐之力);
-                        }
+                    //        Skill 天赐之力 = new 天赐之力(c)
+                    //        {
+                    //            Level = slevel
+                    //        };
+                    //        c.Skills.Add(天赐之力);
+                    //    }
 
-                        if (c == character3)
-                        {
-                            Skill 魔法震荡 = new 魔法震荡(c)
-                            {
-                                Level = 1
-                            };
-                            c.Skills.Add(魔法震荡);
+                    //    if (c == character3)
+                    //    {
+                    //        Skill 魔法震荡 = new 魔法震荡(c)
+                    //        {
+                    //            Level = 1
+                    //        };
+                    //        c.Skills.Add(魔法震荡);
 
-                            Skill 魔法涌流 = new 魔法涌流(c)
-                            {
-                                Level = slevel
-                            };
-                            c.Skills.Add(魔法涌流);
-                        }
+                    //        Skill 魔法涌流 = new 魔法涌流(c)
+                    //        {
+                    //            Level = slevel
+                    //        };
+                    //        c.Skills.Add(魔法涌流);
+                    //    }
 
-                        if (c == character4)
-                        {
-                            Skill 灵能反射 = new 灵能反射(c)
-                            {
-                                Level = 1
-                            };
-                            c.Skills.Add(灵能反射);
+                    //    if (c == character4)
+                    //    {
+                    //        Skill 灵能反射 = new 灵能反射(c)
+                    //        {
+                    //            Level = 1
+                    //        };
+                    //        c.Skills.Add(灵能反射);
 
-                            Skill 三重叠加 = new 三重叠加(c)
-                            {
-                                Level = slevel
-                            };
-                            c.Skills.Add(三重叠加);
-                        }
+                    //        Skill 三重叠加 = new 三重叠加(c)
+                    //        {
+                    //            Level = slevel
+                    //        };
+                    //        c.Skills.Add(三重叠加);
+                    //    }
 
-                        if (c == character5)
-                        {
-                            Skill 智慧与力量 = new 智慧与力量(c)
-                            {
-                                Level = 1
-                            };
-                            c.Skills.Add(智慧与力量);
+                    //    if (c == character5)
+                    //    {
+                    //        Skill 智慧与力量 = new 智慧与力量(c)
+                    //        {
+                    //            Level = 1
+                    //        };
+                    //        c.Skills.Add(智慧与力量);
 
-                            Skill 变幻之心 = new 变幻之心(c)
-                            {
-                                Level = slevel
-                            };
-                            c.Skills.Add(变幻之心);
-                        }
+                    //        Skill 变幻之心 = new 变幻之心(c)
+                    //        {
+                    //            Level = slevel
+                    //        };
+                    //        c.Skills.Add(变幻之心);
+                    //    }
 
-                        if (c == character6)
-                        {
-                            Skill 致命打击 = new 致命打击(c)
-                            {
-                                Level = 1
-                            };
-                            c.Skills.Add(致命打击);
+                    //    if (c == character6)
+                    //    {
+                    //        Skill 致命打击 = new 致命打击(c)
+                    //        {
+                    //            Level = 1
+                    //        };
+                    //        c.Skills.Add(致命打击);
 
-                            Skill 精准打击 = new 精准打击(c)
-                            {
-                                Level = slevel
-                            };
-                            c.Skills.Add(精准打击);
-                        }
+                    //        Skill 精准打击 = new 精准打击(c)
+                    //        {
+                    //            Level = slevel
+                    //        };
+                    //        c.Skills.Add(精准打击);
+                    //    }
 
-                        if (c == character7)
-                        {
-                            Skill 毁灭之势 = new 毁灭之势(c)
-                            {
-                                Level = 1
-                            };
-                            c.Skills.Add(毁灭之势);
+                    //    if (c == character7)
+                    //    {
+                    //        Skill 毁灭之势 = new 毁灭之势(c)
+                    //        {
+                    //            Level = 1
+                    //        };
+                    //        c.Skills.Add(毁灭之势);
 
-                            Skill 绝对领域 = new 绝对领域(c)
-                            {
-                                Level = slevel
-                            };
-                            c.Skills.Add(绝对领域);
-                        }
+                    //        Skill 绝对领域 = new 绝对领域(c)
+                    //        {
+                    //            Level = slevel
+                    //        };
+                    //        c.Skills.Add(绝对领域);
+                    //    }
 
-                        if (c == character8)
-                        {
-                            Skill 枯竭打击 = new 枯竭打击(c)
-                            {
-                                Level = 1
-                            };
-                            c.Skills.Add(枯竭打击);
+                    //    if (c == character8)
+                    //    {
+                    //        Skill 枯竭打击 = new 枯竭打击(c)
+                    //        {
+                    //            Level = 1
+                    //        };
+                    //        c.Skills.Add(枯竭打击);
 
-                            Skill 能量毁灭 = new 能量毁灭(c)
-                            {
-                                Level = slevel
-                            };
-                            c.Skills.Add(能量毁灭);
-                        }
+                    //        Skill 能量毁灭 = new 能量毁灭(c)
+                    //        {
+                    //            Level = slevel
+                    //        };
+                    //        c.Skills.Add(能量毁灭);
+                    //    }
 
-                        if (c == character9)
-                        {
-                            Skill 玻璃大炮 = new 玻璃大炮(c)
-                            {
-                                Level = 1
-                            };
-                            c.Skills.Add(玻璃大炮);
+                    //    if (c == character9)
+                    //    {
+                    //        Skill 玻璃大炮 = new 玻璃大炮(c)
+                    //        {
+                    //            Level = 1
+                    //        };
+                    //        c.Skills.Add(玻璃大炮);
 
-                            Skill 迅捷之势 = new 迅捷之势(c)
-                            {
-                                Level = slevel
-                            };
-                            c.Skills.Add(迅捷之势);
-                        }
+                    //        Skill 迅捷之势 = new 迅捷之势(c)
+                    //        {
+                    //            Level = slevel
+                    //        };
+                    //        c.Skills.Add(迅捷之势);
+                    //    }
 
-                        if (c == character10)
-                        {
-                            Skill 累积之压 = new 累积之压(c)
-                            {
-                                Level = 1
-                            };
-                            c.Skills.Add(累积之压);
+                    //    if (c == character10)
+                    //    {
+                    //        Skill 累积之压 = new 累积之压(c)
+                    //        {
+                    //            Level = 1
+                    //        };
+                    //        c.Skills.Add(累积之压);
 
-                            Skill 嗜血本能 = new 嗜血本能(c)
-                            {
-                                Level = slevel
-                            };
-                            c.Skills.Add(嗜血本能);
-                        }
+                    //        Skill 嗜血本能 = new 嗜血本能(c)
+                    //        {
+                    //            Level = slevel
+                    //        };
+                    //        c.Skills.Add(嗜血本能);
+                    //    }
 
-                        if (c == character11)
-                        {
-                            Skill 敏捷之刃 = new 敏捷之刃(c)
-                            {
-                                Level = 1
-                            };
-                            c.Skills.Add(敏捷之刃);
+                    //    if (c == character11)
+                    //    {
+                    //        Skill 敏捷之刃 = new 敏捷之刃(c)
+                    //        {
+                    //            Level = 1
+                    //        };
+                    //        c.Skills.Add(敏捷之刃);
 
-                            Skill 平衡强化 = new 平衡强化(c)
-                            {
-                                Level = slevel
-                            };
-                            c.Skills.Add(平衡强化);
-                        }
+                    //        Skill 平衡强化 = new 平衡强化(c)
+                    //        {
+                    //            Level = slevel
+                    //        };
+                    //        c.Skills.Add(平衡强化);
+                    //    }
 
-                        if (c == character12)
-                        {
-                            Skill 弱者猎手 = new 弱者猎手(c)
-                            {
-                                Level = 1
-                            };
-                            c.Skills.Add(弱者猎手);
+                    //    if (c == character12)
+                    //    {
+                    //        Skill 弱者猎手 = new 弱者猎手(c)
+                    //        {
+                    //            Level = 1
+                    //        };
+                    //        c.Skills.Add(弱者猎手);
 
-                            Skill 血之狂欢 = new 血之狂欢(c)
-                            {
-                                Level = slevel
-                            };
-                            c.Skills.Add(血之狂欢);
-                        }
-                    }
+                    //        Skill 血之狂欢 = new 血之狂欢(c)
+                    //        {
+                    //            Level = slevel
+                    //        };
+                    //        c.Skills.Add(血之狂欢);
+                    //    }
+                    //}
 
                     // 显示角色信息
                     if (PrintOut) characters.ForEach(c => Console.WriteLine(c.GetInfo()));
@@ -563,7 +561,7 @@ namespace Milimoe.FunGame.Testing.Tests
 
             Dictionary<string, Item> exitem = Factory.GetGameModuleInstances<Item>(nameof(SkillJSONTest), nameof(Item));
             Items.AddRange(exitem.Values);
-            Items.AddRange([new 攻击之爪10(), new 攻击之爪30(), new 攻击之爪50()]);
+            //Items.AddRange([new 攻击之爪10(), new 攻击之爪30(), new 攻击之爪50()]);
         }
     }
 }

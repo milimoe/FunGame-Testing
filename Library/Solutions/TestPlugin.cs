@@ -3,8 +3,6 @@ using Milimoe.FunGame.Core.Entity;
 using Milimoe.FunGame.Core.Interface;
 using Milimoe.FunGame.Core.Library.Common.Addon;
 using Milimoe.FunGame.Core.Library.Common.Event;
-using Milimoe.FunGame.Testing.Items;
-using Milimoe.FunGame.Testing.Skills;
 using MilimoeFunGame.Testing.Characters;
 
 namespace Addons
@@ -39,36 +37,8 @@ namespace Addons
             config.SaveConfig();
 
             EntityModuleConfig<Skill> config2 = new(ExampleGameModuleConstant.Example, ExampleGameModuleConstant.ExampleSkill);
-            Character c = Factory.GetCharacter();
+            //Character c = Factory.GetCharacter();
             List<Skill> listSkill = [];
-            listSkill.Add(new 冰霜攻击(c));
-            listSkill.Add(new 疾风步(c));
-            listSkill.Add(new META马(c));
-            listSkill.Add(new 力量爆发(c));
-            listSkill.Add(new 心灵之火(c));
-            listSkill.Add(new 天赐之力(c));
-            listSkill.Add(new 魔法震荡(c));
-            listSkill.Add(new 魔法涌流(c));
-            listSkill.Add(new 灵能反射(c));
-            listSkill.Add(new 三重叠加(c));
-            listSkill.Add(new 智慧与力量(c));
-            listSkill.Add(new 变幻之心(c));
-            listSkill.Add(new 致命打击(c));
-            listSkill.Add(new 精准打击(c));
-            listSkill.Add(new 毁灭之势(c));
-            listSkill.Add(new 绝对领域(c));
-            listSkill.Add(new 枯竭打击(c));
-            listSkill.Add(new 能量毁灭(c));
-            listSkill.Add(new 玻璃大炮(c));
-            listSkill.Add(new 迅捷之势(c));
-            listSkill.Add(new 累积之压(c));
-            listSkill.Add(new 嗜血本能(c));
-            listSkill.Add(new 敏捷之刃(c));
-            listSkill.Add(new 平衡强化(c));
-            listSkill.Add(new 弱者猎手(c));
-            listSkill.Add(new 血之狂欢(c));
-            listSkill.Add(new 冰霜攻击(c));
-            listSkill.Add(new 疾风步(c));
             foreach (Skill s in listSkill)
             {
                 config2.Add(s.Name, s);
@@ -77,9 +47,7 @@ namespace Addons
 
             EntityModuleConfig<Item> config3 = new(ExampleGameModuleConstant.Example, ExampleGameModuleConstant.ExampleItem)
             {
-                { "攻击之爪10", new 攻击之爪10() },
-                { "攻击之爪30", new 攻击之爪30() },
-                { "攻击之爪50", new 攻击之爪50() }
+
             };
             config3.SaveConfig();
 
