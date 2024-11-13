@@ -1,8 +1,10 @@
 using System.Diagnostics;
 using System.Text;
+using Milimoe.FunGame.Core.Api.Utility;
 using Milimoe.FunGame.Core.Entity;
 using Oshima.Core.Utils;
 using Oshima.FunGame.OshimaModules;
+using Oshima.FunGame.OshimaModules.Skills;
 
 CharacterModule cm = new();
 cm.Load();
@@ -11,11 +13,97 @@ sm.Load();
 ItemModule im = new();
 im.Load();
 
-FunGameSimulation.InitCharacter();
-List<string> strings = FunGameSimulation.StartGame(false, false, true);
-strings.ForEach(Console.WriteLine);
+FunGameSimulation.InitFunGame();
+//List<string> strings = FunGameSimulation.StartGame(false, false, true);
+//strings.ForEach(Console.WriteLine);
 
-//Character c = FunGameSimulation.Characters[1].Copy();
+User user = Factory.GetUser(1, "Mili");
+PluginConfig pc = new("saved", user.Id.ToString());
+// 读取存档
+pc.LoadConfig();
+
+if (pc.Count == 0)
+{
+    Character originalCharacter = FunGameSimulation.Characters[1].Copy();
+    Character exampleCharacter = originalCharacter.Copy();
+    exampleCharacter.Level = 30;
+    Skill xlzh = new 心灵之火
+    {
+        Character = exampleCharacter,
+        Level = 1
+    };
+    exampleCharacter.Skills.Add(xlzh);
+    Skill tczl = new 天赐之力
+    {
+        Character = exampleCharacter,
+        Level = 3
+    };
+    exampleCharacter.Skills.Add(tczl);
+
+    List<Item> 魔法卡 = FunGameSimulation.GenerateMagicCards(3, Milimoe.FunGame.Core.Library.Constant.QualityType.Orange);
+    Item? 魔法卡包 = FunGameSimulation.ConflateMagicCardPack(魔法卡);
+    if (魔法卡包 != null)
+    {
+        exampleCharacter.Equip(魔法卡包);
+        Console.WriteLine(魔法卡包.ToString(false, true));
+    }
+
+    Item[] 饰品 = FunGameSimulation.Equipment.Where(i => i.Id.ToString().StartsWith("14")).ToArray();
+    Item sp = 饰品[Random.Shared.Next(饰品.Length)].Copy();
+    exampleCharacter.Equip(sp);
+
+    Console.WriteLine(exampleCharacter.GetInfo());
+
+    pc.Add("original", originalCharacter);
+    user.Inventory.Characters.Add(exampleCharacter.GetName(), exampleCharacter);
+    Item mfk = FunGameSimulation.GenerateMagicCard();
+    user.Inventory.Items[mfk.Guid.ToString()] = mfk;
+    mfk = FunGameSimulation.GenerateMagicCard();
+    user.Inventory.Items[mfk.Guid.ToString()] = mfk;
+    mfk = FunGameSimulation.GenerateMagicCard();
+    user.Inventory.Items[mfk.Guid.ToString()] = mfk;
+    pc.Add("user", user);
+}
+else
+{
+    user = pc.Get<User>("user") ?? Factory.GetUser();
+    Character originalCharacter = pc.Get<Character>("original") ?? Factory.GetCharacter();
+    Character exampleCharacter = user.Inventory.Characters.Values.First();
+    exampleCharacter.Respawn(originalCharacter);
+
+    Console.WriteLine(exampleCharacter.GetInfo());
+}
+
+// 保存存档
+pc.SaveConfig();
+//Item[] 武器 = FunGameSimulation.Equipment.Where(i => i.Id.ToString().StartsWith("11")).ToArray();
+//Item[] 防具 = FunGameSimulation.Equipment.Where(i => i.Id.ToString().StartsWith("12")).ToArray();
+//Item[] 鞋子 = FunGameSimulation.Equipment.Where(i => i.Id.ToString().StartsWith("13")).ToArray();
+//Item[] 饰品 = FunGameSimulation.Equipment.Where(i => i.Id.ToString().StartsWith("14")).ToArray();
+//Item? a = null, b = null, c = null, d = null;
+//if (武器.Length > 0)
+//{
+//    a = 武器[Random.Shared.Next(武器.Length)];
+//    exampleCharacter.Equip(a.Copy());
+//}
+//if (防具.Length > 0)
+//{
+//    b = 防具[Random.Shared.Next(防具.Length)];
+//    exampleCharacter.Equip(b.Copy());
+//}
+//if (鞋子.Length > 0)
+//{
+//    c = 鞋子[Random.Shared.Next(鞋子.Length)];
+//    exampleCharacter.Equip(c.Copy());
+//}
+//if (饰品.Length > 0)
+//{
+//    d = 饰品[Random.Shared.Next(饰品.Length)];
+//    exampleCharacter.Equip(d.Copy());
+//    d = 饰品[Random.Shared.Next(饰品.Length)];
+//    exampleCharacter.Equip(d.Copy());
+//}
+
 //foreach (Skill s in FunGameSimulation.Magics)
 //{
 //    Skill s2 = s.Copy();
@@ -111,7 +199,7 @@ while (true)
                 builder.AppendLine($"总计冠军数：{stats.Wins}");
                 builder.AppendLine($"总计前三数：{stats.Top3s}");
                 builder.AppendLine($"总计败场数：{stats.Loses}");
-                
+
                 List<string> names = [.. FunGameSimulation.TeamCharacterStatistics.OrderByDescending(kv => kv.Value.Winrates).Select(kv => kv.Key.GetName())];
                 builder.AppendLine($"胜率：{stats.Winrates * 100:0.##}%（#{names.IndexOf(character.GetName()) + 1}）");
 
@@ -158,7 +246,7 @@ while (true)
                 builder.AppendLine($"总计冠军数：{stats.Wins}");
                 builder.AppendLine($"总计前三数：{stats.Top3s}");
                 builder.AppendLine($"总计败场数：{stats.Loses}");
-                
+
                 List<string> names = [.. FunGameSimulation.CharacterStatistics.OrderByDescending(kv => kv.Value.Winrates).Select(kv => kv.Key.GetName())];
                 builder.AppendLine($"胜率：{stats.Winrates * 100:0.##}%（#{names.IndexOf(character.GetName()) + 1}）");
                 builder.AppendLine($"前三率：{stats.Top3rates * 100:0.##}%");
