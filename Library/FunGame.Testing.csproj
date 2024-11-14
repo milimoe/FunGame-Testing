@@ -2,7 +2,7 @@
 
   <PropertyGroup>
     <OutputType>Exe</OutputType>
-    <TargetFramework>net8.0</TargetFramework>
+    <TargetFramework>net9.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <BaseOutputPath>..\bin\</BaseOutputPath>
@@ -18,19 +18,13 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Reference Include="FunGame.Core">
-      <HintPath>..\..\FunGame.Core\bin\Debug\net8.0\FunGame.Core.dll</HintPath>
-    </Reference>
+    <Compile Remove="Items\**" />
+    <EmbeddedResource Remove="Items\**" />
+    <None Remove="Items\**" />
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="Items\Armor\" />
-    <Folder Include="Items\Consumable\" />
-    <Folder Include="Items\MagicCardPack\" />
-    <Folder Include="Items\Shoes\" />
-  </ItemGroup>
-
-  <ItemGroup>
+    <ProjectReference Include="..\..\FunGame.Core\FunGame.Core.csproj" />
     <ProjectReference Include="..\..\OshimaGameModule\OshimaCore\OshimaCore.csproj" />
     <ProjectReference Include="..\..\OshimaGameModule\OshimaModules\OshimaModules.csproj" />
   </ItemGroup>

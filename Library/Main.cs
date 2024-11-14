@@ -2,6 +2,7 @@ using System.Diagnostics;
 using System.Text;
 using Milimoe.FunGame.Core.Api.Utility;
 using Milimoe.FunGame.Core.Entity;
+using Milimoe.FunGame.Core.Library.Constant;
 using Oshima.Core.Utils;
 using Oshima.FunGame.OshimaModules;
 using Oshima.FunGame.OshimaModules.Skills;
@@ -18,14 +19,15 @@ FunGameSimulation.InitFunGame();
 //strings.ForEach(Console.WriteLine);
 
 User user = Factory.GetUser(1, "Mili");
+user.Inventory.Credits = 204824.59;
+user.Inventory.Materials = 132415.2;
 PluginConfig pc = new("saved", user.Id.ToString());
 // 读取存档
 pc.LoadConfig();
 
 if (pc.Count == 0)
 {
-    Character originalCharacter = FunGameSimulation.Characters[1].Copy();
-    Character exampleCharacter = originalCharacter.Copy();
+    Character exampleCharacter = FunGameSimulation.Characters[1].Copy();
     exampleCharacter.Level = 30;
     Skill xlzh = new 心灵之火
     {
@@ -40,38 +42,112 @@ if (pc.Count == 0)
     };
     exampleCharacter.Skills.Add(tczl);
 
-    List<Item> 魔法卡 = FunGameSimulation.GenerateMagicCards(3, Milimoe.FunGame.Core.Library.Constant.QualityType.Orange);
+    List<Item> 魔法卡 = FunGameSimulation.GenerateMagicCards(3, QualityType.Orange);
     Item? 魔法卡包 = FunGameSimulation.ConflateMagicCardPack(魔法卡);
     if (魔法卡包 != null)
     {
+        user.Inventory.Items.Add(魔法卡包);
         exampleCharacter.Equip(魔法卡包);
         Console.WriteLine(魔法卡包.ToString(false, true));
     }
 
     Item[] 饰品 = FunGameSimulation.Equipment.Where(i => i.Id.ToString().StartsWith("14")).ToArray();
     Item sp = 饰品[Random.Shared.Next(饰品.Length)].Copy();
+    sp.IsSellable = false;
+    user.Inventory.Items.Add(sp);
     exampleCharacter.Equip(sp);
+    sp = 饰品[Random.Shared.Next(饰品.Length)].Copy();
+    sp.IsTradable = false;
+    user.Inventory.Items.Add(sp);
+    exampleCharacter.Equip(sp);
+    sp = 饰品[Random.Shared.Next(饰品.Length)].Copy();
+    sp.IsSellable = false;
+    sp.IsTradable = false;
+    user.Inventory.Items.Add(sp);
+    exampleCharacter.Equip(sp);
+    sp = 饰品[Random.Shared.Next(饰品.Length)].Copy();
+    sp.IsTradable = false;
+    sp.NextTradableTime = DateTimeUtility.GetTradableTime();
+    user.Inventory.Items.Add(sp);
+    exampleCharacter.Equip(sp);
+    sp = 饰品[Random.Shared.Next(饰品.Length)].Copy();
+    user.Inventory.Items.Add(sp);
+    sp = 饰品[Random.Shared.Next(饰品.Length)].Copy();
+    user.Inventory.Items.Add(sp);
 
     Console.WriteLine(exampleCharacter.GetInfo());
 
-    pc.Add("original", originalCharacter);
-    user.Inventory.Characters.Add(exampleCharacter.GetName(), exampleCharacter);
+    user.Inventory.Characters.Add(exampleCharacter);
     Item mfk = FunGameSimulation.GenerateMagicCard();
-    user.Inventory.Items[mfk.Guid.ToString()] = mfk;
+    user.Inventory.Items.Add(mfk);
     mfk = FunGameSimulation.GenerateMagicCard();
-    user.Inventory.Items[mfk.Guid.ToString()] = mfk;
+    user.Inventory.Items.Add(mfk);
     mfk = FunGameSimulation.GenerateMagicCard();
-    user.Inventory.Items[mfk.Guid.ToString()] = mfk;
+    user.Inventory.Items.Add(mfk);
     pc.Add("user", user);
 }
 else
 {
     user = pc.Get<User>("user") ?? Factory.GetUser();
-    Character originalCharacter = pc.Get<Character>("original") ?? Factory.GetCharacter();
-    Character exampleCharacter = user.Inventory.Characters.Values.First();
-    exampleCharacter.Respawn(originalCharacter);
 
-    Console.WriteLine(exampleCharacter.GetInfo());
+    List<Character> characters = new(user.Inventory.Characters);
+    List<Item> items = new(user.Inventory.Items);
+    user.Inventory.Characters.Clear();
+    user.Inventory.Items.Clear();
+
+    foreach (Character inventoryCharacter in characters)
+    {
+        Character realCharacter = CharacterBuilder.Build(inventoryCharacter, false);
+        realCharacter.User = user;
+        user.Inventory.Characters.Add(realCharacter);
+    }
+
+    foreach (Item inventoryItem in items)
+    {
+        Item realItem = inventoryItem.Copy(true, true);
+        if (realItem.IsEquipment)
+        {
+            IEnumerable<Character> has = user.Inventory.Characters.Where(character =>
+            {
+                if (realItem.ItemType == ItemType.MagicCardPack && character.EquipSlot.MagicCardPack != null && realItem.Guid == character.EquipSlot.MagicCardPack.Guid)
+                {
+                    return true;
+                }
+                if (realItem.ItemType == ItemType.Weapon && character.EquipSlot.Weapon != null && realItem.Guid == character.EquipSlot.Weapon.Guid)
+                {
+                    return true;
+                }
+                if (realItem.ItemType == ItemType.Armor && character.EquipSlot.Armor != null && realItem.Guid == character.EquipSlot.Armor.Guid)
+                {
+                    return true;
+                }
+                if (realItem.ItemType == ItemType.Shoes && character.EquipSlot.Shoes != null && realItem.Guid == character.EquipSlot.Shoes.Guid)
+                {
+                    return true;
+                }
+                if (realItem.ItemType == ItemType.Accessory)
+                {
+                    if (character.EquipSlot.Accessory1 != null && realItem.Guid == character.EquipSlot.Accessory1.Guid)
+                    {
+                        return true;
+                    }
+                    else if (character.EquipSlot.Accessory2 != null && realItem.Guid == character.EquipSlot.Accessory2.Guid)
+                    {
+                        return true;
+                    }
+                }
+                return false;
+            });
+            if (has.Any() && has.First() is Character character)
+            {
+                realItem.Character = character;
+            }
+        }
+        user.Inventory.Items.Add(realItem);
+    }
+
+    Console.WriteLine(user.Inventory.ToString(false));
+    Console.WriteLine(user.Inventory.ToString(true));
 }
 
 // 保存存档

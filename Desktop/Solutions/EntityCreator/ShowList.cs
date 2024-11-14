@@ -1,7 +1,10 @@
-﻿namespace Milimoe.FunGame.Testing.Desktop.Solutions
+﻿using System.ComponentModel;
+
+namespace Milimoe.FunGame.Testing.Desktop.Solutions
 {
     public partial class ShowList : Form
     {
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public string SelectItem { get; set; } = "";
 
         public ShowList()

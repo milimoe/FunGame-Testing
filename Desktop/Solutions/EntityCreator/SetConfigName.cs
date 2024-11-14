@@ -1,10 +1,13 @@
 ﻿using Milimoe.FunGame.Core.Api.Utility;
+using System.ComponentModel;
 
 namespace Milimoe.FunGame.Testing.Desktop.Solutions
 {
     public partial class SetConfigName : Form
     {
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public string FileName { get; set; } = "";
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public string ModuleName { get; set; } = "";
         public CharacterManager CharacterManager { get; }
         public SkillManager SkillManager { get; }
