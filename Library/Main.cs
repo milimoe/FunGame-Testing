@@ -1,8 +1,10 @@
 using System.Diagnostics;
 using System.Text;
+using Microsoft.Extensions.Logging;
 using Milimoe.FunGame.Core.Api.Utility;
 using Milimoe.FunGame.Core.Entity;
 using Milimoe.FunGame.Core.Library.Constant;
+using Oshima.Core.Controllers;
 using Oshima.Core.Utils;
 using Oshima.FunGame.OshimaModules;
 using Oshima.FunGame.OshimaModules.Skills;
@@ -14,11 +16,18 @@ sm.Load();
 ItemModule im = new();
 im.Load();
 
+FunGameService.InitFunGame();
 FunGameSimulation.InitFunGame();
+
+FunGameController fc = new(new Logger<FunGameController>(new LoggerFactory()));
+Console.WriteLine(string.Join("\r\n", fc.GetInventoryInfo2(3305106902, 23)));
+
 //List<string> strings = FunGameSimulation.StartGame(false, false, true);
 //strings.ForEach(Console.WriteLine);
 
-User user = Factory.GetUser(1, "Mili");
+User user = Factory.GetUser(1, FunGameService.GenerateRandomChineseUserName());
+Console.WriteLine("你的名字是" + user.Username);
+
 user.Inventory.Credits = 204824.59;
 user.Inventory.Materials = 132415.2;
 PluginConfig pc = new("saved", user.Id.ToString());
@@ -27,7 +36,7 @@ pc.LoadConfig();
 
 if (pc.Count == 0)
 {
-    Character exampleCharacter = FunGameSimulation.Characters[1].Copy();
+    Character exampleCharacter = FunGameService.Characters[1].Copy();
     exampleCharacter.Level = 30;
     Skill xlzh = new 心灵之火
     {
@@ -42,8 +51,8 @@ if (pc.Count == 0)
     };
     exampleCharacter.Skills.Add(tczl);
 
-    List<Item> 魔法卡 = FunGameSimulation.GenerateMagicCards(3, QualityType.Orange);
-    Item? 魔法卡包 = FunGameSimulation.ConflateMagicCardPack(魔法卡);
+    List<Item> 魔法卡 = FunGameService.GenerateMagicCards(3, QualityType.Orange);
+    Item? 魔法卡包 = FunGameService.ConflateMagicCardPack(魔法卡);
     if (魔法卡包 != null)
     {
         user.Inventory.Items.Add(魔法卡包);
@@ -51,7 +60,7 @@ if (pc.Count == 0)
         Console.WriteLine(魔法卡包.ToString(false, true));
     }
 
-    Item[] 饰品 = FunGameSimulation.Equipment.Where(i => i.Id.ToString().StartsWith("14")).ToArray();
+    Item[] 饰品 = FunGameService.Equipment.Where(i => i.Id.ToString().StartsWith("14")).ToArray();
     Item sp = 饰品[Random.Shared.Next(饰品.Length)].Copy();
     sp.IsSellable = false;
     user.Inventory.Items.Add(sp);
@@ -78,73 +87,17 @@ if (pc.Count == 0)
     Console.WriteLine(exampleCharacter.GetInfo());
 
     user.Inventory.Characters.Add(exampleCharacter);
-    Item mfk = FunGameSimulation.GenerateMagicCard();
+    Item mfk = FunGameService.GenerateMagicCard();
     user.Inventory.Items.Add(mfk);
-    mfk = FunGameSimulation.GenerateMagicCard();
+    mfk = FunGameService.GenerateMagicCard();
     user.Inventory.Items.Add(mfk);
-    mfk = FunGameSimulation.GenerateMagicCard();
+    mfk = FunGameService.GenerateMagicCard();
     user.Inventory.Items.Add(mfk);
     pc.Add("user", user);
 }
 else
 {
-    user = pc.Get<User>("user") ?? Factory.GetUser();
-
-    List<Character> characters = new(user.Inventory.Characters);
-    List<Item> items = new(user.Inventory.Items);
-    user.Inventory.Characters.Clear();
-    user.Inventory.Items.Clear();
-
-    foreach (Character inventoryCharacter in characters)
-    {
-        Character realCharacter = CharacterBuilder.Build(inventoryCharacter, false);
-        realCharacter.User = user;
-        user.Inventory.Characters.Add(realCharacter);
-    }
-
-    foreach (Item inventoryItem in items)
-    {
-        Item realItem = inventoryItem.Copy(true, true);
-        if (realItem.IsEquipment)
-        {
-            IEnumerable<Character> has = user.Inventory.Characters.Where(character =>
-            {
-                if (realItem.ItemType == ItemType.MagicCardPack && character.EquipSlot.MagicCardPack != null && realItem.Guid == character.EquipSlot.MagicCardPack.Guid)
-                {
-                    return true;
-                }
-                if (realItem.ItemType == ItemType.Weapon && character.EquipSlot.Weapon != null && realItem.Guid == character.EquipSlot.Weapon.Guid)
-                {
-                    return true;
-                }
-                if (realItem.ItemType == ItemType.Armor && character.EquipSlot.Armor != null && realItem.Guid == character.EquipSlot.Armor.Guid)
-                {
-                    return true;
-                }
-                if (realItem.ItemType == ItemType.Shoes && character.EquipSlot.Shoes != null && realItem.Guid == character.EquipSlot.Shoes.Guid)
-                {
-                    return true;
-                }
-                if (realItem.ItemType == ItemType.Accessory)
-                {
-                    if (character.EquipSlot.Accessory1 != null && realItem.Guid == character.EquipSlot.Accessory1.Guid)
-                    {
-                        return true;
-                    }
-                    else if (character.EquipSlot.Accessory2 != null && realItem.Guid == character.EquipSlot.Accessory2.Guid)
-                    {
-                        return true;
-                    }
-                }
-                return false;
-            });
-            if (has.Any() && has.First() is Character character)
-            {
-                realItem.Character = character;
-            }
-        }
-        user.Inventory.Items.Add(realItem);
-    }
+    user = FunGameService.GetUser(pc);
 
     Console.WriteLine(user.Inventory.ToString(false));
     Console.WriteLine(user.Inventory.ToString(true));
@@ -152,10 +105,10 @@ else
 
 // 保存存档
 pc.SaveConfig();
-//Item[] 武器 = FunGameSimulation.Equipment.Where(i => i.Id.ToString().StartsWith("11")).ToArray();
-//Item[] 防具 = FunGameSimulation.Equipment.Where(i => i.Id.ToString().StartsWith("12")).ToArray();
-//Item[] 鞋子 = FunGameSimulation.Equipment.Where(i => i.Id.ToString().StartsWith("13")).ToArray();
-//Item[] 饰品 = FunGameSimulation.Equipment.Where(i => i.Id.ToString().StartsWith("14")).ToArray();
+//Item[] 武器 = FunGameUtil.Equipment.Where(i => i.Id.ToString().StartsWith("11")).ToArray();
+//Item[] 防具 = FunGameUtil.Equipment.Where(i => i.Id.ToString().StartsWith("12")).ToArray();
+//Item[] 鞋子 = FunGameUtil.Equipment.Where(i => i.Id.ToString().StartsWith("13")).ToArray();
+//Item[] 饰品 = FunGameUtil.Equipment.Where(i => i.Id.ToString().StartsWith("14")).ToArray();
 //Item? a = null, b = null, c = null, d = null;
 //if (武器.Length > 0)
 //{
@@ -245,7 +198,7 @@ while (true)
         input = input.Replace("sj", "").Trim();
         if (int.TryParse(input, out int id))
         {
-            Character character = FunGameSimulation.Characters[Convert.ToInt32(id) - 1];
+            Character character = FunGameService.Characters[Convert.ToInt32(id) - 1];
             if (FunGameSimulation.TeamCharacterStatistics.TryGetValue(character, out CharacterStatistics? stats) && stats != null)
             {
                 StringBuilder builder = new();
@@ -292,7 +245,7 @@ while (true)
         input = input.Replace("ss", "").Trim();
         if (int.TryParse(input, out int id))
         {
-            Character character = FunGameSimulation.Characters[Convert.ToInt32(id) - 1];
+            Character character = FunGameService.Characters[Convert.ToInt32(id) - 1];
             if (FunGameSimulation.CharacterStatistics.TryGetValue(character, out CharacterStatistics? stats) && stats != null)
             {
                 StringBuilder builder = new();
