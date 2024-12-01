@@ -13,8 +13,8 @@ im.Load();
 
 FunGameService.InitFunGame();
 FunGameSimulation.InitFunGame();
-List<string> strings = FunGameSimulation.StartGame(false, false, true);
-strings.ForEach(Console.WriteLine);
+List<string> strings = FunGameSimulation.StartGame(true, false, true);
+//strings.ForEach(Console.WriteLine);
 
 FunGameController controller = new(new Logger<FunGameController>(new LoggerFactory()));
 Console.WriteLine(controller.CreateSaved(1, "test"));
