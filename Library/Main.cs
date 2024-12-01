@@ -13,11 +13,15 @@ im.Load();
 
 FunGameService.InitFunGame();
 FunGameSimulation.InitFunGame();
-List<string> strings = FunGameSimulation.StartGame(true, false, true);
+
+//List<string> strings = FunGameSimulation.StartGame(true, false, true);
 //strings.ForEach(Console.WriteLine);
 
 FunGameController controller = new(new Logger<FunGameController>(new LoggerFactory()));
 Console.WriteLine(controller.CreateSaved(1, "test"));
+
+Console.WriteLine(controller.GetCharacterInfo(9));
+
 //for (int i = 1; i <= 100; i++)
 //{
 //    Console.WriteLine($"{i}´Î£º" + string.Join("\r\n", controller.DrawCards(1)));
