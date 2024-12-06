@@ -37,6 +37,8 @@ Console.WriteLine(controller.CreateSaved(1, "test"));
 //    c.Equip(i);
 //}
 //Console.WriteLine(u.Inventory.Characters.First().GetInfo());
+//Item? i2 = c.UnEquip(Milimoe.FunGame.Core.Library.Constant.EquipSlotType.MagicCardPack);
+//Console.WriteLine(i2);
 //pc.Add("user", u);
 //pc.SaveConfig();
 //pc.LoadConfig();
