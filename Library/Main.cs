@@ -1,5 +1,6 @@
 using Microsoft.Extensions.Logging;
 using Milimoe.FunGame.Core.Api.Utility;
+using Milimoe.FunGame.Core.Entity;
 using Oshima.Core.Controllers;
 using Oshima.Core.Utils;
 using Oshima.FunGame.OshimaModules;
@@ -14,12 +15,32 @@ im.Load();
 FunGameService.InitFunGame();
 FunGameSimulation.InitFunGame();
 
-List<string> strings = FunGameSimulation.StartGame(true, false, true);
-strings.ForEach(Console.WriteLine);
+//List<string> strings = FunGameSimulation.StartGame(true, false, true);
+//strings.ForEach(Console.WriteLine);
 
 FunGameController controller = new(new Logger<FunGameController>(new LoggerFactory()));
 Console.WriteLine(controller.CreateSaved(1, "test"));
 
+//ø‚¥Ê≤‚ ‘
+//PluginConfig pc = new("saved", "1");
+//pc.LoadConfig();
+//User u = FunGameService.GetUser(pc);
+//if (u.Inventory.Characters.Count == 0)
+//{
+//    u.Inventory.Characters.Add(FunGameService.Characters[0].Copy());
+//}
+//Character c = u.Inventory.Characters.First();
+//Item? i = FunGameService.GenerateMagicCardPack(3);
+//if (i != null)
+//{
+//    u.Inventory.Items.Add(i);
+//    c.Equip(i);
+//}
+//Console.WriteLine(u.Inventory.Characters.First().GetInfo());
+//pc.Add("user", u);
+//pc.SaveConfig();
+//pc.LoadConfig();
+//u = FunGameService.GetUser(pc);
 
 //for (int i = 1; i <= 100; i++)
 //{
@@ -40,6 +61,10 @@ while (true)
             Console.WriteLine(controller.ExchangeCredits(1, value));
         }
         else Console.WriteLine(controller.ExchangeCredits(1));
+    }
+    else if (msg == "kb")
+    {
+        Console.WriteLine(string.Join("\r\n", controller.GenerateMagicCardPack()));
     }
     else if (msg == "tck")
     {
