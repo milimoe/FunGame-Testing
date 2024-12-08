@@ -29,27 +29,27 @@ FunGameController controller = new(new Logger<FunGameController>(new LoggerFacto
 Console.WriteLine(controller.CreateSaved(1, "test"));
 
 //ø‚¥Ê≤‚ ‘
-PluginConfig pc = new("saved", "1");
-pc.LoadConfig();
-User u = FunGameService.GetUser(pc);
-if (u.Inventory.Characters.Count == 0)
-{
-    u.Inventory.Characters.Add(FunGameService.Characters[0].Copy());
-}
-Character c = u.Inventory.Characters.First();
-Item? i = FunGameService.GenerateMagicCardPack(3);
-if (i != null)
-{
-    u.Inventory.Items.Add(i);
-    c.Equip(i);
-}
-Console.WriteLine(u.Inventory.Characters.First().GetInfo());
-Item? i2 = c.UnEquip(Milimoe.FunGame.Core.Library.Constant.EquipSlotType.MagicCardPack);
-Console.WriteLine(i2);
-pc.Add("user", u);
-pc.SaveConfig();
-pc.LoadConfig();
-u = FunGameService.GetUser(pc);
+//PluginConfig pc = new("saved", "1");
+//pc.LoadConfig();
+//User u = FunGameService.GetUser(pc);
+//if (u.Inventory.Characters.Count == 0)
+//{
+//    u.Inventory.Characters.Add(FunGameService.Characters[0].Copy());
+//}
+//Character c = u.Inventory.Characters.First();
+//Item? i = FunGameService.GenerateMagicCardPack(3);
+//if (i != null)
+//{
+//    u.Inventory.Items.Add(i);
+//    c.Equip(i);
+//}
+//Console.WriteLine(u.Inventory.Characters.First().GetInfo());
+//Item? i2 = c.UnEquip(Milimoe.FunGame.Core.Library.Constant.EquipSlotType.MagicCardPack);
+//Console.WriteLine(i2);
+//pc.Add("user", u);
+//pc.SaveConfig();
+//pc.LoadConfig();
+//u = FunGameService.GetUser(pc);
 
 //for (int i = 1; i <= 100; i++)
 //{
@@ -60,51 +60,66 @@ u = FunGameService.GetUser(pc);
 
 while (true)
 {
-    string msg = Console.ReadLine() ?? "";
-    if (msg == "quit") return;
-    if (msg.StartsWith("dhjb"))
+    try
     {
-        msg = msg.Replace("dhjb", "");
-        if (int.TryParse(msg, out int value))
+        string msg = Console.ReadLine() ?? "";
+        if (msg == "quit") return;
+        if (msg.StartsWith("dhjb"))
         {
-            Console.WriteLine(controller.ExchangeCredits(1, value));
+            msg = msg.Replace("dhjb", "");
+            if (int.TryParse(msg, out int value))
+            {
+                Console.WriteLine(controller.ExchangeCredits(1, value));
+            }
+            else Console.WriteLine(controller.ExchangeCredits(1));
         }
-        else Console.WriteLine(controller.ExchangeCredits(1));
+        else if (msg == "jscs")
+        {
+            Console.WriteLine(controller.RandomCustomCharacter(1));
+        }
+        else if (msg == "qrjscs")
+        {
+            Console.WriteLine(controller.RandomCustomCharacter(1, true));
+        }
+        else if (msg == "kb")
+        {
+            Console.WriteLine(string.Join("\r\n", controller.GenerateMagicCardPack()));
+        }
+        else if (msg == "tck")
+        {
+            Console.WriteLine(string.Join("\r\n", controller.DrawCards(1)));
+        }
+        else if (msg == "ck")
+        {
+            Console.WriteLine(controller.DrawCard(1));
+        }
+        else if (msg == "qk")
+        {
+            Console.WriteLine(await FunGameService.AllowSellAndTrade());
+        }
+        else if (msg.StartsWith("sl") && int.TryParse(msg.Replace("sl", ""), out int page1))
+        {
+            Console.WriteLine(string.Join("\r\n", controller.GetInventoryInfo3(1, page1)));
+        }
+        else if (msg.StartsWith("pzsl") && int.TryParse(msg.Replace("pzsl", ""), out int page3))
+        {
+            Console.WriteLine(string.Join("\r\n", controller.GetInventoryInfo3(1, page3, 2, 2)));
+        }
+        else if (msg.StartsWith("cjs") && int.TryParse(msg.Replace("cjs", ""), out int cIndex))
+        {
+            Console.WriteLine(NetworkUtility.JsonDeserialize<string>(controller.GetCharacterInfoFromInventory(1, cIndex)));
+        }
+        else if (msg.StartsWith("cwp") && int.TryParse(msg.Replace("cwp", ""), out int itemIndex))
+        {
+            Console.WriteLine(NetworkUtility.JsonDeserialize<string>(controller.GetItemInfoFromInventory(1, itemIndex)));
+        }
+        else if (int.TryParse(msg, out int page2))
+        {
+            Console.WriteLine(string.Join("\r\n", controller.GetInventoryInfo2(1, page2)));
+        }
     }
-    else if (msg == "kb")
+    catch (Exception e)
     {
-        Console.WriteLine(string.Join("\r\n", controller.GenerateMagicCardPack()));
-    }
-    else if (msg == "tck")
-    {
-        Console.WriteLine(string.Join("\r\n", controller.DrawCards(1)));
-    }
-    else if (msg == "ck")
-    {
-        Console.WriteLine(controller.DrawCard(1));
-    }
-    else if (msg == "qk")
-    {
-        Console.WriteLine(await FunGameService.AllowSellAndTrade());
-    }
-    else if (msg.StartsWith("sl") && int.TryParse(msg.Replace("sl", ""), out int page1))
-    {
-        Console.WriteLine(string.Join("\r\n", controller.GetInventoryInfo3(1, page1)));
-    }
-    else if (msg.StartsWith("pzsl") && int.TryParse(msg.Replace("pzsl", ""), out int page3))
-    {
-        Console.WriteLine(string.Join("\r\n", controller.GetInventoryInfo3(1, page3, 2, 2)));
-    }
-    else if (msg.StartsWith("cjs") && int.TryParse(msg.Replace("cjs", ""), out int cIndex))
-    {
-        Console.WriteLine(NetworkUtility.JsonDeserialize<string>(controller.GetCharacterInfoFromInventory(1, cIndex)));
-    }
-    else if (msg.StartsWith("cwp") && int.TryParse(msg.Replace("cwp", ""), out int itemIndex))
-    {
-        Console.WriteLine(NetworkUtility.JsonDeserialize<string>(controller.GetItemInfoFromInventory(1, itemIndex)));
-    }
-    else if (int.TryParse(msg, out int page2))
-    {
-        Console.WriteLine(string.Join("\r\n", controller.GetInventoryInfo2(1, page2)));
+        Console.WriteLine(e);
     }
 }    
