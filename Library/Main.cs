@@ -4,6 +4,7 @@ using Milimoe.FunGame.Core.Entity;
 using Oshima.Core.Controllers;
 using Oshima.Core.Utils;
 using Oshima.FunGame.OshimaModules;
+using Oshima.FunGame.OshimaModules.Characters;
 
 CharacterModule cm = new();
 cm.Load();
@@ -17,6 +18,12 @@ FunGameSimulation.InitFunGame();
 
 //List<string> strings = FunGameSimulation.StartGame(true, false, true);
 //strings.ForEach(Console.WriteLine);
+
+Character testc = new CustomCharacter(1, "1");
+Console.WriteLine(testc.GetInfo());
+Console.WriteLine(testc.InitialSTR + $" ({testc.STRGrowth}/Lv)");
+Console.WriteLine(testc.InitialAGI + $" ({testc.AGIGrowth}/Lv)");
+Console.WriteLine(testc.InitialINT + $" ({testc.INTGrowth}/Lv)");
 
 FunGameController controller = new(new Logger<FunGameController>(new LoggerFactory()));
 Console.WriteLine(controller.CreateSaved(1, "test"));
