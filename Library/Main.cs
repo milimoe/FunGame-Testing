@@ -14,7 +14,7 @@ ItemModule im = new();
 im.Load();
 
 FunGameService.InitFunGame();
-FunGameSimulation.InitFunGame();
+FunGameActionQueue.InitFunGame();
 
 //List<string> strings = FunGameSimulation.StartGame(true, false, true);
 //strings.ForEach(Console.WriteLine);
@@ -26,7 +26,13 @@ FunGameSimulation.InitFunGame();
 //Console.WriteLine(testc.InitialINT + $" ({testc.INTGrowth}/Lv)");
 
 FunGameController controller = new(new Logger<FunGameController>(new LoggerFactory()));
-Console.WriteLine(controller.CreateSaved(1, "test"));
+Console.WriteLine(controller.CreateSaved(1, "test1"));
+Console.WriteLine(controller.CreateSaved(2, "test2"));
+
+foreach (string str in controller.FightCustom(1, 2))
+{
+    Console.WriteLine(str);
+}
 
 //ø‚¥Ê≤‚ ‘
 //PluginConfig pc = new("saved", "1");
