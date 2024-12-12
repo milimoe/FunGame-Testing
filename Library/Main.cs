@@ -29,7 +29,12 @@ FunGameController controller = new(new Logger<FunGameController>(new LoggerFacto
 Console.WriteLine(controller.CreateSaved(1, "test1"));
 Console.WriteLine(controller.CreateSaved(2, "test2"));
 
-foreach (string str in controller.FightCustom(1, 2))
+PluginConfig pc = new("saved", "2");
+pc.LoadConfig();
+User user = FunGameService.GetUser(pc);
+Console.WriteLine(user.Inventory);
+
+foreach (string str in controller.GetTest(false, true))
 {
     Console.WriteLine(str);
 }

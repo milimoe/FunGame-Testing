@@ -24,6 +24,10 @@
   </ItemGroup>
 
   <ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="9.0.0" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\..\FunGame.Core\FunGame.Core.csproj" />
     <ProjectReference Include="..\..\OshimaGameModule\OshimaCore\OshimaCore.csproj" />
     <ProjectReference Include="..\..\OshimaGameModule\OshimaModules\OshimaModules.csproj" />
