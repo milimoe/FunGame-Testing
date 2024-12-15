@@ -1,6 +1,7 @@
 using Microsoft.Extensions.Logging;
 using Milimoe.FunGame.Core.Api.Utility;
 using Milimoe.FunGame.Core.Entity;
+using Milimoe.FunGame.Core.Library.Constant;
 using Oshima.Core.Controllers;
 using Oshima.Core.Utils;
 using Oshima.FunGame.OshimaModules;
@@ -14,7 +15,7 @@ ItemModule im = new();
 im.Load();
 
 FunGameService.InitFunGame();
-FunGameActionQueue.InitFunGame();
+FunGameActionQueue.InitFunGameActionQueue();
 
 //List<string> strings = FunGameSimulation.StartGame(true, false, true);
 //strings.ForEach(Console.WriteLine);
@@ -26,18 +27,21 @@ FunGameActionQueue.InitFunGame();
 //Console.WriteLine(testc.InitialINT + $" ({testc.INTGrowth}/Lv)");
 
 FunGameController controller = new(new Logger<FunGameController>(new LoggerFactory()));
-Console.WriteLine(controller.CreateSaved(1, "test1"));
-Console.WriteLine(controller.CreateSaved(2, "test2"));
+//Console.WriteLine(controller.CreateSaved(1, "test1"));
+//Console.WriteLine(controller.CreateSaved(2, "test2"));
 
-PluginConfig pc = new("saved", "2");
-pc.LoadConfig();
-User user = FunGameService.GetUser(pc);
-Console.WriteLine(user.Inventory);
+//PluginConfig pc = new("saved", "2");
+//pc.LoadConfig();
+//User user = FunGameService.GetUser(pc);
+//Console.WriteLine(user.Inventory);
 
-foreach (string str in controller.GetTest(false, true))
-{
-    Console.WriteLine(str);
-}
+Console.WriteLine(string.Join("\r\n", controller.FightCustom(1, 2)));
+
+//FunGameActionQueue.StartSimulationGame(true, true, true, true);
+//foreach (string str in controller.GetTest(false, true))
+//{
+//    Console.WriteLine(str);
+//}
 
 //ø‚¥Ê≤‚ ‘
 //PluginConfig pc = new("saved", "1");
