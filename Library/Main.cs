@@ -6,6 +6,7 @@ using Oshima.Core.Controllers;
 using Oshima.Core.Utils;
 using Oshima.FunGame.OshimaModules;
 using Oshima.FunGame.OshimaModules.Characters;
+using Oshima.FunGame.OshimaModules.Effects.OpenEffects;
 
 CharacterModule cm = new();
 cm.Load();
@@ -27,13 +28,40 @@ FunGameActionQueue.InitFunGameActionQueue();
 //Console.WriteLine(testc.InitialINT + $" ({testc.INTGrowth}/Lv)");
 
 FunGameController controller = new(new Logger<FunGameController>(new LoggerFactory()));
-//Console.WriteLine(controller.CreateSaved(1, "test1"));
-//Console.WriteLine(controller.CreateSaved(2, "test2"));
+Console.WriteLine(controller.CreateSaved(1, "test1"));
+Console.WriteLine(controller.CreateSaved(2, "test2"));
 
-//PluginConfig pc = new("saved", "2");
-//pc.LoadConfig();
-//User user = FunGameService.GetUser(pc);
-//Console.WriteLine(user.Inventory);
+PluginConfig pc = new("saved", "2");
+pc.LoadConfig();
+User user = FunGameService.GetUser(pc);
+Console.WriteLine(user.Inventory);
+Character c = user.Inventory.Characters.First();
+
+Dictionary<string, object> skillargs = [];
+skillargs.Add("active", true);
+skillargs.Add("self", true);
+skillargs.Add("enemy", false);
+Skill skill = Factory.OpenFactory.GetInstance<Skill>((long)EffectID.GetEXP, "æ≠—È È", skillargs);
+Dictionary<string, object> effectargs = new()
+{
+    { "skill", skill },
+    {
+        "values",
+        new Dictionary<string, object>()
+        {
+            { "exp", 7777 }
+        }
+    }
+};
+skill.Effects.Add(Factory.OpenFactory.GetInstance<Effect>(skill.Id, "", effectargs));
+skill.Character = c;
+skill.Level = 1;
+
+skill.OnSkillCasted(null, c, [c]);
+c.OnLevelUp();
+c.OnLevelBreak();
+
+Console.WriteLine(user.Inventory.Characters.First().GetInfo(showEXP: true));
 
 Console.WriteLine(string.Join("\r\n", controller.FightCustom(1, 2)));
 
