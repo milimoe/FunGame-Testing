@@ -28,42 +28,42 @@ FunGameActionQueue.InitFunGameActionQueue();
 //Console.WriteLine(testc.InitialINT + $" ({testc.INTGrowth}/Lv)");
 
 FunGameController controller = new(new Logger<FunGameController>(new LoggerFactory()));
-Console.WriteLine(controller.CreateSaved(1, "test1"));
-Console.WriteLine(controller.CreateSaved(2, "test2"));
+//Console.WriteLine(controller.CreateSaved(1, "test1"));
+//Console.WriteLine(controller.CreateSaved(2, "test2"));
 
-PluginConfig pc = new("saved", "2");
-pc.LoadConfig();
-User user = FunGameService.GetUser(pc);
-Console.WriteLine(user.Inventory);
-Character c = user.Inventory.Characters.First();
+//PluginConfig pc = new("saved", "2");
+//pc.LoadConfig();
+//User user = FunGameService.GetUser(pc);
+//Console.WriteLine(user.Inventory);
+//Character c = user.Inventory.Characters.First();
 
-Dictionary<string, object> skillargs = [];
-skillargs.Add("active", true);
-skillargs.Add("self", true);
-skillargs.Add("enemy", false);
-Skill skill = Factory.OpenFactory.GetInstance<Skill>((long)EffectID.GetEXP, "经验书", skillargs);
-Dictionary<string, object> effectargs = new()
-{
-    { "skill", skill },
-    {
-        "values",
-        new Dictionary<string, object>()
-        {
-            { "exp", 7777 }
-        }
-    }
-};
-skill.Effects.Add(Factory.OpenFactory.GetInstance<Effect>(skill.Id, "", effectargs));
-skill.Character = c;
-skill.Level = 1;
+//Dictionary<string, object> skillargs = [];
+//skillargs.Add("active", true);
+//skillargs.Add("self", true);
+//skillargs.Add("enemy", false);
+//Skill skill = Factory.OpenFactory.GetInstance<Skill>((long)EffectID.GetEXP, "经验书", skillargs);
+//Dictionary<string, object> effectargs = new()
+//{
+//    { "skill", skill },
+//    {
+//        "values",
+//        new Dictionary<string, object>()
+//        {
+//            { "exp", 7777 }
+//        }
+//    }
+//};
+//skill.Effects.Add(Factory.OpenFactory.GetInstance<Effect>(skill.Id, "", effectargs));
+//skill.Character = c;
+//skill.Level = 1;
 
-skill.OnSkillCasted(null, c, [c]);
-c.OnLevelUp();
-c.OnLevelBreak();
+//skill.OnSkillCasted(null, c, [c]);
+//c.OnLevelUp();
+//c.OnLevelBreak();
 
-Console.WriteLine(user.Inventory.Characters.First().GetInfo(showEXP: true));
+//Console.WriteLine(user.Inventory.Characters.First().GetInfo(showEXP: true));
 
-Console.WriteLine(string.Join("\r\n", controller.FightCustom(1, 2)));
+Console.WriteLine(string.Join("", controller.FightCustom(1, 2, true)));
 
 //FunGameActionQueue.StartSimulationGame(true, true, true, true);
 //foreach (string str in controller.GetTest(false, true))
