@@ -16,7 +16,7 @@ ItemModule im = new();
 im.Load();
 
 FunGameService.InitFunGame();
-FunGameActionQueue.InitFunGameActionQueue();
+FunGameSimulation.InitFunGameSimulation();
 
 //List<string> strings = FunGameSimulation.StartGame(true, false, true);
 //strings.ForEach(Console.WriteLine);
