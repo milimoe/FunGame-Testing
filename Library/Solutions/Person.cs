@@ -24,7 +24,7 @@ namespace ConverterExample
             return new();
         }
 
-        public override void ReadPropertyName(ref Utf8JsonReader reader, string propertyName, JsonSerializerOptions options, ref Address result)
+        public override void ReadPropertyName(ref Utf8JsonReader reader, string propertyName, JsonSerializerOptions options, ref Address result, Dictionary<string, object> convertingContext)
         {
             result ??= new();
             switch (propertyName)
@@ -57,7 +57,7 @@ namespace ConverterExample
             return new();
         }
 
-        public override void ReadPropertyName(ref Utf8JsonReader reader, string propertyName, JsonSerializerOptions options, ref Person result)
+        public override void ReadPropertyName(ref Utf8JsonReader reader, string propertyName, JsonSerializerOptions options, ref Person result, Dictionary<string, object> convertingContext)
         {
             result ??= new();
             switch (propertyName)
