@@ -8,6 +8,8 @@ using Oshima.FunGame.OshimaModules;
 using Oshima.FunGame.OshimaModules.Characters;
 using Oshima.FunGame.OshimaModules.Effects.OpenEffects;
 
+_ = new Milimoe.FunGame.Testing.Tests.WebSocketTest();
+
 CharacterModule cm = new();
 cm.Load();
 SkillModule sm = new();
