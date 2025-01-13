@@ -43,6 +43,10 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FunGame.WebAPI", "..\FunGam
 		{94B564CD-7A1E-4B3C-AF78-23EBCD5D627E} = {94B564CD-7A1E-4B3C-AF78-23EBCD5D627E}
 	EndProjectSection
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OshimaServers", "..\OshimaGameModule\OshimaServers\OshimaServers.csproj", "{C9FF6C3C-D1FC-496D-90EB-3507E6915092}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OshimaMaps", "..\OshimaGameModule\OshimaMaps\OshimaMaps.csproj", "{CDA0BCC1-0097-4D52-9895-A706D0523FBF}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -81,6 +85,14 @@ Global
 		{D74DF3A2-52E7-4C18-8854-81114558D4B2}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{D74DF3A2-52E7-4C18-8854-81114558D4B2}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{D74DF3A2-52E7-4C18-8854-81114558D4B2}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C9FF6C3C-D1FC-496D-90EB-3507E6915092}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C9FF6C3C-D1FC-496D-90EB-3507E6915092}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C9FF6C3C-D1FC-496D-90EB-3507E6915092}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C9FF6C3C-D1FC-496D-90EB-3507E6915092}.Release|Any CPU.Build.0 = Release|Any CPU
+		{CDA0BCC1-0097-4D52-9895-A706D0523FBF}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{CDA0BCC1-0097-4D52-9895-A706D0523FBF}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{CDA0BCC1-0097-4D52-9895-A706D0523FBF}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{CDA0BCC1-0097-4D52-9895-A706D0523FBF}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

@@ -5,11 +5,13 @@ using Milimoe.FunGame.Core.Controller;
 using Milimoe.FunGame.Core.Entity;
 using Milimoe.FunGame.Core.Library.Common.Network;
 using Milimoe.FunGame.Core.Library.Constant;
+using Oshima.FunGame.OshimaModules;
 
 namespace Milimoe.FunGame.Testing.Tests
 {
     public class WebSocketTestRunTime : RunTimeController
     {
+        public Guid LoginKey { get; set; } = Guid.Empty;
         public bool Quit { get; set; } = false;
 
         public override bool BeforeConnect(ref string addr, ref int port, ArrayList args)
@@ -37,7 +39,7 @@ namespace Milimoe.FunGame.Testing.Tests
 
         public async Task CheckInput(string str)
         {
-            if (WebSocket is null || Quit)
+            if (HTTPClient is null || Quit)
             {
                 if (str == "retry")
                 {
@@ -52,50 +54,147 @@ namespace Milimoe.FunGame.Testing.Tests
                 }
                 return;
             }
+            if (str == "wstest")
+            {
+                await HTTPClient.Send(SocketMessageType.AnonymousGameServer, OshimaGameModuleConstant.Anonymous);
+            }
+            if (str == "wsclose")
+            {
+                await HTTPClient.Send(SocketMessageType.EndGame);
+            }
+            if (str == "fungametest")
+            {
+                Console.WriteLine(string.Join("\r\n", await HTTPClient.HttpGet<List<string>>("http://localhost:5000/fungame/test") ?? []));
+            }
             if (str == "quit")
             {
-                await WebSocket.Send(SocketMessageType.Disconnect);
+                Quit = true;
+            }
+            if (str == "disc")
+            {
+                if (LoginKey != Guid.Empty) await LogOut();
+                await HTTPClient.Send(SocketMessageType.Disconnect);
             }
             if (str == "login")
             {
-                DataRequest request = NewDataRequest(DataRequestType.Login_Login);
-                request.AddRequestData("username", "mili");
-                request.AddRequestData("password", Encryption.HmacSha512("123123", "Mili"));
-                request.AddRequestData("autokey", "");
-                request.AddRequestData("key", Guid.Empty);
-                await request.SendRequestAsync();
-                if (request.Result == RequestResult.Success)
+                string username = "test";
+                string password = "123123";
+                await Login(username, password);
+            }
+            if (str == "reg")
+            {
+                string username = "test2";
+                string password = "123123";
+                string email = "1231232@qq.com";
+                await Reg(username, password, email);
+            }
+            if (str == "logout")
+            {
+                await LogOut();
+            }
+        }
+
+        public async Task Reg(string username, string password, string email)
+        {
+            DataRequest request = NewDataRequest(DataRequestType.Reg_Reg);
+            request.AddRequestData("username", username);
+            request.AddRequestData("password", Encryption.HmacSha512(password, username));
+            request.AddRequestData("email", email);
+            request.AddRequestData("verifycode", ""); // 初始验证码为空，请求发送验证码
+            await request.SendRequestAsync();
+
+            if (request.Result == RequestResult.Success)
+            {
+                string msg = request.GetResult<string>("msg") ?? "";
+                RegInvokeType type = request.GetResult<RegInvokeType>("type");
+                if (msg != "") Console.WriteLine(msg);
+
+                if (type == RegInvokeType.InputVerifyCode)
                 {
-                    string msg = request.GetResult<string>("msg") ?? "";
-                    if (msg != "")
+                    bool success = false;
+                    do
                     {
-                        Console.WriteLine(msg);
-                    }
-                    else
-                    {
-                        Guid loginKey = request.GetResult<Guid>("key");
-                        if (loginKey != Guid.Empty)
+                        Console.Write("请输入收到的验证码：");
+                        string verifycode = Console.ReadLine() ?? "";
+                        if (verifycode == "q!")
                         {
-                            request = NewDataRequest(DataRequestType.Login_Login);
-                            request.AddRequestData("username", "username");
-                            request.AddRequestData("password", Encryption.HmacSha512("password", "username"));
-                            request.AddRequestData("autokey", "");
-                            request.AddRequestData("key", loginKey);
-                            await request.SendRequestAsync();
-                            if (request.Result == RequestResult.Success)
+                            Console.WriteLine("取消注册操作。");
+                            break;
+                        }
+                        request = NewDataRequest(DataRequestType.Reg_Reg);
+                        request.AddRequestData("username", username);
+                        request.AddRequestData("password", Encryption.HmacSha512(password, username));
+                        request.AddRequestData("email", email);
+                        request.AddRequestData("verifycode", verifycode);
+                        await request.SendRequestAsync();
+
+                        if (request.Result == RequestResult.Success)
+                        {
+                            msg = request.GetResult<string>("msg") ?? "";
+                            success = request.GetResult<bool>("success");
+                            if (msg != "") Console.WriteLine(msg);
+                        }
+                        else
+                        {
+                            Console.WriteLine("请求服务器失败！");
+                        }
+                    } while (!success);
+                }
+                else if (type == RegInvokeType.DuplicateUserName)
+                {
+                    Console.WriteLine("用户名已被注册！");
+                }
+                else if (type == RegInvokeType.DuplicateEmail)
+                {
+                    Console.WriteLine("邮箱已被注册！");
+                }
+            }
+            else
+            {
+                Console.WriteLine("注册请求失败！");
+            }
+        }
+
+        public async Task Login(string username, string password)
+        {
+            DataRequest request = NewDataRequest(DataRequestType.Login_Login);
+            request.AddRequestData("username", username);
+            request.AddRequestData("password", Encryption.HmacSha512(password, username));
+            request.AddRequestData("autokey", "");
+            request.AddRequestData("key", Guid.Empty);
+            await request.SendRequestAsync();
+            if (request.Result == RequestResult.Success)
+            {
+                string msg = request.GetResult<string>("msg") ?? "";
+                if (msg != "")
+                {
+                    Console.WriteLine(msg);
+                }
+                else
+                {
+                    Guid loginKey = request.GetResult<Guid>("key");
+                    if (loginKey != Guid.Empty)
+                    {
+                        request = NewDataRequest(DataRequestType.Login_Login);
+                        request.AddRequestData("username", "username");
+                        request.AddRequestData("password", Encryption.HmacSha512("password", "username"));
+                        request.AddRequestData("autokey", "");
+                        request.AddRequestData("key", loginKey);
+                        await request.SendRequestAsync();
+                        if (request.Result == RequestResult.Success)
+                        {
+                            msg = request.GetResult<string>("msg") ?? "";
+                            if (msg != "")
                             {
-                                msg = request.GetResult<string>("msg") ?? "";
-                                if (msg != "")
+                                Console.WriteLine(msg);
+                            }
+                            else
+                            {
+                                User? user = request.GetResult<User>("user");
+                                if (user != null)
                                 {
-                                    Console.WriteLine(msg);
-                                }
-                                else
-                                {
-                                    User? user = request.GetResult<User>("user");
-                                    if (user != null)
-                                    {
-                                        Console.WriteLine("登录用户完成：" + user.Username);
-                                    }
+                                    Console.WriteLine("登录用户完成：" + user.Username);
+                                    LoginKey = loginKey;
                                 }
                             }
                         }
@@ -104,9 +203,44 @@ namespace Milimoe.FunGame.Testing.Tests
             }
         }
 
+        public async Task LogOut()
+        {
+            DataRequest request = NewDataRequest(DataRequestType.RunTime_Logout);
+            request.AddRequestData("key", LoginKey);
+            await request.SendRequestAsync();
+
+            if (request.Result == RequestResult.Success)
+            {
+                string msg = request.GetResult<string>("msg") ?? "";
+                Guid key = request.GetResult<Guid>("key");
+                Console.WriteLine(msg);
+                if (key != Guid.Empty)
+                {
+                    LoginKey = Guid.Empty;
+                    Console.WriteLine("退出登录成功！");
+                }
+                else
+                {
+                    Console.WriteLine("退出登录失败！");
+                }
+            }
+            else
+            {
+                Console.WriteLine("退出登录请求失败！");
+            }
+        }
+
         public override void Error(Exception e)
         {
             Console.WriteLine(e.ToString());
+            TaskUtility.NewTask(async () =>
+            {
+                if (HTTPClient != null)
+                {
+                    await HTTPClient.Send(SocketMessageType.Disconnect);
+                    Close_WebSocket();
+                }
+            });
         }
 
         public override void WritelnSystemInfo(string msg)
@@ -116,12 +250,22 @@ namespace Milimoe.FunGame.Testing.Tests
 
         protected override void SocketHandler_Disconnect(SocketObject ServerMessage)
         {
-            Quit = true;
+            Console.WriteLine("断开服务器连接成功");
         }
 
         protected override void SocketHandler_HeartBeat(SocketObject ServerMessage)
         {
             Console.WriteLine("服务器连接成功");
+        }
+
+        protected override void SocketHandler_AnonymousGameServer(SocketObject ServerMessage)
+        {
+            Dictionary<string, object> data = ServerMessage.GetParam<Dictionary<string, object>>(0) ?? [];
+            if (data.Count > 0)
+            {
+                string msg = NetworkUtility.JsonDeserializeFromDictionary<string>(data, "msg") ?? "";
+                if (msg != "") Console.WriteLine(msg);
+            }
         }
     }
 
@@ -138,7 +282,7 @@ namespace Milimoe.FunGame.Testing.Tests
                 {
                     if (str == "quit")
                     {
-                        Console.WriteLine("断开服务器连接成功！");
+                        Console.WriteLine("退出ws测试！");
                         Console.ReadLine();
                     }
                 });
