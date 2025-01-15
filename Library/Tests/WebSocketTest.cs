@@ -58,6 +58,14 @@ namespace Milimoe.FunGame.Testing.Tests
             {
                 await HTTPClient.Send(SocketMessageType.AnonymousGameServer, OshimaGameModuleConstant.Anonymous);
             }
+            if (str == "scadd")
+            {
+                Dictionary<string, object> data = [];
+                data.Add("command", "scadd");
+                data.Add("qq", 1);
+                data.Add("sc", 1);
+                await HTTPClient.Send(SocketMessageType.AnonymousGameServer, OshimaGameModuleConstant.Anonymous, data);
+            }
             if (str == "wsclose")
             {
                 await HTTPClient.Send(SocketMessageType.EndGame);
@@ -243,7 +251,7 @@ namespace Milimoe.FunGame.Testing.Tests
             });
         }
 
-        public override void WritelnSystemInfo(string msg)
+        public override void WritelnSystemInfo(string msg, LogLevel level, bool useLevel)
         {
             Console.WriteLine(msg);
         }

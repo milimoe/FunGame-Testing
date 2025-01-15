@@ -31,6 +31,8 @@
     <ProjectReference Include="..\..\FunGame.Core\FunGame.Core.csproj" />
     <ProjectReference Include="..\..\OshimaGameModule\OshimaCore\OshimaCore.csproj" />
     <ProjectReference Include="..\..\OshimaGameModule\OshimaModules\OshimaModules.csproj" />
+    <ProjectReference Include="..\..\OshimaGameModule\OshimaServers\OshimaServers.csproj" />
+    <ProjectReference Include="..\..\OshimaGameModule\OshimaWebAPI\OshimaWebAPI.csproj" />
   </ItemGroup>
 
 </Project>
