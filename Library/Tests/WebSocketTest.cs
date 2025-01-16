@@ -56,7 +56,9 @@ namespace Milimoe.FunGame.Testing.Tests
             }
             if (str == "wstest")
             {
-                await HTTPClient.Send(SocketMessageType.AnonymousGameServer, OshimaGameModuleConstant.Anonymous);
+                Dictionary<string, object> data = [];
+                data["access_token"] = "1";
+                await HTTPClient.Send(SocketMessageType.AnonymousGameServer, OshimaGameModuleConstant.Anonymous, data);
             }
             if (str == "scadd")
             {
