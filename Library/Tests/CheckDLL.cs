@@ -16,11 +16,11 @@ namespace Milimoe.FunGame.Testing.Tests
                 Console.WriteLine(plugin + " is loaded.");
             }
 
-            Dictionary<string, string> plugindllsha512 = [];
+            Dictionary<string, string> plugindllsha256 = [];
             foreach (string pfp in PluginLoader.PluginFilePaths.Keys)
             {
-                string text = Encryption.FileSha512(PluginLoader.PluginFilePaths[pfp]);
-                plugindllsha512.Add(pfp, text);
+                string text = Encryption.FileSha256(PluginLoader.PluginFilePaths[pfp]);
+                plugindllsha256.Add(pfp, text);
                 Console.WriteLine(pfp + $" is {text}.");
             }
 
@@ -45,20 +45,26 @@ namespace Milimoe.FunGame.Testing.Tests
                 }
             }
 
-            Dictionary<string, string> moduledllsha512 = [];
+            Dictionary<string, string> moduledllsha256 = [];
             foreach (string mfp in GameModuleLoader.ModuleFilePaths.Keys)
             {
-                string text = Encryption.FileSha512(GameModuleLoader.ModuleFilePaths[mfp]);
-                moduledllsha512.Add(mfp, text);
+                string text = Encryption.FileSha256(GameModuleLoader.ModuleFilePaths[mfp]);
+                moduledllsha256.Add(mfp, text);
                 Console.WriteLine(mfp + $" is {text}.");
             }
 
-            foreach (string moduledll in moduledllsha512.Keys)
+            GameModuleLoader serverModels = GameModuleLoader.LoadGameModules(FunGameInfo.FunGame.FunGame_Server, []);
+
+            foreach (string moduledll in serverModels.ModuleServers.Keys)
             {
-                string server = moduledllsha512[moduledll];
-                if (plugindllsha512.TryGetValue(moduledll, out string? client) && client != "" && server == client)
+                if (!serverModels.ModuleServers[moduledll].IsAnonymous)
                 {
-                    Console.WriteLine(moduledll + $" is checked pass.");
+                    string server = Encryption.FileSha256(GameModuleLoader.ModuleFilePaths[moduledll]);
+                    string client = moduledllsha256[moduledll];
+                    if (server == client)
+                    {
+                        Console.WriteLine(moduledll + $" is checked pass.");
+                    }
                 }
             }
         }

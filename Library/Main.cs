@@ -4,6 +4,10 @@ using Oshima.FunGame.WebAPI.Controllers;
 using Oshima.FunGame.OshimaModules;
 using Oshima.FunGame.OshimaServers.Service;
 
+_ = new Milimoe.FunGame.Testing.Tests.CheckDLL();
+
+Console.WriteLine();
+
 _ = new Milimoe.FunGame.Testing.Tests.WebSocketTest();
 
 CharacterModule cm = new();

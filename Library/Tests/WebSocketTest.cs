@@ -66,6 +66,12 @@ namespace Milimoe.FunGame.Testing.Tests
                 data.Add("sc", 1);
                 await HTTPClient.Send(SocketMessageType.AnonymousGameServer, OshimaGameModuleConstant.Anonymous, data);
             }
+            if (str == "sclist")
+            {
+                Dictionary<string, object> data = [];
+                data.Add("command", "sclist");
+                await HTTPClient.Send(SocketMessageType.AnonymousGameServer, OshimaGameModuleConstant.Anonymous, data);
+            }
             if (str == "wsclose")
             {
                 await HTTPClient.Send(SocketMessageType.EndGame);
