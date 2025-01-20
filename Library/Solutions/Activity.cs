@@ -3,21 +3,6 @@ using Milimoe.FunGame.Core.Library.Constant;
 
 namespace Milimoe.FunGame.Testing.Solutions
 {
-    public enum ActivityState
-    {
-        Future,
-        Upcoming,
-        InProgress,
-        Ended
-    }
-    
-    public enum RedeemResult
-    {
-        Success,
-        StockNotEnough,
-        PointsNotEnough
-    }
-
     public class Activity(long id, string name, DateTime startTime, DateTime endTime)
     {
         public long Id { get; set; } = id;
