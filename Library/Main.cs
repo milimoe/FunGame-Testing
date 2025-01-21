@@ -1,14 +1,14 @@
 using Microsoft.Extensions.Logging;
 using Milimoe.FunGame.Core.Api.Utility;
-using Oshima.FunGame.WebAPI.Controllers;
 using Oshima.FunGame.OshimaModules;
 using Oshima.FunGame.OshimaServers.Service;
+using Oshima.FunGame.WebAPI.Controllers;
 
-_ = new Milimoe.FunGame.Testing.Tests.CheckDLL();
+//_ = new Milimoe.FunGame.Testing.Tests.CheckDLL();
 
 Console.WriteLine();
 
-_ = new Milimoe.FunGame.Testing.Tests.WebSocketTest();
+//_ = new Milimoe.FunGame.Testing.Tests.WebSocketTest();
 
 CharacterModule cm = new();
 cm.Load();
@@ -67,7 +67,7 @@ FunGameController controller = new(new Logger<FunGameController>(new LoggerFacto
 
 //Console.WriteLine(user.Inventory.Characters.First().GetInfo(showEXP: true));
 
-Console.WriteLine(string.Join("", controller.FightCustom(1, 2, true)));
+//Console.WriteLine(string.Join("", controller.FightCustom(1, 2, true)));
 
 //FunGameActionQueue.StartSimulationGame(true, true, true, true);
 //foreach (string str in controller.GetTest(false, true))
@@ -169,4 +169,4 @@ while (true)
     {
         Console.WriteLine(e);
     }
-}    
+}

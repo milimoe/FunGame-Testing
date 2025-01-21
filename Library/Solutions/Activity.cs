@@ -3,6 +3,21 @@ using Milimoe.FunGame.Core.Library.Constant;
 
 namespace Milimoe.FunGame.Testing.Solutions
 {
+    public enum ActivityState
+    {
+        Future,
+        Upcoming,
+        InProgress,
+        Ended
+    }
+
+    public enum RedeemResult
+    {
+        Success,
+        StockNotEnough,
+        PointsNotEnough
+    }
+
     public class Activity(long id, string name, DateTime startTime, DateTime endTime)
     {
         public long Id { get; set; } = id;
@@ -14,7 +29,6 @@ namespace Milimoe.FunGame.Testing.Solutions
         public Store Store { get; set; } = new Store();
 
         // 事件
-        public event EventHandler<ActivityStateChangedEventArgs>? ActivityStateChanged;
         public event EventHandler<UserAccessEventArgs>? UserAccessCheck;
 
         public void UpdateState()
@@ -42,13 +56,7 @@ namespace Milimoe.FunGame.Testing.Solutions
             if (State != newState)
             {
                 State = newState;
-                OnActivityStateChanged(new ActivityStateChangedEventArgs(State));
             }
-        }
-
-        protected virtual void OnActivityStateChanged(ActivityStateChangedEventArgs e)
-        {
-            ActivityStateChanged?.Invoke(this, e);
         }
 
         public bool AllowUserAccess(long userId)
@@ -74,14 +82,9 @@ namespace Milimoe.FunGame.Testing.Solutions
             if (quest != null)
             {
                 quest.Status = newStatus;
-                // 可选：触发任务状态更新事件
+                Console.WriteLine($"活动状态已改变为：{newStatus}");
             }
         }
-    }
-
-    public class ActivityStateChangedEventArgs(ActivityState newState) : EventArgs
-    {
-        public ActivityState NewState { get; } = newState;
     }
 
     public class UserAccessEventArgs(long userId, ActivityState activityState, DateTime startTime, DateTime endTime) : EventArgs

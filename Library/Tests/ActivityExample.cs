@@ -2,6 +2,8 @@
 using Milimoe.FunGame.Core.Entity;
 using Milimoe.FunGame.Core.Library.Constant;
 using Milimoe.FunGame.Testing.Solutions;
+using ActivityState = Milimoe.FunGame.Testing.Solutions.ActivityState;
+using RedeemResult = Milimoe.FunGame.Testing.Solutions.RedeemResult;
 
 namespace Milimoe.FunGame.Testing.Tests
 {
@@ -55,12 +57,6 @@ namespace Milimoe.FunGame.Testing.Tests
             item2.Description = "游戏道具";
             activity.Store.AddItem(item1, 100, 10);
             activity.Store.AddItem(item2, 200, 10);
-
-            // 订阅活动状态改变事件
-            activity.ActivityStateChanged += (sender, e) =>
-            {
-                Console.WriteLine($"活动状态已改变为：{e.NewState}");
-            };
 
             // 订阅用户访问检查事件
             activity.UserAccessCheck += (sender, e) =>
