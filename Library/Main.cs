@@ -4,6 +4,8 @@ using Oshima.FunGame.OshimaModules;
 using Oshima.FunGame.OshimaServers.Service;
 using Oshima.FunGame.WebAPI.Controllers;
 
+//0
+
 //_ = new Milimoe.FunGame.Testing.Tests.CheckDLL();
 
 Console.WriteLine();
@@ -45,7 +47,7 @@ FunGameController controller = new(new Logger<FunGameController>(new LoggerFacto
 //skillargs.Add("active", true);
 //skillargs.Add("self", true);
 //skillargs.Add("enemy", false);
-//Skill skill = Factory.OpenFactory.GetInstance<Skill>((long)EffectID.GetEXP, "¾­ÑéÊé", skillargs);
+//Skill skill = Factory.OpenFactory.GetInstance<Skill>((long)EffectID.GetEXP, "Â¾Â­Ã‘Ã©ÃŠÃ©", skillargs);
 //Dictionary<string, object> effectargs = new()
 //{
 //    { "skill", skill },
@@ -75,7 +77,7 @@ FunGameController controller = new(new Logger<FunGameController>(new LoggerFacto
 //    Console.WriteLine(str);
 //}
 
-//¿â´æ²âÊÔ
+//Â¿Ã¢Â´Ã¦Â²Ã¢ÃŠÃ”
 //PluginConfig pc = new("saved", "1");
 //pc.LoadConfig();
 //User u = FunGameService.GetUser(pc);
@@ -100,7 +102,7 @@ FunGameController controller = new(new Logger<FunGameController>(new LoggerFacto
 
 //for (int i = 1; i <= 100; i++)
 //{
-//    Console.WriteLine($"{i}´Î£º" + string.Join("\r\n", controller.DrawCards(1)));
+//    Console.WriteLine($"{i}Â´ÃŽÂ£Âº" + string.Join("\r\n", controller.DrawCards(1)));
 //}
 //Console.WriteLine(NetworkUtility.JsonDeserialize<string>(controller.GetInventoryInfo(1)));
 //Console.WriteLine(string.Join("\r\n", controller.GetInventoryInfo2(1, 2)));
