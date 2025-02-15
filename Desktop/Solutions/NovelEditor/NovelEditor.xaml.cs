@@ -1,7 +1,6 @@
 ﻿using System.Windows;
 using System.Windows.Controls;
 using Milimoe.FunGame.Core.Api.Utility;
-using Milimoe.FunGame.Core.Entity;
 using Milimoe.FunGame.Core.Model;
 using Button = System.Windows.Controls.Button;
 using MessageBox = System.Windows.MessageBox;
@@ -13,33 +12,22 @@ namespace Milimoe.FunGame.Testing.Desktop.Solutions.NovelEditor
     /// </summary>
     public partial class NovelEditor : Window
     {
-        public static Dictionary<Character, int> Likability { get; } = [];
-        public static Dictionary<string, Func<bool>> Conditions { get; } = [];
-        public static Character MainCharacter { get; set; } = Factory.GetCharacter();
-        public static Character 马猴烧酒 { get; set; } = Factory.GetCharacter();
-
-        private readonly NovelConfig _config;
+        private NovelConfig _config;
 
         public NovelEditor()
         {
             InitializeComponent();
 
-            MainCharacter.Name = "主角";
-            MainCharacter.NickName = "主角";
-            马猴烧酒.Name = "马猴烧酒";
-            马猴烧酒.NickName = "魔法少女";
-            Likability.Add(马猴烧酒, 100);
-
-            Conditions.Add("马猴烧酒的好感度低于50", () => 好感度低于50(马猴烧酒));
-            Conditions.Add("主角攻击力大于20", () => 攻击力大于20(MainCharacter));
-            Conditions.Add("马猴烧酒攻击力大于20", () => 攻击力大于20(马猴烧酒));
+            // 初始化必要常量
+            NovelConstant.InitConstatnt();
 
             // 如果需要，初始化小说
-            //NovelTest.CreateNovels();
+            //NovelConstant.CreateNovels();
 
             // 小说配置
-            _config = new NovelConfig("novel1", "chapter1");
-            LoadNovelData();
+            _config = new NovelConfig("NovelEditor", "example");
+            _config.LoadConfig(NovelConstant.Conditions);
+            OpenedFileName.Text = _config.FileName;
 
             // 绑定节点列表
             NodeListBox.ItemsSource = _config.Values;
@@ -47,12 +35,6 @@ namespace Milimoe.FunGame.Testing.Desktop.Solutions.NovelEditor
             {
                 NodeListBox.SelectedIndex = 0;
             }
-        }
-
-        private void LoadNovelData()
-        {
-            // 加载已有的小说数据
-            _config.LoadConfig(Conditions);
         }
 
         private void NodeListBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
@@ -185,6 +167,7 @@ namespace Milimoe.FunGame.Testing.Desktop.Solutions.NovelEditor
 
             _config.Add(newNode.Key, newNode);
             NodeListBox.Items.Refresh();
+            if (!Title.StartsWith('*')) Title = "* " + Title;
         }
 
         private void EditNodeButton_Click(object sender, RoutedEventArgs e)
@@ -193,6 +176,78 @@ namespace Milimoe.FunGame.Testing.Desktop.Solutions.NovelEditor
             {
                 selectedNode.Content = "此示例节点已被编辑";
                 NodeContentText.Text = "文本：" + selectedNode.Content;
+                if (!Title.StartsWith('*')) Title = "* " + Title;
+            }
+        }
+
+        private void LoadButton_Click(object sender, RoutedEventArgs e)
+        {
+            OpenFileDialog openFileDialog = new()
+            {
+                Filter = "小说配置文件 (*.json)|*.json|所有文件 (*.*)|*.*",
+                Title = "选择小说配置文件"
+            };
+            if (openFileDialog.ShowDialog() == System.Windows.Forms.DialogResult.OK)
+            {
+                string filePath = openFileDialog.FileName;
+                try
+                {
+                    _config = NovelConfig.LoadFrom(filePath, "NovelEditor", false, NovelConstant.Conditions);
+                    OpenedFileName.Text = _config.FileName;
+                    NodeListBox.ItemsSource = _config.Values;
+                    NodeListBox.Items.Refresh();
+                    Title = Title.Replace("*", "").Trim();
+                    if (NovelConfig.ExistsFile("NovelEditor", _config.FileName))
+                    {
+                        MessageBox.Show("这是一个在配置文件中已存在相同文件名的文件，建议保存时使用另存为功能。", "提示");
+                    }
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show($"打开文件失败：{ex.Message}");
+                }
+            }
+        }
+        
+        private void SaveButton_Click(object sender, RoutedEventArgs e)
+        {
+            _config.SaveConfig();
+            NodeListBox.Items.Refresh();
+            Title = Title.Replace("*", "").Trim();
+        }
+
+        private void SaveAsButton_Click(object sender, RoutedEventArgs e)
+        {
+            InputDialog inputDialog = new("请输入新的小说章节名称：", "另存为");
+            if (inputDialog.ShowDialog() == true)
+            {
+                string name = inputDialog.ResponseText;
+                if (name.Trim() != "")
+                {
+                    if (NovelConfig.ExistsFile("NovelEditor", name))
+                    {
+                        if (MessageBox.Show("文件已经存在，是否覆盖？", "提示", MessageBoxButton.YesNo) == MessageBoxResult.No)
+                        {
+                            return;
+                        }
+                    }
+                    NovelConfig config2 = new("NovelEditor", name);
+                    foreach (string key in _config.Keys)
+                    {
+                        config2[key] = _config[key];
+                    }
+                    _config = config2;
+                    _config.SaveConfig();
+                    OpenedFileName.Text = _config.FileName;
+                    NodeListBox.ItemsSource = _config.Values;
+                    NodeListBox.Items.Refresh();
+                    Title = Title.Replace("*", "").Trim();
+                    MessageBox.Show($"已经添加新的文件：{name}.json", "提示");
+                }
+                else
+                {
+                    MessageBox.Show("文件名不能为空，另存为失败。");
+                }
             }
         }
 
@@ -203,16 +258,6 @@ namespace Milimoe.FunGame.Testing.Desktop.Solutions.NovelEditor
                 NodeListBox.SelectedItem = target;
                 NodeListBox.ScrollIntoView(target);
             }
-        }
-
-        public static bool 攻击力大于20(Character character)
-        {
-            return character.ATK > 20;
-        }
-
-        public static bool 好感度低于50(Character character)
-        {
-            return Likability[character] > 50;
         }
     }
 }

@@ -5,7 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:Milimoe.FunGame.Testing.Desktop.Solutions.NovelEditor"
         mc:Ignorable="d"
-        Title="NovelEditor" Height="450" Width="800"
+        Title="NovelEditor" Height="450" Width="800" WindowStartupLocation="CenterScreen"
         >
     <Grid>
         <Grid.ColumnDefinitions>
@@ -15,8 +15,24 @@
 
         <!-- 左侧：节点列表和操作按钮 -->
         <StackPanel Grid.Column="0" Margin="10">
-            <Button Content="添加节点" Click="AddNodeButton_Click" Margin="0,0,0,10"/>
-            <Button Content="编辑节点" Click="EditNodeButton_Click" Margin="0,0,0,10"/>
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                </Grid.RowDefinitions>
+
+                <Button Content="添加节点" Click="AddNodeButton_Click" Margin="5,5,5,5" Grid.Column="0" Grid.Row="0"/>
+                <Button Content="编辑节点" Click="EditNodeButton_Click" Margin="5,5,5,5" Grid.Column="1" Grid.Row="0"/>
+                <Button Content="加载" Click="LoadButton_Click" Margin="5,5,5,5" Grid.Column="0" Grid.Row="1"/>
+                <Button Content="保存" Click="SaveButton_Click" Margin="5,5,5,5" Grid.Column="1" Grid.Row="1"/>
+                <TextBlock x:Name="OpenedFileName" HorizontalAlignment="Center" Margin="5,5,5,5" Grid.Column="0" Grid.Row="2"/>
+                <Button Content="另存为" Click="SaveAsButton_Click" Margin="5,5,5,5" Grid.Column="1" Grid.Row="2"/>
+            </Grid>
             <ListBox x:Name="NodeListBox" SelectionChanged="NodeListBox_SelectionChanged" d:ItemsSource="{d:SampleData ItemCount=5}">
                 <ListBox.ItemTemplate>
                     <DataTemplate>
