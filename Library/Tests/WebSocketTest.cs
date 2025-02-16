@@ -65,6 +65,7 @@ namespace Milimoe.FunGame.Testing.Tests
                 Dictionary<string, object> data = [];
                 data.Add("command", "scadd");
                 data.Add("qq", 1);
+                data.Add("group", 2);
                 data.Add("sc", 1);
                 await HTTPClient.Send(SocketMessageType.AnonymousGameServer, OshimaGameModuleConstant.Anonymous, data);
             }
