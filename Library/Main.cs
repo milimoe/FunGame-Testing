@@ -22,7 +22,7 @@ im.Load();
 FunGameService.InitFunGame();
 FunGameSimulation.InitFunGameSimulation();
 
-_ = new Milimoe.FunGame.Testing.Tests.ActivityExample();
+//_ = new Milimoe.FunGame.Testing.Tests.ActivityExample();
 
 //List<string> strings = FunGameSimulation.StartGame(true, false, true);
 //strings.ForEach(Console.WriteLine);
