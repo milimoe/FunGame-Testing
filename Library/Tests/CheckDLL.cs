@@ -26,11 +26,6 @@ namespace Milimoe.FunGame.Testing.Tests
 
             LoginEventArgs e = new();
             plugins.OnBeforeLoginEvent(plugins, e);
-            if (!e.Cancel)
-            {
-                plugins.OnSucceedLoginEvent(plugins, e);
-                plugins.OnFailedLoginEvent(plugins, e);
-            }
             plugins.OnAfterLoginEvent(plugins, e);
 
             List<Character> list = [];

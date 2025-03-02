@@ -23,21 +23,19 @@ namespace FunGame.Testing.Solutions
         public void AfterLoginEvent(object sender, LoginEventArgs e)
         {
             Controller.WriteLine("[" + Name + "] 触发AfterLoginEvent! ");
+            if (e.Success)
+            {
+                Controller.WriteLine("[" + Name + "] 检测到登录成功？？ ");
+            }
+            else
+            {
+                Controller.WriteLine("[" + Name + "] 登录失败~~");
+            }
         }
 
         public void BeforeLoginEvent(object sender, LoginEventArgs e)
         {
             Controller.WriteLine("[" + Name + "] 试图登录！账号" + e.Username + "密码" + e.Password);
-        }
-
-        public void FailedLoginEvent(object sender, LoginEventArgs e)
-        {
-            Controller.WriteLine("[" + Name + "] 登录失败~~");
-        }
-
-        public void SucceedLoginEvent(object sender, LoginEventArgs e)
-        {
-            Controller.WriteLine("[" + Name + "] 检测到登录成功？？ ");
         }
 
         public void BeforeConnectEvent(object sender, ConnectEventArgs e)
@@ -48,16 +46,14 @@ namespace FunGame.Testing.Solutions
         public void AfterConnectEvent(object sender, ConnectEventArgs e)
         {
             Controller.WriteLine("[" + Name + "] 结果：" + e.ConnectResult);
-        }
-
-        public void SucceedConnectEvent(object sender, ConnectEventArgs e)
-        {
-            Controller.WriteLine("[" + Name + "] 连接服务器成功！！服务器IP" + e.ServerIP + ":" + e.ServerPort);
-        }
-
-        public void FailedConnectEvent(object sender, ConnectEventArgs e)
-        {
-            Controller.WriteLine("[" + Name + "] 连接服务器失败！！服务器IP" + e.ServerIP + ":" + e.ServerPort);
+            if (e.Success)
+            {
+                Controller.WriteLine("[" + Name + "] 连接服务器成功！！服务器IP" + e.ServerIP + ":" + e.ServerPort);
+            }
+            else
+            {
+                Controller.WriteLine("[" + Name + "] 连接服务器失败！！服务器IP" + e.ServerIP + ":" + e.ServerPort);
+            }
         }
 
         public void BeforeIntoRoomEvent(object sender, RoomEventArgs e)
@@ -67,24 +63,17 @@ namespace FunGame.Testing.Solutions
 
         public void AfterIntoRoomEvent(object sender, RoomEventArgs e)
         {
-
-        }
-
-        public void SucceedIntoRoomEvent(object sender, RoomEventArgs e)
-        {
-            DataRequest request = Controller.NewDataRequest(Milimoe.FunGame.Core.Library.Constant.DataRequestType.Room_GetRoomPlayerCount);
-            request.AddRequestData("roomid", e.RoomID);
-            request.SendRequest();
-            if (request.Result == Milimoe.FunGame.Core.Library.Constant.RequestResult.Success)
+            if (e.Success)
             {
-                Controller.WriteLine("[" + Name + "] " + e.RoomID + " 的玩家数量为： " + request.GetResult<int>("count"));
+                DataRequest request = Controller.NewDataRequest(Milimoe.FunGame.Core.Library.Constant.DataRequestType.Room_GetRoomPlayerCount);
+                request.AddRequestData("roomid", e.RoomID);
+                request.SendRequest();
+                if (request.Result == Milimoe.FunGame.Core.Library.Constant.RequestResult.Success)
+                {
+                    Controller.WriteLine("[" + Name + "] " + e.RoomID + " 的玩家数量为： " + request.GetResult<int>("count"));
+                }
+                request.Dispose();
             }
-            request.Dispose();
-        }
-
-        public void FailedIntoRoomEvent(object sender, RoomEventArgs e)
-        {
-
         }
     }
 }
