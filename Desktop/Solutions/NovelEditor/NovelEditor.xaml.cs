@@ -192,7 +192,7 @@ namespace Milimoe.FunGame.Testing.Desktop.Solutions.NovelEditor
                 string filePath = openFileDialog.FileName;
                 try
                 {
-                    _config = NovelConfig.LoadFrom(filePath, "NovelEditor", false, NovelConstant.Conditions);
+                    _config = NovelConfig.LoadFrom(filePath, "NovelEditor", true, true, NovelConstant.Conditions);
                     OpenedFileName.Text = _config.FileName;
                     NodeListBox.ItemsSource = _config.Values;
                     NodeListBox.Items.Refresh();
