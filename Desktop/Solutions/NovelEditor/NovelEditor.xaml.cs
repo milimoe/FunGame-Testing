@@ -208,7 +208,7 @@ namespace Milimoe.FunGame.Testing.Desktop.Solutions.NovelEditor
                 }
             }
         }
-        
+
         private void SaveButton_Click(object sender, RoutedEventArgs e)
         {
             _config.SaveConfig();

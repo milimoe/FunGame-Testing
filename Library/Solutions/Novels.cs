@@ -15,7 +15,7 @@ namespace Milimoe.FunGame.Testing.Solutions
         {
             return character.ATK > 20;
         }
-        
+
         public static bool 好感度低于50(Character character)
         {
             return Likability[character] > 50;
