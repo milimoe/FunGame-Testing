@@ -4,7 +4,7 @@ using Oshima.FunGame.OshimaModules;
 using Oshima.FunGame.OshimaServers.Service;
 using Oshima.FunGame.WebAPI.Controllers;
 
-_ = new Milimoe.FunGame.Testing.Solutions.Novels();
+//_ = new Milimoe.FunGame.Testing.Solutions.Novels();
 
 //_ = new Milimoe.FunGame.Testing.Tests.CheckDLL();
 
