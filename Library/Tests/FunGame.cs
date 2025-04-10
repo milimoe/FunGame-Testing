@@ -11,18 +11,20 @@ namespace Milimoe.FunGame.Testing.Tests
         public FunGameSimulation()
         {
             InitCharacter();
-
-            bool printout = true;
-            List<string> strs = StartGame(printout);
-            if (printout == false)
+            Task.Run(async () =>
             {
-                foreach (string str in strs)
+                bool printout = true;
+                List<string> strs = await StartGame(printout);
+                if (printout == false)
                 {
-                    Console.WriteLine(str);
+                    foreach (string str in strs)
+                    {
+                        Console.WriteLine(str);
+                    }
                 }
-            }
 
-            Console.ReadKey();
+                Console.ReadKey();
+            });
         }
 
         public static List<Character> Characters { get; } = [];
@@ -34,7 +36,7 @@ namespace Milimoe.FunGame.Testing.Tests
         public static bool PrintOut { get; set; } = false;
         public static string Msg { get; set; } = "";
 
-        public static List<string> StartGame(bool printout, bool isWeb = false)
+        public static async Task<List<string>> StartGame(bool printout, bool isWeb = false)
         {
             PrintOut = printout;
             IsWeb = isWeb;
@@ -57,7 +59,7 @@ namespace Milimoe.FunGame.Testing.Tests
                 // M = 5, W = 0, P1 = 0, P3 = 2
                 // M = 5, W = 1, P1 = 0, P3 = 0
 
-                List<Character> list = new(Characters);
+                List<Character> list = [.. Characters];
 
                 if (list.Count > 11)
                 {
@@ -327,9 +329,9 @@ namespace Milimoe.FunGame.Testing.Tests
                             foreach (Character c in characters.Where(c => c != winner && c.HP > 0))
                             {
                                 WriteLine("[ " + winner + " ] 对 [ " + c + " ] 造成了 99999999999 点真实伤害。");
-                                actionQueue.DeathCalculation(winner, c);
+                                await actionQueue.DeathCalculationAsync(winner, c);
                             }
-                            actionQueue.EndGameInfo(winner);
+                            await actionQueue.EndGameInfo(winner);
                             result.Add(Msg);
                             break;
                         }
@@ -343,7 +345,7 @@ namespace Milimoe.FunGame.Testing.Tests
                             WriteLine($"=== Round {i++} ===");
                             WriteLine("现在是 [ " + characterToAct + " ] 的回合！");
 
-                            bool isGameEnd = actionQueue.ProcessTurn(characterToAct);
+                            bool isGameEnd = await actionQueue.ProcessTurnAsync(characterToAct);
                             if (isGameEnd)
                             {
                                 result.Add(Msg);
@@ -355,7 +357,7 @@ namespace Milimoe.FunGame.Testing.Tests
                         }
 
                         // 模拟时间流逝
-                        double timeLapse = actionQueue.TimeLapse();
+                        double timeLapse = await actionQueue.TimeLapse();
                         totalTime += timeLapse;
                         下一次空投 -= timeLapse;
 

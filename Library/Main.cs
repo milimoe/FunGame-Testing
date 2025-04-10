@@ -4,7 +4,7 @@ using Oshima.FunGame.OshimaModules;
 using Oshima.FunGame.OshimaServers.Service;
 using Oshima.FunGame.WebAPI.Controllers;
 
-_ = new Milimoe.FunGame.Testing.Solutions.Novels();
+//_ = new Milimoe.FunGame.Testing.Solutions.Novels();
 
 //_ = new Milimoe.FunGame.Testing.Tests.CheckDLL();
 
@@ -24,8 +24,8 @@ FunGameSimulation.InitFunGameSimulation();
 
 //_ = new Milimoe.FunGame.Testing.Tests.ActivityExample();
 
-//List<string> strings = FunGameSimulation.StartSimulationGame(true, false, true);
-//strings.ForEach(Console.WriteLine);
+List<string> strings = await FunGameSimulation.StartSimulationGame(true, false, true);
+strings.ForEach(Console.WriteLine);
 
 //Character testc = new CustomCharacter(1, "1");
 //Console.WriteLine(testc.GetInfo());
