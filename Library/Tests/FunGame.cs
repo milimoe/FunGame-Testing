@@ -440,7 +440,7 @@ namespace Milimoe.FunGame.Testing.Tests
             }
         }
 
-        private static async Task ActionQueue_QueueUpdated(ActionQueue queue, List<Character> characters, Character character, QueueUpdatedReason reason, string msg)
+        private static async Task ActionQueue_QueueUpdated(ActionQueue queue, List<Character> characters, Character character, double hardnessTime, QueueUpdatedReason reason, string msg)
         {
             if (IsPlayer_OnlyTest(queue, character))
             {
@@ -679,10 +679,10 @@ namespace Milimoe.FunGame.Testing.Tests
 
         private static async Task ActionQueue_TurnEnd(ActionQueue queue, Character character)
         {
-            if (IsPlayer_OnlyTest(queue, character))
+            if (IsRoundHasPlayer_OnlyTest(queue, character))
             {
                 // 暂停让玩家查看本回合日志
-                Console.WriteLine("你的回合已结束，按任意键继续. . .");
+                Console.WriteLine("你的回合（或与你相关的回合）已结束，请查看本回合日志，然后按任意键继续. . .");
                 await Console.In.ReadLineAsync();
             }
             await Task.CompletedTask;
@@ -695,6 +695,7 @@ namespace Milimoe.FunGame.Testing.Tests
             {
                 await Task.Run(() =>
                 {
+                    Console.WriteLine(character.GetSimpleInfo());
                     while (type == CharacterActionType.None)
                     {
                         Console.Write("现在是你的回合！1：普通攻击，2：使用技能，5：使用物品，6：直接结束回合\r\n请告诉我你的行动：");
@@ -743,6 +744,11 @@ namespace Milimoe.FunGame.Testing.Tests
         private static bool IsPlayer_OnlyTest(ActionQueue queue, Character current)
         {
             return queue.CustomData.TryGetValue("player", out object? value) && value is Character player && player == current;
+        }
+        
+        private static bool IsRoundHasPlayer_OnlyTest(ActionQueue queue, Character current)
+        {
+            return queue.CustomData.TryGetValue("player", out object? value) && value is Character player && (player == current || (current.CharacterState != CharacterState.Casting && queue.LastRound.Targets.Any(c => c == player)));
         }
 
         public static void WriteLine(string str)
