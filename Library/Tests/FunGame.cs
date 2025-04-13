@@ -234,10 +234,10 @@ namespace Milimoe.FunGame.Testing.Tests
                                     effectArgs = new(dict);
                                 }
                                 Dictionary<string, object> args = new()
-                                    {
-                                        { "skill", skill },
-                                        { "values", effectArgs }
-                                    };
+                                {
+                                    { "skill", skill },
+                                    { "values", effectArgs }
+                                };
                                 skill.GamingQueue = actionQueue;
                                 skill.Effects.Add(Factory.OpenFactory.GetInstance<Effect>(skill.Id, "", args));
                                 skill.Character = characterToAct;
@@ -279,7 +279,7 @@ namespace Milimoe.FunGame.Testing.Tests
                             break;
                         }
 
-                        actionQueue.DisplayQueue();
+                        if (isWeb) actionQueue.DisplayQueue();
                         WriteLine("");
                     }
 
@@ -442,10 +442,21 @@ namespace Milimoe.FunGame.Testing.Tests
 
         private static async Task ActionQueue_QueueUpdated(ActionQueue queue, List<Character> characters, Character character, QueueUpdatedReason reason, string msg)
         {
-            if (IsPlayer_OnlyTest(queue, character) && reason == QueueUpdatedReason.Action)
+            if (IsPlayer_OnlyTest(queue, character))
             {
-                // 调用 AI 托管，这里目的是，因为没有GUI，为了让角色能在其他角色的行动回合可以使用爆发技插队，这里需要让AI去释放。
-                queue.SetCharactersToAIControl(false, character);
+                if (reason == QueueUpdatedReason.Action)
+                {
+                    // QueueUpdatedReason.Action 是指角色行动后改变了顺序表
+                    // 调用 AI 托管，这里目的是，因为没有GUI，为了让角色能在其他角色的行动回合可以使用爆发技插队，这里需要让AI去释放。
+                    queue.SetCharactersToAIControl(false, character);
+                }
+                if (reason == QueueUpdatedReason.PreCastSuperSkill)
+                {
+                    // QueueUpdatedReason.PreCastSuperSkill 是指角色释放了爆发技
+                    // 通知玩家，让玩家知道下一次行动需要选择目标
+                    Console.WriteLine($"你的下一回合需要选择爆发技目标，知晓请按任意键继续. . .");
+                    await Console.In.ReadLineAsync();
+                }
             }
             await Task.CompletedTask;
         }
@@ -543,7 +554,7 @@ namespace Milimoe.FunGame.Testing.Tests
                     Console.WriteLine(string.Join("\r\n", items.Select(i => $"{i.GetIdName()}：{i}")));
                     while (item is null)
                     {
-                        Console.Write("请选择你想使用的物品（输入物品编号）：");
+                        Console.Write("请选择你想使用的物品（输入物品编号，0为取消）：");
                         string? input = Console.ReadLine();
                         if (int.TryParse(input, out int id))
                         {
@@ -585,7 +596,7 @@ namespace Milimoe.FunGame.Testing.Tests
                         string input = Console.ReadLine() ?? "";
                         if (input.Equals("OK", StringComparison.CurrentCultureIgnoreCase))
                         {
-                            Console.WriteLine("取消选择");
+                            Console.WriteLine("结束选择");
                             break;
                         }
                         if (int.TryParse(input, out int id))
@@ -670,7 +681,9 @@ namespace Milimoe.FunGame.Testing.Tests
         {
             if (IsPlayer_OnlyTest(queue, character))
             {
-                // DO NOTHING
+                // 暂停让玩家查看本回合日志
+                Console.WriteLine("你的回合已结束，按任意键继续. . .");
+                await Console.In.ReadLineAsync();
             }
             await Task.CompletedTask;
         }
