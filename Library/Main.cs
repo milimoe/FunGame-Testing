@@ -22,8 +22,8 @@ im.Load();
 FunGameService.InitFunGame();
 FunGameSimulation.InitFunGameSimulation();
 
-List<string> strings = await Milimoe.FunGame.Testing.Tests.FunGameSimulation.StartGame(true, false);
-strings.ForEach(Console.WriteLine);
+await Milimoe.FunGame.Testing.Tests.FunGameSimulation.StartGame(true, false);
+//strings.ForEach(Console.WriteLine);
 
 //_ = new Milimoe.FunGame.Testing.Tests.ActivityExample();
 

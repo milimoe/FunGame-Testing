@@ -99,7 +99,9 @@ namespace Milimoe.FunGame.Testing.Tests
                         if (int.TryParse(input, out int id) && characters.FirstOrDefault(c => c.Id == id) is Character c)
                         {
                             player = c;
-                            Console.WriteLine($"选择了 [ {player} ]！");
+                            Console.WriteLine($"选择了 [ {player} ]！\r\n{player.GetInfo()}");
+                            Console.WriteLine($"按任意键继续. . .");
+                            Console.ReadKey();
                             break;
                         }
                     }
@@ -179,7 +181,18 @@ namespace Milimoe.FunGame.Testing.Tests
                 int maxRound = 999;
 
                 // 随机回合奖励
-                Dictionary<int, List<Skill>> roundRewards = FunGameService.GenerateRoundRewards(maxRound);
+                Dictionary<long, bool> effects = [];
+                foreach (EffectID id in FunGameConstant.RoundRewards.Keys)
+                {
+                    long effectID = (long)id;
+                    bool isActive = false;
+                    if (effectID > (long)EffectID.Active_Start)
+                    {
+                        isActive = true;
+                    }
+                    effects.Add(effectID, isActive);
+                }
+                actionQueue.InitRoundRewards(maxRound, 1, effects, id => FunGameConstant.RoundRewards[(EffectID)id]);
 
                 int i = 1;
                 while (i < maxRound)
@@ -212,66 +225,10 @@ namespace Milimoe.FunGame.Testing.Tests
                     // 处理回合
                     if (characterToAct != null)
                     {
-                        // 获取回合奖励
-                        List<Skill> skillRewards = [];
-                        if (roundRewards.TryGetValue(i, out List<Skill>? effectList) && effectList != null)
-                        {
-                            skillRewards = [.. effectList];
-                        }
-
                         WriteLine($"=== Round {i++} ===");
                         WriteLine("现在是 [ " + characterToAct + " ] 的回合！");
 
-                        // 实际的回合奖励
-                        List<Skill> realSkillRewards = [];
-                        if (skillRewards.Count > 0)
-                        {
-                            foreach (Skill skill in skillRewards)
-                            {
-                                Dictionary<string, object> effectArgs = [];
-                                if (FunGameConstant.RoundRewards.TryGetValue((EffectID)skill.Id, out Dictionary<string, object>? dict) && dict != null)
-                                {
-                                    effectArgs = new(dict);
-                                }
-                                Dictionary<string, object> args = new()
-                                {
-                                    { "skill", skill },
-                                    { "values", effectArgs }
-                                };
-                                skill.GamingQueue = actionQueue;
-                                skill.Effects.Add(Factory.OpenFactory.GetInstance<Effect>(skill.Id, "", args));
-                                skill.Character = characterToAct;
-                                skill.Level = 1;
-                                actionQueue.LastRound.RoundRewards.Add(skill);
-                                WriteLine($"[ {characterToAct} ] 获得了回合奖励！{skill.Description}".Trim());
-                                if (skill.IsActive)
-                                {
-                                    actionQueue.LastRound.Targets.Add(characterToAct);
-                                    skill.OnSkillCasted(actionQueue, characterToAct, [characterToAct]);
-                                }
-                                else
-                                {
-                                    characterToAct.Skills.Add(skill);
-                                    realSkillRewards.Add(skill);
-                                }
-                            }
-                        }
-
                         bool isGameEnd = await actionQueue.ProcessTurnAsync(characterToAct);
-
-                        if (realSkillRewards.Count > 0)
-                        {
-                            foreach (Skill skill in realSkillRewards)
-                            {
-                                foreach (Effect e in skill.Effects)
-                                {
-                                    e.OnEffectLost(characterToAct);
-                                    characterToAct.Effects.Remove(e);
-                                }
-                                characterToAct.Skills.Remove(skill);
-                                skill.Character = null;
-                            }
-                        }
 
                         if (isGameEnd)
                         {
@@ -756,7 +713,7 @@ namespace Milimoe.FunGame.Testing.Tests
             Msg += str + "\r\n";
             if (PrintOut) Console.WriteLine(str);
         }
-
+        
         public static void DropItems(ActionQueue queue, int mQuality, int wQuality, int aQuality, int sQuality, int acQuality)
         {
             foreach (Character character in queue.Queue)
