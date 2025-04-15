@@ -3,6 +3,7 @@ using Milimoe.FunGame.Core.Api.Utility;
 using Milimoe.FunGame.Core.Entity;
 using Milimoe.FunGame.Core.Library.Constant;
 using Milimoe.FunGame.Core.Model;
+using Oshima.Core.Constant;
 using Oshima.FunGame.OshimaModules.Effects.OpenEffects;
 using Oshima.FunGame.OshimaModules.Skills;
 using Oshima.FunGame.OshimaServers.Service;
@@ -113,7 +114,10 @@ namespace Milimoe.FunGame.Testing.Tests
                 }
 
                 // 创建顺序表并排序
-                ActionQueue actionQueue = new(characters, false, WriteLine);
+                ActionQueue actionQueue = new(characters, false, WriteLine)
+                {
+                    GameplayEquilibriumConstant = OshimaGameModuleConstant.GameplayEquilibriumConstant
+                };
                 if (PrintOut) Console.WriteLine();
 
                 // 绑定事件
@@ -296,7 +300,7 @@ namespace Milimoe.FunGame.Testing.Tests
                 if (PrintOut)
                 {
                     Console.WriteLine("--- End ---");
-                    Console.WriteLine($"总游戏时长：{totalTime:0.##}");
+                    Console.WriteLine($"总游戏时长：{totalTime:0.##} {actionQueue.GameplayEquilibriumConstant.InGameTime}");
                     Console.WriteLine("");
                 }
 
