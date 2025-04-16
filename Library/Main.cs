@@ -22,6 +22,12 @@ im.Load();
 FunGameService.InitFunGame();
 FunGameSimulation.InitFunGameSimulation();
 
+//while (true)
+//{
+//    await FunGameSimulation.StartSimulationGame(false, false, true);
+//    await FunGameSimulation.StartSimulationGame(false, false, false);
+//}
+
 await Milimoe.FunGame.Testing.Tests.FunGameSimulation.StartGame(true, false);
 //strings.ForEach(Console.WriteLine);
 
@@ -37,6 +43,10 @@ await Milimoe.FunGame.Testing.Tests.FunGameSimulation.StartGame(true, false);
 //Console.WriteLine(testc.InitialINT + $" ({testc.INTGrowth}/Lv)");
 
 FunGameController controller = new(new Logger<FunGameController>(new LoggerFactory()));
+//Console.WriteLine(controller.GetWinrateRank());
+//Console.WriteLine(controller.GetWinrateRank(true));
+//Console.WriteLine(controller.GetRatingRank());
+//Console.WriteLine(controller.GetRatingRank(true));
 //Console.WriteLine(controller.CreateSaved(1, "test1"));
 //Console.WriteLine(controller.CreateSaved(2, "test2"));
 
