@@ -150,7 +150,7 @@ namespace Milimoe.FunGame.Testing.Tests
                 List<string> msgs = await queue.StartTeamGame(teams, -1, 30);
                 foreach (Character character in queue.ActionQueue.CharacterStatistics.Keys)
                 {
-                    Milimoe.FunGame.Testing.Tests.FunGameSimulation.UpdateStatistics(stats[character.User], queue.ActionQueue.CharacterStatistics[character]);
+                    FunGameTesting.UpdateStatistics(stats[character.User], queue.ActionQueue.CharacterStatistics[character]);
                 }
                 Console.WriteLine(string.Join("\r\n\r\n", msgs[^2..]));
                 foreach (Team team in queue.ActionQueue.EliminatedTeams)

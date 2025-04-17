@@ -10,9 +10,9 @@ using Oshima.FunGame.OshimaServers.Service;
 
 namespace Milimoe.FunGame.Testing.Tests
 {
-    public class FunGameSimulation
+    public class FunGameTesting
     {
-        public FunGameSimulation()
+        public FunGameTesting()
         {
             InitCharacter();
             Task.Run(async () =>

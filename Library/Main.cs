@@ -1,5 +1,6 @@
 using Microsoft.Extensions.Logging;
 using Milimoe.FunGame.Core.Api.Utility;
+using Milimoe.FunGame.Testing.Tests;
 using Oshima.FunGame.OshimaModules;
 using Oshima.FunGame.OshimaServers.Service;
 using Oshima.FunGame.WebAPI.Controllers;
@@ -22,13 +23,16 @@ im.Load();
 FunGameService.InitFunGame();
 FunGameSimulation.InitFunGameSimulation();
 
+//await FunGameBO5.StartBO5();
+
 //while (true)
 //{
 //    await FunGameSimulation.StartSimulationGame(false, false, true);
 //    await FunGameSimulation.StartSimulationGame(false, false, false);
 //}
 
-await Milimoe.FunGame.Testing.Tests.FunGameSimulation.StartGame(true, false);
+await FunGameTesting.StartGame(true, false);
+
 //strings.ForEach(Console.WriteLine);
 
 //_ = new Milimoe.FunGame.Testing.Tests.ActivityExample();

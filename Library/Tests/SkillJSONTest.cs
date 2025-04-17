@@ -13,7 +13,7 @@ namespace Milimoe.FunGame.Testing.Tests
             im.Load();
             ExampleSkillModule sm = new();
             sm.Load();
-            _ = new FunGameSimulation();
+            //_ = new FunGameTesting();
         }
     }
 }
