@@ -23,7 +23,7 @@ im.Load();
 FunGameService.InitFunGame();
 FunGameSimulation.InitFunGameSimulation();
 
-//await FunGameBO5.StartBO5();
+await FunGameBO5.StartBO5();
 
 //while (true)
 //{
