@@ -139,6 +139,33 @@ while (true)
             }
             else Console.WriteLine(controller.ExchangeCredits(1));
         }
+        else if (msg.StartsWith("winrate"))
+        {
+            msg = msg.Replace("winrate", "");
+            if (int.TryParse(msg, out int value))
+            {
+                Console.WriteLine(controller.GetWinrateRank(true));
+            }
+            else Console.WriteLine(controller.GetWinrateRank(false));
+        }
+        else if (msg.StartsWith("csj"))
+        {
+            msg = msg.Replace("csj", "");
+            if (int.TryParse(msg, out int value))
+            {
+                Console.WriteLine(controller.GetStats(value));
+            }
+            else Console.WriteLine(controller.GetStats(1));
+        }
+        else if (msg.StartsWith("ctdsj"))
+        {
+            msg = msg.Replace("ctdsj", "");
+            if (int.TryParse(msg, out int value))
+            {
+                Console.WriteLine(controller.GetTeamStats(value));
+            }
+            else Console.WriteLine(controller.GetTeamStats(1));
+        }
         else if (msg == "jscs")
         {
             Console.WriteLine(controller.RandomCustomCharacter(1));

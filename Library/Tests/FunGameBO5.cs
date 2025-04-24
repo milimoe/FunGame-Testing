@@ -56,7 +56,7 @@ namespace Milimoe.FunGame.Testing.Tests
                 }
             }
 
-            Console.WriteLine("\r\n\r\nBO5系列赛，赛制：团队死斗模式，目标30人头或歼灭所有队员；死亡次数越多，复活时间越快。\r\n\r\n");
+            Console.WriteLine("\r\n\r\nBO5系列赛，赛制：团队死斗模式，目标30人头或歼灭所有队员；死亡次数越多，复活时间越快。\r\n所有的数据统计格式均为：[Rating] Name K/A/D\r\n\r\n");
 
             Dictionary<HashSet<User>, int> teamScore = new()
             {
