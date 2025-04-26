@@ -708,7 +708,7 @@ namespace Milimoe.FunGame.Testing.Tests
         {
             return queue.CustomData.TryGetValue("player", out object? value) && value is Character player && player == current;
         }
-        
+
         private static bool IsRoundHasPlayer_OnlyTest(ActionQueue queue, Character current)
         {
             return queue.CustomData.TryGetValue("player", out object? value) && value is Character player && (player == current || (current.CharacterState != CharacterState.Casting && queue.LastRound.Targets.Any(c => c == player)));
@@ -719,7 +719,7 @@ namespace Milimoe.FunGame.Testing.Tests
             Msg += str + "\r\n";
             if (PrintOut) Console.WriteLine(str);
         }
-        
+
         public static void DropItems(ActionQueue queue, int mQuality, int wQuality, int aQuality, int sQuality, int acQuality)
         {
             foreach (Character character in queue.Queue)
