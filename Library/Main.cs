@@ -25,13 +25,15 @@ FunGameSimulation.InitFunGameSimulation();
 
 await FunGameBO5.StartBO5();
 
-//while (true)
-//{
-//    await FunGameSimulation.StartSimulationGame(false, false, true);
-//    await FunGameSimulation.StartSimulationGame(false, false, false);
-//}
+while (true)
+{
+    await FunGameSimulation.StartSimulationGame(true, false, true);
+    Console.ReadKey();
+    await FunGameSimulation.StartSimulationGame(true, false, false);
+    Console.ReadKey();
+}
 
-await FunGameTesting.StartGame(true, false);
+//await FunGameTesting.StartGame(true, false);
 
 //strings.ForEach(Console.WriteLine);
 

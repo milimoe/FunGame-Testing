@@ -1,6 +1,7 @@
 ﻿using Milimoe.FunGame.Core.Api.Utility;
 using Milimoe.FunGame.Core.Entity;
 using Milimoe.FunGame.Core.Library.Constant;
+using Milimoe.FunGame.Core.Model;
 using Oshima.FunGame.OshimaServers.Service;
 
 namespace Milimoe.FunGame.Testing.Tests
@@ -148,12 +149,12 @@ namespace Milimoe.FunGame.Testing.Tests
                 team2.Members.ForEach(c => c.Recovery());
                 FunGameActionQueue queue = new();
                 List<string> msgs = await queue.StartTeamGame(teams, -1, 30);
-                foreach (Character character in queue.ActionQueue.CharacterStatistics.Keys)
+                foreach (Character character in queue.GamingQueue.CharacterStatistics.Keys)
                 {
-                    FunGameTesting.UpdateStatistics(stats[character.User], queue.ActionQueue.CharacterStatistics[character]);
+                    FunGameTesting.UpdateStatistics(stats[character.User], queue.GamingQueue.CharacterStatistics[character]);
                 }
                 Console.WriteLine(string.Join("\r\n\r\n", msgs[^2..]));
-                foreach (Team team in queue.ActionQueue.EliminatedTeams)
+                foreach (Team team in ((TeamGamingQueue)queue.GamingQueue).EliminatedTeams)
                 {
                     if (team.IsWinner && team.Name == userTeams[u1]) teamScore[u1]++;
                     if (team.IsWinner && team.Name == userTeams[u2]) teamScore[u2]++;
