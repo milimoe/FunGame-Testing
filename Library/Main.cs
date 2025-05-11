@@ -27,6 +27,8 @@ while (true)
 {
     await FunGameSimulation.StartSimulationGame(true, false, true, true);
     Console.ReadKey();
+    await FunGameSimulation.StartSimulationGame(true, false, false, true);
+    Console.ReadKey();
 }
 
 await FunGameBO5.StartBO5();
