@@ -23,15 +23,13 @@ im.Load();
 FunGameService.InitFunGame();
 FunGameSimulation.InitFunGameSimulation();
 
-await FunGameBO5.StartBO5();
-
 while (true)
 {
-    await FunGameSimulation.StartSimulationGame(true, false, true);
-    Console.ReadKey();
-    await FunGameSimulation.StartSimulationGame(true, false, false);
+    await FunGameSimulation.StartSimulationGame(true, false, true, true);
     Console.ReadKey();
 }
+
+await FunGameBO5.StartBO5();
 
 //await FunGameTesting.StartGame(true, false);
 

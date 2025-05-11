@@ -100,7 +100,7 @@ namespace Milimoe.FunGame.Testing.Tests
                         if (int.TryParse(input, out int id) && characters.FirstOrDefault(c => c.Id == id) is Character c)
                         {
                             player = c;
-                            Console.WriteLine($"选择了 [ {player} ]！\r\n{player.GetInfo()}");
+                            Console.WriteLine($"选择了 [ {player} ]！");
                             Console.WriteLine($"按任意键继续. . .");
                             Console.ReadKey();
                             break;
@@ -180,6 +180,10 @@ namespace Milimoe.FunGame.Testing.Tests
                 // 显示初始顺序表
                 gamingQueue.DisplayQueue();
                 if (PrintOut) Console.WriteLine();
+
+                Console.WriteLine($"你的角色是 [ {player} ]，详细信息：{player.GetInfo()}");
+                Console.WriteLine($"按任意键继续. . .");
+                Console.ReadKey();
 
                 // 总回合数
                 int maxRound = 999;
