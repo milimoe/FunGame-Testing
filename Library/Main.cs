@@ -25,7 +25,7 @@ FunGameSimulation.InitFunGameSimulation();
 
 while (true)
 {
-    await FunGameSimulation.StartSimulationGame(true, false, true, true);
+    await FunGameSimulation.StartSimulationGame(true, false, true, true, useStore: true);
     Console.ReadKey();
     await FunGameSimulation.StartSimulationGame(true, false, false, true);
     Console.ReadKey();
