@@ -23,6 +23,9 @@ im.Load();
 FunGameService.InitFunGame();
 FunGameSimulation.InitFunGameSimulation();
 
+await FunGameBO5.StartBO5();
+Console.ReadKey();
+
 while (true)
 {
     await FunGameSimulation.StartSimulationGame(true, false, true, true, useStore: true);
@@ -30,8 +33,6 @@ while (true)
     await FunGameSimulation.StartSimulationGame(true, false, false, true);
     Console.ReadKey();
 }
-
-await FunGameBO5.StartBO5();
 
 //await FunGameTesting.StartGame(true, false);
 
