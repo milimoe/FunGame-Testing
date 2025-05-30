@@ -1,5 +1,6 @@
 using Microsoft.Extensions.Logging;
 using Milimoe.FunGame.Core.Api.Utility;
+using Milimoe.FunGame.Core.Entity;
 using Milimoe.FunGame.Testing.Tests;
 using Oshima.FunGame.OshimaModules;
 using Oshima.FunGame.OshimaServers.Service;
@@ -23,18 +24,40 @@ im.Load();
 FunGameService.InitFunGame();
 FunGameSimulation.InitFunGameSimulation();
 
+foreach (Character c in FunGameConstant.Characters)
+{
+    Character character = c.Copy();
+    character.Recovery();
+    FunGameService.AddCharacterSkills(character, 0, 0, 0);
+    Console.WriteLine(character.GetInfo());
+}
+foreach (Skill s in FunGameConstant.Skills)
+{
+    Console.WriteLine(s.GetInfo());
+}
+foreach (Skill m in FunGameConstant.Magics)
+{
+    Console.WriteLine(m.GetInfo());
+}
+Console.ReadKey();
+
+//Dictionary<int, RoundRecord> rounds = FunGameSimulation.ReadRoundsFromZip("rounds_archive.zip") ?? [];
+//Console.WriteLine(rounds.Count);
+//Console.ReadKey();
+//rounds.Clear();
+
 await FunGameBO5.StartBO5();
 Console.ReadKey();
 
+await FunGameTesting.StartGame(true, false);
+
 while (true)
 {
-    await FunGameSimulation.StartSimulationGame(true, false, true, true, useStore: true);
+    await FunGameSimulation.StartSimulationGame(true, true, true, true, useStore: false);
     Console.ReadKey();
     await FunGameSimulation.StartSimulationGame(true, false, false, true);
     Console.ReadKey();
 }
-
-//await FunGameTesting.StartGame(true, false);
 
 //strings.ForEach(Console.WriteLine);
 
