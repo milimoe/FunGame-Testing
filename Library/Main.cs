@@ -39,6 +39,14 @@ foreach (Skill m in FunGameConstant.Magics)
 {
     Console.WriteLine(m.GetInfo());
 }
+foreach (Character c in FunGameConstant.Characters)
+{
+    Character character = c.Copy();
+    character.Level = 60;
+    character.Recovery();
+    FunGameService.AddCharacterSkills(character, 1, 6, 6);
+    Console.WriteLine(character.GetInfo());
+}
 Console.ReadKey();
 
 //Dictionary<int, RoundRecord> rounds = FunGameSimulation.ReadRoundsFromZip("rounds_archive.zip") ?? [];
@@ -46,10 +54,10 @@ Console.ReadKey();
 //Console.ReadKey();
 //rounds.Clear();
 
-await FunGameBO5.StartBO5();
-Console.ReadKey();
+//await FunGameBO5.StartBO5();
+//Console.ReadKey();
 
-await FunGameTesting.StartGame(true, false);
+//await FunGameTesting.StartGame(true, false);
 
 while (true)
 {
