@@ -28,15 +28,17 @@ foreach (Character c in FunGameConstant.Characters)
 {
     Character character = c.Copy();
     character.Recovery();
-    FunGameService.AddCharacterSkills(character, 0, 0, 0);
+    FunGameService.AddCharacterSkills(character, 1, 1, 1);
     Console.WriteLine(character.GetInfo());
 }
 foreach (Skill s in FunGameConstant.Skills)
 {
+    s.Level = 1;
     Console.WriteLine(s.GetInfo());
 }
 foreach (Skill m in FunGameConstant.Magics)
 {
+    m.Level = 1;
     Console.WriteLine(m.GetInfo());
 }
 foreach (Character c in FunGameConstant.Characters)
@@ -46,6 +48,21 @@ foreach (Character c in FunGameConstant.Characters)
     character.Recovery();
     FunGameService.AddCharacterSkills(character, 1, 6, 6);
     Console.WriteLine(character.GetInfo());
+}
+foreach (Skill s in FunGameConstant.Skills)
+{
+    s.Level = 6;
+    Console.WriteLine(s.GetInfo());
+}
+foreach (Skill m in FunGameConstant.Magics)
+{
+    m.Level = 8;
+    Console.WriteLine(m.GetInfo());
+}
+foreach (Item i in FunGameConstant.AllItems)
+{
+    if (i.ItemType == Milimoe.FunGame.Core.Library.Constant.ItemType.GiftBox && i.Name != "毕业礼包") continue;
+    Console.WriteLine(i.ToString());
 }
 Console.ReadKey();
 
