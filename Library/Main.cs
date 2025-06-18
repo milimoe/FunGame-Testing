@@ -1,7 +1,6 @@
 using Microsoft.Extensions.Logging;
 using Milimoe.FunGame.Core.Api.Utility;
 using Milimoe.FunGame.Core.Entity;
-using Milimoe.FunGame.Testing.Tests;
 using Oshima.FunGame.OshimaModules;
 using Oshima.FunGame.OshimaServers.Service;
 using Oshima.FunGame.WebAPI.Controllers;
