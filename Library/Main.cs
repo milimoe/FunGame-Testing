@@ -1,6 +1,9 @@
+using System.Text;
 using Microsoft.Extensions.Logging;
 using Milimoe.FunGame.Core.Api.Utility;
 using Milimoe.FunGame.Core.Entity;
+using Milimoe.FunGame.Core.Library.Constant;
+using Milimoe.FunGame.Testing.Tests;
 using Oshima.FunGame.OshimaModules;
 using Oshima.FunGame.OshimaServers.Service;
 using Oshima.FunGame.WebAPI.Controllers;
@@ -22,47 +25,75 @@ im.Load();
 
 FunGameService.InitFunGame();
 FunGameSimulation.InitFunGameSimulation();
-
-foreach (Character c in FunGameConstant.Characters)
+//new CharacterTest();
+//foreach (Character c in FunGameConstant.Characters)
+//{
+//    Character character = c.Copy();
+//    character.Recovery();
+//    FunGameService.AddCharacterSkills(character, 1, 1, 1);
+//    Console.WriteLine(character.GetInfo());
+//}
+//foreach (Skill s in FunGameConstant.Skills)
+//{
+//    s.Level = 1;
+//    Console.WriteLine(s.GetInfo());
+//}
+//foreach (Skill m in FunGameConstant.Magics)
+//{
+//    m.Level = 1;
+//    Console.WriteLine(m.GetInfo());
+//}
+//foreach (Character c in FunGameConstant.Characters)
+//{
+//    Character character = c.Copy();
+//    character.Level = 60;
+//    character.Recovery();
+//    FunGameService.AddCharacterSkills(character, 1, 6, 6);
+//    Console.WriteLine(character.GetInfo());
+//}
+//foreach (Skill s in FunGameConstant.Skills)
+//{
+//    s.Level = 6;
+//    Console.WriteLine(s.GetInfo());
+//}
+//foreach (Skill m in FunGameConstant.Magics)
+//{
+//    m.Level = 8;
+//    Console.WriteLine(m.GetInfo());
+//}
+Character character = new Oshima.FunGame.OshimaModules.Characters.CustomCharacter(0, "");
+character.SetLevel(60);
+foreach (Item i in FunGameConstant.Equipment)
 {
-    Character character = c.Copy();
-    character.Recovery();
-    FunGameService.AddCharacterSkills(character, 1, 1, 1);
-    Console.WriteLine(character.GetInfo());
-}
-foreach (Skill s in FunGameConstant.Skills)
-{
-    s.Level = 1;
-    Console.WriteLine(s.GetInfo());
-}
-foreach (Skill m in FunGameConstant.Magics)
-{
-    m.Level = 1;
-    Console.WriteLine(m.GetInfo());
-}
-foreach (Character c in FunGameConstant.Characters)
-{
-    Character character = c.Copy();
-    character.Level = 60;
-    character.Recovery();
-    FunGameService.AddCharacterSkills(character, 1, 6, 6);
-    Console.WriteLine(character.GetInfo());
-}
-foreach (Skill s in FunGameConstant.Skills)
-{
-    s.Level = 6;
-    Console.WriteLine(s.GetInfo());
-}
-foreach (Skill m in FunGameConstant.Magics)
-{
-    m.Level = 8;
-    Console.WriteLine(m.GetInfo());
-}
-foreach (Item i in FunGameConstant.AllItems)
-{
-    if (i.ItemType == Milimoe.FunGame.Core.Library.Constant.ItemType.GiftBox && i.Name != "毕业礼包") continue;
+    character.Equip(i);
+    if (i.ItemType == ItemType.GiftBox && i.Name != "毕业礼包") continue;
     Console.WriteLine(i.ToString());
 }
+Console.WriteLine(character.GetInfo());
+//foreach (Item i in FunGameConstant.Equipment)
+//{
+//    StringBuilder builder = new();
+
+//    builder.AppendLine($"【{i.Name}】");
+
+//    string itemquality = ItemSet.GetQualityTypeName(i.QualityType);
+//    string itemtype = ItemSet.GetItemTypeName(i.ItemType) + (i.ItemType == ItemType.Weapon && i.WeaponType != WeaponType.None ? "-" + ItemSet.GetWeaponTypeName(i.WeaponType) : "");
+//    if (itemtype != "") itemtype = $" {itemtype}";
+
+//    builder.AppendLine($"{itemquality + itemtype}");
+
+//    if (i.Description != "")
+//    {
+//        builder.AppendLine("物品描述：" + i.Description);
+//    }
+
+//    if (i.BackgroundStory != "")
+//    {
+//        builder.AppendLine($"\"{i.BackgroundStory}\"");
+//    }
+
+//    Console.WriteLine(builder.ToString());
+//}
 Console.ReadKey();
 
 //Dictionary<int, RoundRecord> rounds = FunGameSimulation.ReadRoundsFromZip("rounds_archive.zip") ?? [];

@@ -169,9 +169,8 @@ namespace Milimoe.FunGame.Testing.Tests
                 // 显示角色信息
                 if (PrintOut) characters.ForEach(c => Console.WriteLine(c.GetInfo()));
 
-                // 因赋予了装备，所以清除排序重新排
-                gamingQueue.ClearQueue();
-                gamingQueue.InitCharacterQueue(characters);
+                // 初始化队列，准备开始游戏
+                gamingQueue.InitActionQueue();
                 gamingQueue.SetCharactersToAIControl(false, characters);
                 gamingQueue.SetCharactersToAIControl(true, player);
                 gamingQueue.CustomData.Add("player", player);
