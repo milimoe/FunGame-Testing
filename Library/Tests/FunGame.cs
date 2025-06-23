@@ -12,25 +12,6 @@ namespace Milimoe.FunGame.Testing.Tests
 {
     public class FunGameTesting
     {
-        public FunGameTesting()
-        {
-            InitCharacter();
-            Task.Run(async () =>
-            {
-                bool printout = true;
-                List<string> strs = await StartGame(printout);
-                if (printout == false)
-                {
-                    foreach (string str in strs)
-                    {
-                        Console.WriteLine(str);
-                    }
-                }
-
-                Console.ReadKey();
-            });
-        }
-
         public static Dictionary<Character, CharacterStatistics> CharacterStatistics { get; } = [];
         public static PluginConfig StatsConfig { get; } = new(nameof(FunGameSimulation), nameof(CharacterStatistics));
         public static bool IsRuning { get; set; } = false;
@@ -135,11 +116,11 @@ namespace Milimoe.FunGame.Testing.Tests
 
                 // 开始空投
                 Msg = "";
-                int qMagicCardPack = 0;
-                int qWeapon = 0;
-                int qArmor = 0;
-                int qShoes = 0;
-                int qAccessory = 0;
+                int qMagicCardPack = 5;
+                int qWeapon = 5;
+                int qArmor = 5;
+                int qShoes = 5;
+                int qAccessory = 4;
                 WriteLine($"社区送温暖了，现在随机发放空投！！");
                 DropItems(gamingQueue, qMagicCardPack, qWeapon, qArmor, qShoes, qAccessory);
                 WriteLine("");
@@ -323,6 +304,7 @@ namespace Milimoe.FunGame.Testing.Tests
                     mvpBuilder.AppendLine($"控制时长：{stats.ControlTime:0.##} / 总计治疗：{stats.TotalHeal:0.##} / 护盾抵消：{stats.TotalShield:0.##}");
                     mvpBuilder.AppendLine($"总计伤害：{stats.TotalDamage:0.##} / 总计物理伤害：{stats.TotalPhysicalDamage:0.##} / 总计魔法伤害：{stats.TotalMagicDamage:0.##}");
                     mvpBuilder.AppendLine($"总承受伤害：{stats.TotalTakenDamage:0.##} / 总承受物理伤害：{stats.TotalTakenPhysicalDamage:0.##} / 总承受魔法伤害：{stats.TotalTakenMagicDamage:0.##}");
+                    if (stats.TotalTrueDamage > 0 || stats.TotalTakenTrueDamage > 0) mvpBuilder.AppendLine($"总计真实伤害：{stats.TotalTrueDamage:0.##} / 总承受真实伤害：{stats.TotalTakenTrueDamage:0.##}");
                     mvpBuilder.Append($"每秒伤害：{stats.DamagePerSecond:0.##} / 每回合伤害：{stats.DamagePerTurn:0.##}");
                 }
 
@@ -357,6 +339,7 @@ namespace Milimoe.FunGame.Testing.Tests
                     builder.AppendLine($"控制时长：{stats.ControlTime:0.##} / 总计治疗：{stats.TotalHeal:0.##} / 护盾抵消：{stats.TotalShield:0.##}");
                     builder.AppendLine($"总计伤害：{stats.TotalDamage:0.##} / 总计物理伤害：{stats.TotalPhysicalDamage:0.##} / 总计魔法伤害：{stats.TotalMagicDamage:0.##}");
                     builder.AppendLine($"总承受伤害：{stats.TotalTakenDamage:0.##} / 总承受物理伤害：{stats.TotalTakenPhysicalDamage:0.##} / 总承受魔法伤害：{stats.TotalTakenMagicDamage:0.##}");
+                    if (stats.TotalTrueDamage > 0 || stats.TotalTakenTrueDamage > 0) builder.AppendLine($"总计真实伤害：{stats.TotalTrueDamage:0.##} / 总承受真实伤害：{stats.TotalTakenTrueDamage:0.##}");
                     builder.Append($"每秒伤害：{stats.DamagePerSecond:0.##} / 每回合伤害：{stats.DamagePerTurn:0.##}");
                     if (count++ <= top)
                     {
@@ -725,12 +708,13 @@ namespace Milimoe.FunGame.Testing.Tests
 
         public static void DropItems(GamingQueue queue, int mQuality, int wQuality, int aQuality, int sQuality, int acQuality)
         {
-            foreach (Character character in queue.Queue)
+            Item[] weapons = [.. FunGameConstant.Equipment.Where(i => i.Id.ToString().StartsWith("11") && (int)i.QualityType == wQuality)];
+            Item[] armors = [.. FunGameConstant.Equipment.Where(i => i.Id.ToString().StartsWith("12") && (int)i.QualityType == aQuality)];
+            Item[] shoes = [.. FunGameConstant.Equipment.Where(i => i.Id.ToString().StartsWith("13") && (int)i.QualityType == sQuality)];
+            Item[] accessorys = [.. FunGameConstant.Equipment.Where(i => i.Id.ToString().StartsWith("14") && (int)i.QualityType == acQuality)];
+            Item[] consumables = [.. FunGameConstant.AllItems.Where(i => i.ItemType == ItemType.Consumable && i.IsInGameItem)];
+            foreach (Character character in queue.AllCharacters)
             {
-                Item[] weapons = [.. FunGameConstant.Equipment.Where(i => i.Id.ToString().StartsWith("11") && (int)i.QualityType == wQuality)];
-                Item[] armors = [.. FunGameConstant.Equipment.Where(i => i.Id.ToString().StartsWith("12") && (int)i.QualityType == aQuality)];
-                Item[] shoes = [.. FunGameConstant.Equipment.Where(i => i.Id.ToString().StartsWith("13") && (int)i.QualityType == sQuality)];
-                Item[] accessorys = [.. FunGameConstant.Equipment.Where(i => i.Id.ToString().StartsWith("14") && (int)i.QualityType == acQuality)];
                 Item? a = null, b = null, c = null, d = null;
                 if (weapons.Length > 0)
                 {
@@ -768,6 +752,14 @@ namespace Milimoe.FunGame.Testing.Tests
                     Item realItem = item.Copy();
                     realItem.SetGamingQueue(queue);
                     queue.Equip(character, realItem);
+                }
+                if (consumables.Length > 0 && character.Items.Count < 5)
+                {
+                    for (int i = 0; i < 2; i++)
+                    {
+                        Item consumable = consumables[Random.Shared.Next(consumables.Length)].Copy();
+                        character.Items.Add(consumable);
+                    }
                 }
             }
         }

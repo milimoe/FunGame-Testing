@@ -10,7 +10,7 @@ namespace Milimoe.FunGame.Testing.Tests
 {
     internal class CharacterTest
     {
-        public CharacterTest()
+        public static async Task CharacterTest1()
         {
             GamingQueue queue = new(Console.WriteLine);
             Character character = new CustomCharacter(0, "");
@@ -19,12 +19,30 @@ namespace Milimoe.FunGame.Testing.Tests
             Item item = FunGameConstant.Equipment.Where(i => i.Id == 12515).First();
             character.Equip(item);
             Console.WriteLine(character.GetInfo());
+            Character teammate = new MagicalGirl();
+            Console.ReadKey();
+            teammate.SetLevel(60);
+            Skill skill = new 毁灭之势(teammate);
+            teammate.Skills.Add(skill);
+            skill.GamingQueue = queue;
+            skill.Character = teammate;
+            skill.Level++;
+            skill = new 绝对领域(teammate);
+            teammate.Skills.Add(skill);
+            skill.GamingQueue = queue;
+            skill.Character = teammate;
+            skill.Level += 6;
+            skill.OnSkillCasted(queue, teammate, [character]);
             Character enemy = new CustomCharacter(1, "敌人");
             Console.ReadKey();
             enemy.SetLevel(60);
-            Skill skill = new 虚弱领域(enemy);
+            skill = new 混沌烙印(enemy);
+            skill.GamingQueue = queue;
             skill.Level += 8;
-            skill.OnSkillCasted(queue, enemy, [character]);
+            skill.OnSkillCasted(queue, enemy, [teammate]);
+            queue.CharacterStatistics[teammate] = new CharacterStatistics();
+            queue.AddCharacter(teammate, 10);
+            await queue.TimeLapse();
             character.UnEquip(EquipSlotType.Armor);
             Console.WriteLine(character.GetInfo());
             Console.ReadKey();

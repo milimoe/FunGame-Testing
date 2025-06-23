@@ -25,7 +25,9 @@ im.Load();
 
 FunGameService.InitFunGame();
 FunGameSimulation.InitFunGameSimulation();
-//new CharacterTest();
+FunGameController controller = new(new Logger<FunGameController>(new LoggerFactory()));
+
+await CharacterTest.CharacterTest1();
 //foreach (Character c in FunGameConstant.Characters)
 //{
 //    Character character = c.Copy();
@@ -61,15 +63,15 @@ FunGameSimulation.InitFunGameSimulation();
 //    m.Level = 8;
 //    Console.WriteLine(m.GetInfo());
 //}
-Character character = new Oshima.FunGame.OshimaModules.Characters.CustomCharacter(0, "");
-character.SetLevel(60);
-foreach (Item i in FunGameConstant.Equipment)
-{
-    character.Equip(i);
-    if (i.ItemType == ItemType.GiftBox && i.Name != "毕业礼包") continue;
-    Console.WriteLine(i.ToString());
-}
-Console.WriteLine(character.GetInfo());
+//Character character = new Oshima.FunGame.OshimaModules.Characters.CustomCharacter(0, "");
+//character.SetLevel(60);
+//foreach (Item i in FunGameConstant.Equipment)
+//{
+//    character.Equip(i);
+//    if (i.ItemType == ItemType.GiftBox && i.Name != "毕业礼包") continue;
+//    Console.WriteLine(i.ToString());
+//}
+//Console.WriteLine(character.GetInfo());
 //foreach (Item i in FunGameConstant.Equipment)
 //{
 //    StringBuilder builder = new();
@@ -105,6 +107,7 @@ Console.ReadKey();
 //Console.ReadKey();
 
 //await FunGameTesting.StartGame(true, false);
+//Console.ReadKey();
 
 while (true)
 {
@@ -126,8 +129,6 @@ while (true)
 //Console.WriteLine(testc.InitialSTR + $" ({testc.STRGrowth}/Lv)");
 //Console.WriteLine(testc.InitialAGI + $" ({testc.AGIGrowth}/Lv)");
 //Console.WriteLine(testc.InitialINT + $" ({testc.INTGrowth}/Lv)");
-
-FunGameController controller = new(new Logger<FunGameController>(new LoggerFactory()));
 //Console.WriteLine(controller.GetWinrateRank());
 //Console.WriteLine(controller.GetWinrateRank(true));
 //Console.WriteLine(controller.GetRatingRank());
