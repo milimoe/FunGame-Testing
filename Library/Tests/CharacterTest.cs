@@ -33,6 +33,7 @@ namespace Milimoe.FunGame.Testing.Tests
             skill.Character = teammate;
             skill.Level += 6;
             skill.OnSkillCasted(queue, teammate, [character]);
+            skill.OnSkillCasted(queue, teammate, [character]);
             Character enemy = new CustomCharacter(1, "敌人");
             Console.ReadKey();
             enemy.SetLevel(60);
@@ -43,6 +44,11 @@ namespace Milimoe.FunGame.Testing.Tests
             queue.CharacterStatistics[teammate] = new CharacterStatistics();
             queue.AddCharacter(teammate, 10);
             await queue.TimeLapse();
+            Console.WriteLine(teammate.GetInfo());
+            skill = new 虚弱领域(enemy);
+            skill.GamingQueue = queue;
+            skill.Level += 8;
+            skill.OnSkillCasted(queue, enemy, [character]);
             character.UnEquip(EquipSlotType.Armor);
             Console.WriteLine(character.GetInfo());
             Console.ReadKey();

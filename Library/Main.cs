@@ -27,7 +27,7 @@ FunGameService.InitFunGame();
 FunGameSimulation.InitFunGameSimulation();
 FunGameController controller = new(new Logger<FunGameController>(new LoggerFactory()));
 
-await CharacterTest.CharacterTest1();
+//await CharacterTest.CharacterTest1();
 //foreach (Character c in FunGameConstant.Characters)
 //{
 //    Character character = c.Copy();
@@ -72,30 +72,30 @@ await CharacterTest.CharacterTest1();
 //    Console.WriteLine(i.ToString());
 //}
 //Console.WriteLine(character.GetInfo());
-//foreach (Item i in FunGameConstant.Equipment)
-//{
-//    StringBuilder builder = new();
+foreach (Item i in FunGameConstant.Equipment)
+{
+    StringBuilder builder = new();
 
-//    builder.AppendLine($"【{i.Name}】");
+    builder.AppendLine($"【{i.Name}】");
 
-//    string itemquality = ItemSet.GetQualityTypeName(i.QualityType);
-//    string itemtype = ItemSet.GetItemTypeName(i.ItemType) + (i.ItemType == ItemType.Weapon && i.WeaponType != WeaponType.None ? "-" + ItemSet.GetWeaponTypeName(i.WeaponType) : "");
-//    if (itemtype != "") itemtype = $" {itemtype}";
+    string itemquality = ItemSet.GetQualityTypeName(i.QualityType);
+    string itemtype = ItemSet.GetItemTypeName(i.ItemType) + (i.ItemType == ItemType.Weapon && i.WeaponType != WeaponType.None ? "-" + ItemSet.GetWeaponTypeName(i.WeaponType) : "");
+    if (itemtype != "") itemtype = $" {itemtype}";
 
-//    builder.AppendLine($"{itemquality + itemtype}");
+    builder.AppendLine($"{itemquality + itemtype}");
 
-//    if (i.Description != "")
-//    {
-//        builder.AppendLine("物品描述：" + i.Description);
-//    }
+    if (i.Description != "")
+    {
+        builder.AppendLine("物品描述：" + i.Description);
+    }
 
-//    if (i.BackgroundStory != "")
-//    {
-//        builder.AppendLine($"\"{i.BackgroundStory}\"");
-//    }
+    if (i.BackgroundStory != "")
+    {
+        builder.AppendLine($"\"{i.BackgroundStory}\"");
+    }
 
-//    Console.WriteLine(builder.ToString());
-//}
+    Console.WriteLine(builder.ToString());
+}
 Console.ReadKey();
 
 //Dictionary<int, RoundRecord> rounds = FunGameSimulation.ReadRoundsFromZip("rounds_archive.zip") ?? [];
