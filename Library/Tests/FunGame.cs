@@ -126,23 +126,23 @@ namespace Milimoe.FunGame.Testing.Tests
                 WriteLine("");
                 if (isWeb) result.Add("=== 空投 ===\r\n" + Msg);
                 double nextDropItemTime = 40;
-                if (qMagicCardPack < 4)
+                if (qMagicCardPack < 5)
                 {
                     qMagicCardPack++;
                 }
-                if (qWeapon < 4)
+                if (qWeapon < 5)
                 {
                     qWeapon++;
                 }
-                if (qArmor < 1)
+                if (qArmor < 5)
                 {
                     qArmor++;
                 }
-                if (qShoes < 1)
+                if (qShoes < 5)
                 {
                     qShoes++;
                 }
-                if (qAccessory < 3)
+                if (qAccessory < 5)
                 {
                     qAccessory++;
                 }
@@ -258,23 +258,23 @@ namespace Milimoe.FunGame.Testing.Tests
                         WriteLine("");
                         if (isWeb) result.Add("=== 空投 ===\r\n" + Msg);
                         nextDropItemTime = 40;
-                        if (qMagicCardPack < 4)
+                        if (qMagicCardPack < 5)
                         {
                             qMagicCardPack++;
                         }
-                        if (qWeapon < 4)
+                        if (qWeapon < 5)
                         {
                             qWeapon++;
                         }
-                        if (qArmor < 1)
+                        if (qArmor < 5)
                         {
                             qArmor++;
                         }
-                        if (qShoes < 1)
+                        if (qShoes < 5)
                         {
                             qShoes++;
                         }
-                        if (qAccessory < 3)
+                        if (qAccessory < 5)
                         {
                             qAccessory++;
                         }

@@ -5,6 +5,7 @@ using Milimoe.FunGame.Core.Entity;
 using Milimoe.FunGame.Core.Library.Constant;
 using Milimoe.FunGame.Testing.Tests;
 using Oshima.FunGame.OshimaModules;
+using Oshima.FunGame.OshimaModules.Regions;
 using Oshima.FunGame.OshimaServers.Service;
 using Oshima.FunGame.WebAPI.Controllers;
 
@@ -95,6 +96,11 @@ foreach (Item i in FunGameConstant.Equipment)
     }
 
     Console.WriteLine(builder.ToString());
+}
+Console.ReadKey();
+foreach (OshimaRegion region in FunGameConstant.Regions.Union(FunGameConstant.PlayerRegions))
+{
+    Console.WriteLine(region.ToString());
 }
 Console.ReadKey();
 
