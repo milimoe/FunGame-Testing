@@ -29,23 +29,19 @@ FunGameSimulation.InitFunGameSimulation();
 FunGameController controller = new(new Logger<FunGameController>(new LoggerFactory()));
 
 //await CharacterTest.CharacterTest1();
-//foreach (Character c in FunGameConstant.Characters)
+
+await ActivityTest.Test();
+
+//foreach (Skill s in FunGameConstant.Skills)
 //{
-//    Character character = c.Copy();
-//    character.Recovery();
-//    FunGameService.AddCharacterSkills(character, 1, 1, 1);
-//    Console.WriteLine(character.GetInfo());
+//    s.Level = 1;
+//    Console.WriteLine(s.GetInfo());
 //}
-foreach (Skill s in FunGameConstant.Skills)
-{
-    s.Level = 1;
-    Console.WriteLine(s.GetInfo());
-}
-foreach (Skill m in FunGameConstant.Magics)
-{
-    m.Level = 1;
-    Console.WriteLine(m.GetInfo());
-}
+//foreach (Skill m in FunGameConstant.Magics)
+//{
+//    m.Level = 1;
+//    Console.WriteLine(m.GetInfo());
+//}
 //foreach (Character c in FunGameConstant.Characters)
 //{
 //    Character character = c.Copy();
@@ -65,45 +61,6 @@ foreach (Skill m in FunGameConstant.Magics)
     Console.WriteLine(m.GetInfo());
 }
 Console.ReadKey();
-//Character character = new Oshima.FunGame.OshimaModules.Characters.CustomCharacter(0, "");
-//character.SetLevel(60);
-//foreach (Item i in FunGameConstant.Equipment)
-//{
-//    character.Equip(i);
-//    if (i.ItemType == ItemType.GiftBox && i.Name != "毕业礼包") continue;
-//    Console.WriteLine(i.ToString());
-//}
-//Console.WriteLine(character.GetInfo());
-//foreach (Item i in FunGameConstant.Equipment)
-//{
-//    StringBuilder builder = new();
-
-//    builder.AppendLine($"【{i.Name}】");
-
-//    string itemquality = ItemSet.GetQualityTypeName(i.QualityType);
-//    string itemtype = ItemSet.GetItemTypeName(i.ItemType) + (i.ItemType == ItemType.Weapon && i.WeaponType != WeaponType.None ? "-" + ItemSet.GetWeaponTypeName(i.WeaponType) : "");
-//    if (itemtype != "") itemtype = $" {itemtype}";
-
-//    builder.AppendLine($"{itemquality + itemtype}");
-
-//    if (i.Description != "")
-//    {
-//        builder.AppendLine("物品描述：" + i.Description);
-//    }
-
-//    if (i.BackgroundStory != "")
-//    {
-//        builder.AppendLine($"\"{i.BackgroundStory}\"");
-//    }
-
-//    Console.WriteLine(builder.ToString());
-//}
-//Console.ReadKey();
-//foreach (OshimaRegion region in FunGameConstant.Regions.Union(FunGameConstant.PlayerRegions))
-//{
-//    Console.WriteLine(region.ToString());
-//}
-//Console.ReadKey();
 
 //Dictionary<int, RoundRecord> rounds = FunGameSimulation.ReadRoundsFromZip("rounds_archive.zip") ?? [];
 //Console.WriteLine(rounds.Count);
