@@ -21,7 +21,9 @@ namespace Milimoe.FunGame.Testing.Tests
             {
                 Id = 1,
                 Name = "里程碑Ⅰ·永燃坩埚",
-                Description = "收集 1000 份 [ 活体金属苔藓 ]。",
+                Description = "收集 2500 份 [ 活体金属苔藓 ]。",
+                RegionId = 3,
+                NeedyExploreItemName = "活体金属苔藓",
                 CreditsAward = 50000,
                 Awards = [
                     new 魔法卡礼包(QualityType.Blue, 5)
@@ -30,14 +32,16 @@ namespace Milimoe.FunGame.Testing.Tests
                     { "魔法卡礼包", 1 }
                 },
                 QuestType = QuestType.Progressive,
-                MaxProgress = 1000,
+                MaxProgress = 2500,
                 Status = QuestState.InProgress
             };
             Quest quest2 = new()
             {
                 Id = 2,
                 Name = "里程碑Ⅰ·齿轮坟场",
-                Description = "收集 800 份 [ 机械核心碎片 ]。",
+                Description = "收集 2000 份 [ 机械核心碎片 ]。",
+                RegionId = 5,
+                NeedyExploreItemName = "机械核心碎片",
                 CreditsAward = 40000,
                 Awards = [
                     new 魔法卡礼包(QualityType.Blue, 5)
@@ -46,7 +50,7 @@ namespace Milimoe.FunGame.Testing.Tests
                     { "魔法卡礼包", 1 }
                 },
                 QuestType = QuestType.Progressive,
-                MaxProgress = 800,
+                MaxProgress = 2000,
                 Status = QuestState.InProgress
             };
             activity1.Quests.Add(quest1);
@@ -62,7 +66,9 @@ namespace Milimoe.FunGame.Testing.Tests
             {
                 Id = 1,
                 Name = "里程碑Ⅱ·瑟兰薇歌林海",
-                Description = "收集 500 份 [ 荧蓝汁液 ]。",
+                Description = "收集 2500 份 [ 荧蓝汁液 ]。",
+                RegionId = 2,
+                NeedyExploreItemName = "荧蓝汁液",
                 CreditsAward = 50000,
                 Awards = [
                     new 魔法卡礼包(QualityType.Purple, 5)
@@ -71,13 +77,15 @@ namespace Milimoe.FunGame.Testing.Tests
                     { "魔法卡礼包", 1 }
                 },
                 QuestType = QuestType.Progressive,
-                MaxProgress = 500
+                MaxProgress = 2500
             };
             Quest quest4 = new()
             {
                 Id = 2,
                 Name = "里程碑Ⅱ·时之荒漠",
-                Description = "收集 300 份 [ 时间碎片 ]。",
+                Description = "收集 2000 份 [ 时间碎片 ]。",
+                RegionId = 7,
+                NeedyExploreItemName = "时间碎片",
                 CreditsAward = 40000,
                 Awards = [
                     new 魔法卡礼包(QualityType.Purple, 5)
@@ -86,7 +94,7 @@ namespace Milimoe.FunGame.Testing.Tests
                     { "魔法卡礼包", 1 }
                 },
                 QuestType = QuestType.Progressive,
-                MaxProgress = 300
+                MaxProgress = 2000
             };
             activity2.Quests.Add(quest3);
             activity2.Quests.Add(quest4);
@@ -101,7 +109,9 @@ namespace Milimoe.FunGame.Testing.Tests
             {
                 Id = 1,
                 Name = "里程碑Ⅲ·星辉凝露",
-                Description = "收集 200 份 [ 星辉凝露 ]。",
+                Description = "收集 2000 份 [ 星辉凝露 ]。",
+                RegionId = 1,
+                NeedyExploreItemName = "星辉凝露",
                 CreditsAward = 50000,
                 Awards = [
                     new 魔法卡礼包(QualityType.Orange, 5)
@@ -110,14 +120,16 @@ namespace Milimoe.FunGame.Testing.Tests
                     { "魔法卡礼包", 1 }
                 },
                 QuestType = QuestType.Progressive,
-                MaxProgress = 200
+                MaxProgress = 2000
             };
             Quest quest6 = new()
             {
                 Id = 2,
                 Name = "里程碑Ⅲ·液态月光",
-                Description = "收集 100 份 [ 液态月光 ]。",
-                CreditsAward = 40000,
+                Description = "收集 2000 份 [ 液态月光 ]。",
+                RegionId = 1,
+                NeedyExploreItemName = "液态月光",
+                CreditsAward = 50000,
                 Awards = [
                     new 魔法卡礼包(QualityType.Orange, 5)
                 ],
@@ -125,7 +137,7 @@ namespace Milimoe.FunGame.Testing.Tests
                     { "魔法卡礼包", 1 }
                 },
                 QuestType = QuestType.Progressive,
-                MaxProgress = 100
+                MaxProgress = 2000
             };
             activity3.Quests.Add(quest5);
             activity3.Quests.Add(quest6);
@@ -140,7 +152,9 @@ namespace Milimoe.FunGame.Testing.Tests
             {
                 Id = 1,
                 Name = "里程碑Ⅳ·永霜裂痕",
-                Description = "收集 150 份 [ 时霜药剂 ]。",
+                Description = "收集 2500 份 [ 时霜药剂 ]。",
+                RegionId = 4,
+                NeedyExploreItemName = "时霜药剂",
                 CreditsAward = 80000,
                 Awards = [
                     new 魔法卡礼包(QualityType.Red, 5)
@@ -149,14 +163,16 @@ namespace Milimoe.FunGame.Testing.Tests
                     { "魔法卡礼包", 1 }
                 },
                 QuestType = QuestType.Progressive,
-                MaxProgress = 150
+                MaxProgress = 2500
             };
             Quest quest8 = new()
             {
                 Id = 2,
                 Name = "里程碑Ⅳ·棱镜骨桥",
-                Description = "收集 100 份 [ 晶化记忆孢子 ]。",
-                CreditsAward = 60000,
+                Description = "收集 2500 份 [ 晶化记忆孢子 ]。",
+                RegionId = 11,
+                NeedyExploreItemName = "晶化记忆孢子",
+                CreditsAward = 80000,
                 Awards = [
                     new 魔法卡礼包(QualityType.Red, 5)
                 ],
@@ -164,7 +180,7 @@ namespace Milimoe.FunGame.Testing.Tests
                     { "魔法卡礼包", 1 }
                 },
                 QuestType = QuestType.Progressive,
-                MaxProgress = 100
+                MaxProgress = 2500
             };
             activity4.Quests.Add(quest7);
             activity4.Quests.Add(quest8);
@@ -179,7 +195,9 @@ namespace Milimoe.FunGame.Testing.Tests
             {
                 Id = 1,
                 Name = "终幕·悖论挑战",
-                Description = "战胜 200 次 [ 失控的悖论引擎 ]。",
+                Description = "战胜 500 次活动限定 [ 失控的悖论引擎 ]。",
+                RegionId = 1,
+                NeedyExploreCharacterName = "活动限定失控的悖论引擎",
                 CreditsAward = 100000,
                 Awards = [
                     new 魔法卡礼包(QualityType.Gold, 3)
@@ -188,14 +206,16 @@ namespace Milimoe.FunGame.Testing.Tests
                     { "魔法卡礼包", 1 }
                 },
                 QuestType = QuestType.Progressive,
-                MaxProgress = 200,
+                MaxProgress = 500,
             };
             Quest quest10 = new()
             {
                 Id = 2,
                 Name = "终幕·星银合金",
-                Description = "收集 100 份 [ 星银合金 ]。",
-                CreditsAward = 60000,
+                Description = "收集 2000 份 [ 星银合金 ]。",
+                RegionId = 1,
+                NeedyExploreItemName = "星银合金",
+                CreditsAward = 80000,
                 Awards = [
                     new 魔法卡礼包(QualityType.Red, 6)
                 ],
@@ -203,7 +223,7 @@ namespace Milimoe.FunGame.Testing.Tests
                     { "魔法卡礼包", 1 }
                 },
                 QuestType = QuestType.Progressive,
-                MaxProgress = 100
+                MaxProgress = 2000
             };
             activity5.Quests.Add(quest9);
             activity5.Quests.Add(quest10);
@@ -211,12 +231,12 @@ namespace Milimoe.FunGame.Testing.Tests
             {
                 Description = "毕业季特别通告：启程既是毕业，大量秘宝馈赠！发送【毕业礼包】指令即可获得毕业礼包一份，礼包包含从零开始拉满一个角色的所有资源，让你的角色直接“毕业”！礼包最多可以领取 2 次。"
             };
-            //Console.WriteLine(FunGameService.AddEvent(activity1));
-            //Console.WriteLine(FunGameService.AddEvent(activity2));
-            //Console.WriteLine(FunGameService.AddEvent(activity3));
-            //Console.WriteLine(FunGameService.AddEvent(activity4));
-            //Console.WriteLine(FunGameService.AddEvent(activity5));
-            //Console.WriteLine(FunGameService.AddEvent(activity6));
+            Console.WriteLine(FunGameService.AddEvent(activity1));
+            Console.WriteLine(FunGameService.AddEvent(activity2));
+            Console.WriteLine(FunGameService.AddEvent(activity3));
+            Console.WriteLine(FunGameService.AddEvent(activity4));
+            Console.WriteLine(FunGameService.AddEvent(activity5));
+            Console.WriteLine(FunGameService.AddEvent(activity6));
             Console.WriteLine();
             Console.WriteLine(FunGameService.GetEventCenter());
             Console.WriteLine();
