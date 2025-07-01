@@ -1,9 +1,12 @@
-﻿using Milimoe.FunGame.Core.Entity;
+﻿using Milimoe.FunGame.Core.Api.Utility;
+using Milimoe.FunGame.Core.Entity;
 using Milimoe.FunGame.Core.Library.Constant;
 using Milimoe.FunGame.Core.Model;
 using Oshima.FunGame.OshimaModules.Characters;
 using Oshima.FunGame.OshimaModules.Effects.PassiveEffects;
+using Oshima.FunGame.OshimaModules.Regions;
 using Oshima.FunGame.OshimaModules.Skills;
+using Oshima.FunGame.OshimaServers.Model;
 using Oshima.FunGame.OshimaServers.Service;
 
 namespace Milimoe.FunGame.Testing.Tests
@@ -63,6 +66,133 @@ namespace Milimoe.FunGame.Testing.Tests
             character.UnEquip(EquipSlotType.Armor);
             Console.WriteLine(character.GetInfo());
             Console.ReadKey();
+        }
+
+        public static async Task CharacterTest2()
+        {
+            Character character1 = new CustomCharacter(1, "测试1")
+            {
+                Id = Random.Shared.Next(1, 13),
+                Level = 60,
+            };
+            Character character2 = new CustomCharacter(1, "测试A")
+            {
+                Id = Random.Shared.Next(1, 13),
+                Level = 60
+            };
+            Character character3 = new CustomCharacter(1, "测试α")
+            {
+                Id = Random.Shared.Next(1, 13),
+                Level = 60
+            };
+            Character character4 = new CustomCharacter(1, "测试Ⅰ")
+            {
+                Id = Random.Shared.Next(1, 13),
+                Level = 60
+            };
+            character1.NormalAttack.Level = 8;
+            character2.NormalAttack.Level = 8;
+            character3.NormalAttack.Level = 8;
+            character4.NormalAttack.Level = 8;
+            character1.Recovery();
+            character2.Recovery();
+            character3.Recovery();
+            character4.Recovery();
+            GamingQueue queue = new([character1, character2, character3, character4], Console.WriteLine);
+            FunGameService.AddCharacterSkills(character1, 1, 6, 6);
+            FunGameService.AddCharacterSkills(character2, 1, 6, 6);
+            FunGameService.AddCharacterSkills(character3, 1, 6, 6);
+            FunGameService.AddCharacterSkills(character4, 1, 6, 6);
+            FunGameSimulation.DropItems(queue, 5, 5, 5, 5, 5);
+            FunGameService.SetCharacterPrimaryAttribute(character1);
+            FunGameService.SetCharacterPrimaryAttribute(character2);
+            FunGameService.SetCharacterPrimaryAttribute(character3);
+            FunGameService.SetCharacterPrimaryAttribute(character4);
+            Console.WriteLine(character1.GetInfo());
+            Console.WriteLine(character2.GetInfo());
+            Console.WriteLine(character3.GetInfo());
+            Console.WriteLine(character4.GetInfo());
+            User user = Factory.GetUser(1, "测试用户");
+            if (character1.EquipSlot.MagicCardPack != null) user.Inventory.Items.Add(character1.EquipSlot.MagicCardPack);
+            if (character1.EquipSlot.Weapon != null) user.Inventory.Items.Add(character1.EquipSlot.Weapon);
+            if (character1.EquipSlot.Armor != null) user.Inventory.Items.Add(character1.EquipSlot.Armor);
+            if (character1.EquipSlot.Shoes != null) user.Inventory.Items.Add(character1.EquipSlot.Shoes);
+            if (character1.EquipSlot.Accessory1 != null) user.Inventory.Items.Add(character1.EquipSlot.Accessory1);
+            if (character1.EquipSlot.Accessory2 != null) user.Inventory.Items.Add(character1.EquipSlot.Accessory2);
+            if (character2.EquipSlot.MagicCardPack != null) user.Inventory.Items.Add(character2.EquipSlot.MagicCardPack);
+            if (character2.EquipSlot.Weapon != null) user.Inventory.Items.Add(character2.EquipSlot.Weapon);
+            if (character2.EquipSlot.Armor != null) user.Inventory.Items.Add(character2.EquipSlot.Armor);
+            if (character2.EquipSlot.Shoes != null) user.Inventory.Items.Add(character2.EquipSlot.Shoes);
+            if (character2.EquipSlot.Accessory1 != null) user.Inventory.Items.Add(character2.EquipSlot.Accessory1);
+            if (character2.EquipSlot.Accessory2 != null) user.Inventory.Items.Add(character2.EquipSlot.Accessory2);
+            if (character3.EquipSlot.MagicCardPack != null) user.Inventory.Items.Add(character3.EquipSlot.MagicCardPack);
+            if (character3.EquipSlot.Weapon != null) user.Inventory.Items.Add(character3.EquipSlot.Weapon);
+            if (character3.EquipSlot.Armor != null) user.Inventory.Items.Add(character3.EquipSlot.Armor);
+            if (character3.EquipSlot.Shoes != null) user.Inventory.Items.Add(character3.EquipSlot.Shoes);
+            if (character3.EquipSlot.Accessory1 != null) user.Inventory.Items.Add(character3.EquipSlot.Accessory1);
+            if (character3.EquipSlot.Accessory2 != null) user.Inventory.Items.Add(character3.EquipSlot.Accessory2);
+            if (character4.EquipSlot.MagicCardPack != null) user.Inventory.Items.Add(character4.EquipSlot.MagicCardPack);
+            if (character4.EquipSlot.Weapon != null) user.Inventory.Items.Add(character4.EquipSlot.Weapon);
+            if (character4.EquipSlot.Armor != null) user.Inventory.Items.Add(character4.EquipSlot.Armor);
+            if (character4.EquipSlot.Shoes != null) user.Inventory.Items.Add(character4.EquipSlot.Shoes);
+            if (character4.EquipSlot.Accessory1 != null) user.Inventory.Items.Add(character4.EquipSlot.Accessory1);
+            if (character4.EquipSlot.Accessory2 != null) user.Inventory.Items.Add(character4.EquipSlot.Accessory2);
+            user.Inventory.Characters.Add(character1);
+            user.Inventory.Characters.Add(character2);
+            user.Inventory.Characters.Add(character3);
+            user.Inventory.Characters.Add(character4);
+            while (true)
+            {
+                character1.Recovery();
+                character2.Recovery();
+                character3.Recovery();
+                character4.Recovery();
+                OshimaRegion region = FunGameConstant.Regions.OrderBy(o => Random.Shared.Next()).First();
+                ExploreModel model = await FunGameService.GenerateExploreModel(region, [1, 2, 3, 4], user);
+                Console.WriteLine(model.GetExploreInfo(user.Inventory.Characters, FunGameConstant.Regions));
+                Console.WriteLine(model.String);
+                ConsoleKey key = Console.ReadKey().Key;
+                if (key == ConsoleKey.Escape)
+                {
+                    break;
+                }
+                else if (key == ConsoleKey.F3)
+                {
+                    FunGameSimulation.DropItems(queue, 5, 5, 5, 5, 5);
+                    FunGameService.SetCharacterPrimaryAttribute(character1);
+                    FunGameService.SetCharacterPrimaryAttribute(character2);
+                    FunGameService.SetCharacterPrimaryAttribute(character3);
+                    FunGameService.SetCharacterPrimaryAttribute(character4);
+                    Console.WriteLine(character1.GetInfo());
+                    Console.WriteLine(character2.GetInfo());
+                    Console.WriteLine(character3.GetInfo());
+                    Console.WriteLine(character4.GetInfo());
+                    if (character1.EquipSlot.MagicCardPack != null) user.Inventory.Items.Add(character1.EquipSlot.MagicCardPack);
+                    if (character1.EquipSlot.Weapon != null) user.Inventory.Items.Add(character1.EquipSlot.Weapon);
+                    if (character1.EquipSlot.Armor != null) user.Inventory.Items.Add(character1.EquipSlot.Armor);
+                    if (character1.EquipSlot.Shoes != null) user.Inventory.Items.Add(character1.EquipSlot.Shoes);
+                    if (character1.EquipSlot.Accessory1 != null) user.Inventory.Items.Add(character1.EquipSlot.Accessory1);
+                    if (character1.EquipSlot.Accessory2 != null) user.Inventory.Items.Add(character1.EquipSlot.Accessory2);
+                    if (character2.EquipSlot.MagicCardPack != null) user.Inventory.Items.Add(character2.EquipSlot.MagicCardPack);
+                    if (character2.EquipSlot.Weapon != null) user.Inventory.Items.Add(character2.EquipSlot.Weapon);
+                    if (character2.EquipSlot.Armor != null) user.Inventory.Items.Add(character2.EquipSlot.Armor);
+                    if (character2.EquipSlot.Shoes != null) user.Inventory.Items.Add(character2.EquipSlot.Shoes);
+                    if (character2.EquipSlot.Accessory1 != null) user.Inventory.Items.Add(character2.EquipSlot.Accessory1);
+                    if (character2.EquipSlot.Accessory2 != null) user.Inventory.Items.Add(character2.EquipSlot.Accessory2);
+                    if (character3.EquipSlot.MagicCardPack != null) user.Inventory.Items.Add(character3.EquipSlot.MagicCardPack);
+                    if (character3.EquipSlot.Weapon != null) user.Inventory.Items.Add(character3.EquipSlot.Weapon);
+                    if (character3.EquipSlot.Armor != null) user.Inventory.Items.Add(character3.EquipSlot.Armor);
+                    if (character3.EquipSlot.Shoes != null) user.Inventory.Items.Add(character3.EquipSlot.Shoes);
+                    if (character3.EquipSlot.Accessory1 != null) user.Inventory.Items.Add(character3.EquipSlot.Accessory1);
+                    if (character3.EquipSlot.Accessory2 != null) user.Inventory.Items.Add(character3.EquipSlot.Accessory2);
+                    if (character4.EquipSlot.MagicCardPack != null) user.Inventory.Items.Add(character4.EquipSlot.MagicCardPack);
+                    if (character4.EquipSlot.Weapon != null) user.Inventory.Items.Add(character4.EquipSlot.Weapon);
+                    if (character4.EquipSlot.Armor != null) user.Inventory.Items.Add(character4.EquipSlot.Armor);
+                    if (character4.EquipSlot.Shoes != null) user.Inventory.Items.Add(character4.EquipSlot.Shoes);
+                    if (character4.EquipSlot.Accessory1 != null) user.Inventory.Items.Add(character4.EquipSlot.Accessory1);
+                    if (character4.EquipSlot.Accessory2 != null) user.Inventory.Items.Add(character4.EquipSlot.Accessory2);
+                }
+            }
         }
     }
 }
