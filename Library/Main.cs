@@ -30,7 +30,9 @@ FunGameController controller = new(new Logger<FunGameController>(new LoggerFacto
 
 await CharacterTest.CharacterTest2();
 
-await ActivityTest.Test();
+ActivityTest.Test2();
+
+//await ActivityTest.Test();
 
 //foreach (Skill s in FunGameConstant.Skills)
 //{

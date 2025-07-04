@@ -1,4 +1,5 @@
-﻿using Milimoe.FunGame.Core.Entity;
+﻿using Milimoe.FunGame.Core.Api.Utility;
+using Milimoe.FunGame.Core.Entity;
 using Milimoe.FunGame.Core.Library.Constant;
 using Oshima.FunGame.OshimaModules.Items;
 using Oshima.FunGame.OshimaServers.Service;
@@ -249,6 +250,20 @@ namespace Milimoe.FunGame.Testing.Tests
             Console.WriteLine(FunGameService.GetEvent(5));
             Console.WriteLine(FunGameService.GetEvent(6));
             Console.ReadKey();
+        }
+
+        public static void Test2()
+        {
+            while (true)
+            {
+                EntityModuleConfig<Quest> quests = new("1", "1");
+                Console.WriteLine(FunGameService.CheckQuestList(quests));
+                ConsoleKey key = Console.ReadKey().Key;
+                if (key == ConsoleKey.Escape)
+                {
+                    break;
+                }
+            }
         }
     }
 }

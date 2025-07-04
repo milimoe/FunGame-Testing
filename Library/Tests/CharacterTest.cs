@@ -158,6 +158,10 @@ namespace Milimoe.FunGame.Testing.Tests
                 }
                 else if (key == ConsoleKey.F3)
                 {
+                    character1.Items.Clear();
+                    character2.Items.Clear();
+                    character3.Items.Clear();
+                    character4.Items.Clear();
                     FunGameSimulation.DropItems(queue, 5, 5, 5, 5, 5);
                     FunGameService.SetCharacterPrimaryAttribute(character1);
                     FunGameService.SetCharacterPrimaryAttribute(character2);
