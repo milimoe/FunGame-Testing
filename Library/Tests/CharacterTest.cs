@@ -148,9 +148,19 @@ namespace Milimoe.FunGame.Testing.Tests
                 character3.Recovery();
                 character4.Recovery();
                 OshimaRegion region = FunGameConstant.Regions.OrderBy(o => Random.Shared.Next()).First();
-                ExploreModel model = await FunGameService.GenerateExploreModel(region, [1, 2, 3, 4], user);
+                ExploreModel model = new()
+                {
+                    RegionId = region.Id,
+                    CharacterIds = [1, 2, 3 ,4],
+                    StartTime = DateTime.Now
+                };
+                await FunGameService.GenerateExploreModel(model, region, [1, 2, 3, 4], user);
                 Console.WriteLine(model.GetExploreInfo(user.Inventory.Characters, FunGameConstant.Regions));
                 Console.WriteLine(model.String);
+                PluginConfig pc2 = new("exploring", user.Id.ToString());
+                pc2.LoadConfig();
+                FunGameService.SettleExploreAll(pc2, user, true);
+                pc2.SaveConfig();
                 ConsoleKey key = Console.ReadKey().Key;
                 if (key == ConsoleKey.Escape)
                 {
