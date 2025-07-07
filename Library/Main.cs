@@ -28,9 +28,9 @@ FunGameService.InitFunGame();
 FunGameSimulation.InitFunGameSimulation();
 FunGameController controller = new(new Logger<FunGameController>(new LoggerFactory()));
 
-await CharacterTest.CharacterTest2();
+//await CharacterTest.CharacterTest2();
 
-ActivityTest.Test2();
+//ActivityTest.Test2();
 
 //await ActivityTest.Test();
 
@@ -52,25 +52,31 @@ ActivityTest.Test2();
 //    FunGameService.AddCharacterSkills(character, 1, 6, 6);
 //    Console.WriteLine(character.GetInfo());
 //}
-foreach (Skill s in FunGameConstant.Skills)
-{
-    s.Level = 6;
-    Console.WriteLine(s.GetInfo());
-}
-foreach (Skill m in FunGameConstant.Magics)
-{
-    m.Level = 8;
-    Console.WriteLine(m.GetInfo());
-}
-Console.ReadKey();
+//foreach (Skill s in FunGameConstant.Skills)
+//{
+//    s.Level = 6;
+//    Console.WriteLine(s.GetInfo());
+//}
+//foreach (Skill m in FunGameConstant.Magics)
+//{
+//    m.Level = 8;
+//    Console.WriteLine(m.GetInfo());
+//}
+//Console.ReadKey();
 
 //Dictionary<int, RoundRecord> rounds = FunGameSimulation.ReadRoundsFromZip("rounds_archive.zip") ?? [];
 //Console.WriteLine(rounds.Count);
 //Console.ReadKey();
 //rounds.Clear();
-
-//await FunGameBO5.StartBO5();
-//Console.ReadKey();
+while (true)
+{
+    await FunGameBO5.StartBO5();
+    ConsoleKeyInfo key = Console.ReadKey();
+    if (key.Key == ConsoleKey.Escape)
+    {
+        break;
+    }
+}
 
 //await FunGameTesting.StartGame(true, false);
 //Console.ReadKey();
@@ -78,9 +84,17 @@ Console.ReadKey();
 while (true)
 {
     await FunGameSimulation.StartSimulationGame(true, true, true, true, useStore: false);
-    Console.ReadKey();
+    ConsoleKeyInfo key = Console.ReadKey();
+    if (key.Key == ConsoleKey.Escape)
+    {
+        break;
+    }
     await FunGameSimulation.StartSimulationGame(true, false, false, true);
-    Console.ReadKey();
+    key = Console.ReadKey();
+    if (key.Key == ConsoleKey.Escape)
+    {
+        break;
+    }
 }
 
 //strings.ForEach(Console.WriteLine);

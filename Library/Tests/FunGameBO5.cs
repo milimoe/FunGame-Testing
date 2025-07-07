@@ -154,6 +154,8 @@ namespace Milimoe.FunGame.Testing.Tests
                     FunGameTesting.UpdateStatistics(stats[character.User], queue.GamingQueue.CharacterStatistics[character]);
                 }
                 Console.WriteLine(string.Join("\r\n\r\n", msgs[^2..]));
+                Character subMvp = queue.GamingQueue.CharacterStatistics.OrderByDescending(kv => kv.Value.Rating).Select(kv => kv.Key).First();
+                Console.WriteLine($"本局 MVP：{subMvp.User}，角色 {subMvp.ToStringWithLevelWithOutUser()}，技能、配装分享：\r\n{subMvp.GetItemInfo()}\r\n{subMvp.GetSkillInfo()}\r\n");
                 foreach (Team team in ((TeamGamingQueue)queue.GamingQueue).EliminatedTeams)
                 {
                     if (team.IsWinner && team.Name == userTeams[u1]) teamScore[u1]++;
@@ -192,13 +194,13 @@ namespace Milimoe.FunGame.Testing.Tests
 
         public static void DropItems(IEnumerable<Character> characters)
         {
+            Item[] 武器 = [.. FunGameConstant.Equipment.Where(i => i.Id.ToString().StartsWith("11") && (int)i.QualityType == 5)];
+            Item[] 防具 = [.. FunGameConstant.Equipment.Where(i => i.Id.ToString().StartsWith("12") && (int)i.QualityType == 5)];
+            Item[] 鞋子 = [.. FunGameConstant.Equipment.Where(i => i.Id.ToString().StartsWith("13") && (int)i.QualityType == 5)];
+            Item[] 饰品1 = [.. FunGameConstant.Equipment.Where(i => i.Id.ToString().StartsWith("14") && (int)i.QualityType == 5)];
+            Item[] 饰品2 = [.. FunGameConstant.Equipment.Where(i => i.Id.ToString().StartsWith("14") && (int)i.QualityType == 5)];
             foreach (Character character in characters)
             {
-                Item[] 武器 = [.. FunGameConstant.Equipment.Where(i => i.Id.ToString().StartsWith("11") && (int)i.QualityType == 4)];
-                Item[] 防具 = [.. FunGameConstant.Equipment.Where(i => i.Id.ToString().StartsWith("12") && (int)i.QualityType == 1)];
-                Item[] 鞋子 = [.. FunGameConstant.Equipment.Where(i => i.Id.ToString().StartsWith("13") && (int)i.QualityType == 1)];
-                Item[] 饰品1 = [.. FunGameConstant.Equipment.Where(i => i.Id.ToString().StartsWith("14") && (int)i.QualityType == 3)];
-                Item[] 饰品2 = [.. FunGameConstant.Equipment.Where(i => i.Id.ToString().StartsWith("14") && (int)i.QualityType == 3)];
                 Item? a = null, b = null, c = null, d = null, e = null;
                 if (武器.Length > 0)
                 {
@@ -226,7 +228,7 @@ namespace Milimoe.FunGame.Testing.Tests
                 if (c != null) 这次发放的空投.Add(c);
                 if (d != null) 这次发放的空投.Add(d);
                 if (e != null) 这次发放的空投.Add(e);
-                Item? 魔法卡包 = FunGameService.GenerateMagicCardPack(4, QualityType.Orange);
+                Item? 魔法卡包 = FunGameService.GenerateMagicCardPack(4, QualityType.Red);
                 if (魔法卡包 != null)
                 {
                     foreach (Skill magic in 魔法卡包.Skills.Magics)
