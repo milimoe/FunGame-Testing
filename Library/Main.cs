@@ -44,14 +44,14 @@ FunGameController controller = new(new Logger<FunGameController>(new LoggerFacto
 //    m.Level = 1;
 //    Console.WriteLine(m.GetInfo());
 //}
-//foreach (Character c in FunGameConstant.Characters)
-//{
-//    Character character = c.Copy();
-//    character.Level = 60;
-//    character.Recovery();
-//    FunGameService.AddCharacterSkills(character, 1, 6, 6);
-//    Console.WriteLine(character.GetInfo());
-//}
+foreach (Character c in FunGameConstant.Characters)
+{
+    Character character = c.Copy();
+    character.Level = 1;
+    character.Recovery();
+    FunGameService.AddCharacterSkills(character, 1, 6, 6);
+    Console.WriteLine(character.GetInfo());
+}
 //foreach (Skill s in FunGameConstant.Skills)
 //{
 //    s.Level = 6;
@@ -62,7 +62,7 @@ FunGameController controller = new(new Logger<FunGameController>(new LoggerFacto
 //    m.Level = 8;
 //    Console.WriteLine(m.GetInfo());
 //}
-//Console.ReadKey();
+Console.ReadKey();
 
 //Dictionary<int, RoundRecord> rounds = FunGameSimulation.ReadRoundsFromZip("rounds_archive.zip") ?? [];
 //Console.WriteLine(rounds.Count);
