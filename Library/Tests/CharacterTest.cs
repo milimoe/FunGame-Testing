@@ -70,25 +70,34 @@ namespace Milimoe.FunGame.Testing.Tests
 
         public static async Task CharacterTest2()
         {
-            Character character1 = new CustomCharacter(1, "测试1")
+            Character character1 = new CustomCharacter(1, "测试1-Carry", primaryAttribute: PrimaryAttribute.AGI)
             {
-                Id = Random.Shared.Next(1, 13),
+                Id = 2,
                 Level = 60,
+                FirstRoleType = RoleType.Core,
+                InitialHP = 65,
             };
-            Character character2 = new CustomCharacter(1, "测试A")
+            Character character2 = new CustomCharacter(1, "测试A-Tank", primaryAttribute: PrimaryAttribute.STR)
             {
-                Id = Random.Shared.Next(1, 13),
-                Level = 60
+                Id = 3,
+                Level = 60,
+                FirstRoleType = RoleType.Guardian,
+                InitialHP = 85,
             };
-            Character character3 = new CustomCharacter(1, "测试α")
+            Character character3 = new CustomCharacter(1, "测试α-Support", primaryAttribute: PrimaryAttribute.INT)
             {
-                Id = Random.Shared.Next(1, 13),
-                Level = 60
+                Id = 10,
+                Level = 60,
+                FirstRoleType = RoleType.Support,
+                SecondRoleType = RoleType.Vanguard,
+                InitialHP = 65,
             };
-            Character character4 = new CustomCharacter(1, "测试Ⅰ")
+            Character character4 = new CustomCharacter(1, "测试Ⅰ-Medic", primaryAttribute: PrimaryAttribute.INT)
             {
-                Id = Random.Shared.Next(1, 13),
-                Level = 60
+                Id = 4,
+                Level = 60,
+                FirstRoleType = RoleType.Medic,
+                InitialHP = 65,
             };
             character1.NormalAttack.Level = 8;
             character2.NormalAttack.Level = 8;
@@ -98,12 +107,14 @@ namespace Milimoe.FunGame.Testing.Tests
             character2.Recovery();
             character3.Recovery();
             character4.Recovery();
-            GamingQueue queue = new([character1, character2, character3, character4], Console.WriteLine);
             FunGameService.AddCharacterSkills(character1, 1, 6, 6);
             FunGameService.AddCharacterSkills(character2, 1, 6, 6);
             FunGameService.AddCharacterSkills(character3, 1, 6, 6);
             FunGameService.AddCharacterSkills(character4, 1, 6, 6);
-            FunGameSimulation.DropItems(queue, 5, 5, 5, 5, 5);
+            DropItemByCharacterRoleType(character1);
+            DropItemByCharacterRoleType(character2);
+            DropItemByCharacterRoleType(character3);
+            DropItemByCharacterRoleType(character4);
             FunGameService.SetCharacterPrimaryAttribute(character1);
             FunGameService.SetCharacterPrimaryAttribute(character2);
             FunGameService.SetCharacterPrimaryAttribute(character3);
@@ -172,7 +183,10 @@ namespace Milimoe.FunGame.Testing.Tests
                     character2.Items.Clear();
                     character3.Items.Clear();
                     character4.Items.Clear();
-                    FunGameSimulation.DropItems(queue, 5, 5, 5, 5, 5);
+                    DropItemByCharacterRoleType(character1);
+                    DropItemByCharacterRoleType(character2);
+                    DropItemByCharacterRoleType(character3);
+                    DropItemByCharacterRoleType(character4);
                     FunGameService.SetCharacterPrimaryAttribute(character1);
                     FunGameService.SetCharacterPrimaryAttribute(character2);
                     FunGameService.SetCharacterPrimaryAttribute(character3);
@@ -206,6 +220,90 @@ namespace Milimoe.FunGame.Testing.Tests
                     if (character4.EquipSlot.Accessory1 != null) user.Inventory.Items.Add(character4.EquipSlot.Accessory1);
                     if (character4.EquipSlot.Accessory2 != null) user.Inventory.Items.Add(character4.EquipSlot.Accessory2);
                 }
+            }
+        }
+
+        public static void DropItemByCharacterRoleType(Character character)
+        {
+            long[] magicIds;
+            (int str, int agi, int intelligence)[] values;
+            Item? m, w, a, s, ac1, ac2;
+            switch (character.FirstRoleType)
+            {
+                case RoleType.Core:
+                    // 核心
+                    magicIds = [1031, 1037, 1036];
+                    values = [(0, 39, 0), (0, 40, 0), (0, 41, 0)];
+                    m = FunGameService.GenerateMagicCardPack(3, QualityType.Red, magicIds, values);
+                    if (m != null) character.Equip(m);
+                    w = FunGameConstant.Equipment.FirstOrDefault(i => i.Id == 11573);
+                    if (w != null) character.Equip(w);
+                    a = FunGameConstant.Equipment.FirstOrDefault(i => i.Id == 12526);
+                    if (a != null) character.Equip(a);
+                    s = FunGameConstant.Equipment.FirstOrDefault(i => i.Id == 13525);
+                    if (s != null) character.Equip(s);
+                    ac1 = FunGameConstant.Equipment.FirstOrDefault(i => i.Id == 14545);
+                    if (ac1 != null) character.Equip(ac1);
+                    ac2 = FunGameConstant.Equipment.FirstOrDefault(i => i.Id == 14545);
+                    if (ac2 != null) character.Equip(ac2);
+                    break;
+                case RoleType.Guardian:
+                    // 近卫
+                    magicIds = [1004, 1038, 1010];
+                    values = [(39, 0, 0), (40, 0, 0), (41, 0, 0)];
+                    m = FunGameService.GenerateMagicCardPack(3, QualityType.Red, magicIds, values);
+                    if (m != null) character.Equip(m);
+                    w = FunGameConstant.Equipment.FirstOrDefault(i => i.Id == 11579);
+                    if (w != null) character.Equip(w);
+                    a = FunGameConstant.Equipment.FirstOrDefault(i => i.Id == 12525);
+                    if (a != null) character.Equip(a);
+                    s = FunGameConstant.Equipment.FirstOrDefault(i => i.Id == 13526);
+                    if (s != null) character.Equip(s);
+                    ac1 = FunGameConstant.Equipment.FirstOrDefault(i => i.Id == 14552);
+                    if (ac1 != null) character.Equip(ac1);
+                    ac2 = FunGameConstant.Equipment.FirstOrDefault(i => i.Id == 14552);
+                    if (ac2 != null) character.Equip(ac2);
+                    break;
+                case RoleType.Support:
+                    // 辅助
+                    magicIds = [1049, 1020, 1031];
+                    values = [(37, 0, 2), (0, 10, 30), (0, 10, 31)];
+                    m = FunGameService.GenerateMagicCardPack(3, QualityType.Red, magicIds, values);
+                    if (m != null) character.Equip(m);
+                    w = FunGameConstant.Equipment.FirstOrDefault(i => i.Id == 11578);
+                    if (w != null) character.Equip(w);
+                    a = FunGameConstant.Equipment.FirstOrDefault(i => i.Id == 12526);
+                    if (a != null) character.Equip(a);
+                    s = FunGameConstant.Equipment.FirstOrDefault(i => i.Id == 13523);
+                    if (s != null) character.Equip(s);
+                    ac1 = FunGameConstant.Equipment.FirstOrDefault(i => i.Id == 14542);
+                    if (ac1 != null) character.Equip(ac1);
+                    ac2 = FunGameConstant.Equipment.FirstOrDefault(i => i.Id == 14542);
+                    if (ac2 != null) character.Equip(ac2);
+                    break;
+                case RoleType.Medic:
+                    // 治疗
+                    magicIds = [1012, 1044, 1045];
+                    values = [(0, 0, 39), (0, 0, 40), (0, 0, 41)];
+                    m = FunGameService.GenerateMagicCardPack(3, QualityType.Red, magicIds, values);
+                    if (m != null) character.Equip(m);
+                    w = FunGameConstant.Equipment.FirstOrDefault(i => i.Id == 11578);
+                    if (w != null) character.Equip(w);
+                    a = FunGameConstant.Equipment.FirstOrDefault(i => i.Id == 12525);
+                    if (a != null) character.Equip(a);
+                    s = FunGameConstant.Equipment.FirstOrDefault(i => i.Id == 13523);
+                    if (s != null) character.Equip(s);
+                    ac1 = FunGameConstant.Equipment.FirstOrDefault(i => i.Id == 14548);
+                    if (ac1 != null) character.Equip(ac1);
+                    ac2 = FunGameConstant.Equipment.FirstOrDefault(i => i.Id == 14548);
+                    if (ac2 != null) character.Equip(ac2);
+                    break;
+                default:
+                    break;
+            }
+            foreach (Skill magic in character.Skills)
+            {
+                if (magic.IsMagic) magic.Level = 8;
             }
         }
     }
