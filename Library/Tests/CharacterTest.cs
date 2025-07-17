@@ -2,6 +2,7 @@
 using Milimoe.FunGame.Core.Entity;
 using Milimoe.FunGame.Core.Library.Constant;
 using Milimoe.FunGame.Core.Model;
+using Oshima.Core.Constant;
 using Oshima.FunGame.OshimaModules.Characters;
 using Oshima.FunGame.OshimaModules.Effects.PassiveEffects;
 using Oshima.FunGame.OshimaModules.Regions;
@@ -70,6 +71,9 @@ namespace Milimoe.FunGame.Testing.Tests
 
         public static async Task CharacterTest2()
         {
+            int times = 0;
+            int approval = 0;
+            InstanceType instanceType = InstanceType.Explore;
             Character character1 = new CustomCharacter(1, "测试1-Carry", primaryAttribute: PrimaryAttribute.AGI)
             {
                 Id = 2,
@@ -152,26 +156,82 @@ namespace Milimoe.FunGame.Testing.Tests
             user.Inventory.Characters.Add(character2);
             user.Inventory.Characters.Add(character3);
             user.Inventory.Characters.Add(character4);
+            user.Inventory.Squad = [character1.Id, character2.Id, character3.Id, character4.Id];
+            Character[] squad = [character1, character2, character3, character4];
             while (true)
             {
                 character1.Recovery();
                 character2.Recovery();
                 character3.Recovery();
                 character4.Recovery();
-                OshimaRegion region = FunGameConstant.Regions.OrderBy(o => Random.Shared.Next()).First();
-                ExploreModel model = new()
+                character1.Effects.Clear();
+                character2.Effects.Clear();
+                character3.Effects.Clear();
+                character4.Effects.Clear();
+                times++;
+                Console.WriteLine($"账户金币：{user.Inventory.Credits}，材料：{user.Inventory.Materials}.");
+                if (instanceType == InstanceType.Explore)
                 {
-                    RegionId = region.Id,
-                    CharacterIds = [1, 2, 3 ,4],
-                    StartTime = DateTime.Now
-                };
-                await FunGameService.GenerateExploreModel(model, region, [1, 2, 3, 4], user);
-                Console.WriteLine(model.GetExploreInfo(user.Inventory.Characters, FunGameConstant.Regions));
-                Console.WriteLine(model.String);
-                PluginConfig pc2 = new("exploring", user.Id.ToString());
-                pc2.LoadConfig();
-                FunGameService.SettleExploreAll(pc2, user, true);
-                pc2.SaveConfig();
+                    OshimaRegion region = FunGameConstant.Regions.OrderBy(o => Random.Shared.Next()).First();
+                    ExploreModel model = new()
+                    {
+                        RegionId = region.Id,
+                        CharacterIds = [1, 2, 3, 4],
+                        StartTime = DateTime.Now
+                    };
+                    approval += ((int)region.Difficulty + 1) * 4;
+                    Console.WriteLine($"第 {times} 次探索，难度：{CharacterSet.GetRarityTypeName(region.Difficulty)}，消耗 {((int)region.Difficulty + 1) * 4} 探索许可，累计已消耗 {approval} 探索许可。");
+                    await FunGameService.GenerateExploreModel(model, region, [1, 2, 3, 4], user);
+                    Console.WriteLine(model.GetExploreInfo(user.Inventory.Characters, FunGameConstant.Regions));
+                    Console.WriteLine(model.String);
+                    PluginConfig pc2 = new("exploring", user.Id.ToString());
+                    pc2.LoadConfig();
+                    FunGameService.SettleExploreAll(pc2, user, true);
+                    pc2.SaveConfig();
+                }
+                else if (instanceType == InstanceType.Currency)
+                {
+                    int difficulty = Random.Shared.Next(1, 6);
+                    approval += difficulty * 4;
+                    Console.WriteLine($"第 {times} 次探索，秘境：金币秘境，难度：{CharacterSet.GetRarityTypeName((RarityType)(difficulty - 1))}，消耗 {difficulty * 4} 探索许可，累计已使用 {approval} 探索许可。");
+                    Console.WriteLine(await FunGameService.FightInstance(instanceType, difficulty, user, squad));
+                }
+                else if (instanceType == InstanceType.Material)
+                {
+                    int difficulty = Random.Shared.Next(1, 6);
+                    approval += difficulty * 4;
+                    Console.WriteLine($"第 {times} 次探索，秘境：材料秘境，难度：{CharacterSet.GetRarityTypeName((RarityType)(difficulty - 1))}，消耗 {difficulty * 4} 探索许可，累计已使用 {approval} 探索许可。");
+                    Console.WriteLine(await FunGameService.FightInstance(instanceType, difficulty, user, squad));
+                }
+                else if (instanceType == InstanceType.EXP)
+                {
+                    int difficulty = Random.Shared.Next(1, 6);
+                    approval += difficulty * 4;
+                    Console.WriteLine($"第 {times} 次探索，秘境：经验秘境，难度：{CharacterSet.GetRarityTypeName((RarityType)(difficulty - 1))}，消耗 {difficulty * 4} 探索许可，累计已使用 {approval} 探索许可。");
+                    Console.WriteLine(await FunGameService.FightInstance(instanceType, difficulty, user, squad));
+                }
+                else if (instanceType == InstanceType.RegionItem)
+                {
+                    int difficulty = Random.Shared.Next(1, 6);
+                    approval += difficulty * 4;
+                    Console.WriteLine($"第 {times} 次探索，秘境：地区锻造材料秘境，难度：{CharacterSet.GetRarityTypeName((RarityType)(difficulty - 1))}，消耗 {difficulty * 4} 探索许可，累计已使用 {approval} 探索许可。");
+                    Console.WriteLine(await FunGameService.FightInstance(instanceType, difficulty, user, squad));
+                }
+                else if (instanceType == InstanceType.CharacterLevelBreak)
+                {
+                    int difficulty = Random.Shared.Next(1, 6);
+                    approval += difficulty * 4;
+                    Console.WriteLine($"第 {times} 次探索，秘境：角色突破材料秘境，难度：{CharacterSet.GetRarityTypeName((RarityType)(difficulty - 1))}，消耗 {difficulty * 4} 探索许可，累计已使用 {approval} 探索许可。");
+                    Console.WriteLine(await FunGameService.FightInstance(instanceType, difficulty, user, squad));
+                }
+                else if (instanceType == InstanceType.SkillLevelUp)
+                {
+                    int difficulty = Random.Shared.Next(1, 6);
+                    approval += difficulty * 4;
+                    Console.WriteLine($"第 {times} 次探索，秘境：技能升级材料秘境，难度：{CharacterSet.GetRarityTypeName((RarityType)(difficulty - 1))}，消耗 {difficulty * 4} 探索许可，累计已使用 {approval} 探索许可。");
+                    Console.WriteLine(await FunGameService.FightInstance(instanceType, difficulty, user, squad));
+                }
+                Console.WriteLine($"账户金币：{user.Inventory.Credits}，材料：{user.Inventory.Materials}.");
                 ConsoleKey key = Console.ReadKey().Key;
                 if (key == ConsoleKey.Escape)
                 {
@@ -220,6 +280,41 @@ namespace Milimoe.FunGame.Testing.Tests
                     if (character4.EquipSlot.Accessory1 != null) user.Inventory.Items.Add(character4.EquipSlot.Accessory1);
                     if (character4.EquipSlot.Accessory2 != null) user.Inventory.Items.Add(character4.EquipSlot.Accessory2);
                 }
+                else if (key == ConsoleKey.Z)
+                {
+                    instanceType = InstanceType.Explore;
+                    Console.WriteLine("已切换至探索模式。");
+                }
+                else if (key == ConsoleKey.X)
+                {
+                    instanceType = InstanceType.Currency;
+                    Console.WriteLine("已切换至金币秘境模式。");
+                }
+                else if (key == ConsoleKey.C)
+                {
+                    instanceType = InstanceType.Material;
+                    Console.WriteLine("已切换至材料秘境模式。");
+                }
+                else if (key == ConsoleKey.A)
+                {
+                    instanceType = InstanceType.EXP;
+                    Console.WriteLine("已切换至经验秘境模式。");
+                }
+                else if (key == ConsoleKey.S)
+                {
+                    instanceType = InstanceType.RegionItem;
+                    Console.WriteLine("已切换至地区锻造材料秘境模式。");
+                }
+                else if (key == ConsoleKey.D)
+                {
+                    instanceType = InstanceType.CharacterLevelBreak;
+                    Console.WriteLine("已切换至角色突破材料秘境模式。");
+                }
+                else if (key == ConsoleKey.F)
+                {
+                    instanceType = InstanceType.SkillLevelUp;
+                    Console.WriteLine("已切换至技能升级材料秘境模式。");
+                }
             }
         }
 
@@ -232,9 +327,9 @@ namespace Milimoe.FunGame.Testing.Tests
             {
                 case RoleType.Core:
                     // 核心
-                    magicIds = [1031, 1037, 1036];
+                    magicIds = [1031, 1002, 1003];
                     values = [(0, 39, 0), (0, 40, 0), (0, 41, 0)];
-                    m = FunGameService.GenerateMagicCardPack(3, QualityType.Red, magicIds, values);
+                    m = FunGameService.GenerateMagicCardPack(3, QualityType.Gold, magicIds, values);
                     if (m != null) character.Equip(m);
                     w = FunGameConstant.Equipment.FirstOrDefault(i => i.Id == 11573);
                     if (w != null) character.Equip(w);
@@ -251,7 +346,7 @@ namespace Milimoe.FunGame.Testing.Tests
                     // 近卫
                     magicIds = [1004, 1038, 1010];
                     values = [(39, 0, 0), (40, 0, 0), (41, 0, 0)];
-                    m = FunGameService.GenerateMagicCardPack(3, QualityType.Red, magicIds, values);
+                    m = FunGameService.GenerateMagicCardPack(3, QualityType.Gold, magicIds, values);
                     if (m != null) character.Equip(m);
                     w = FunGameConstant.Equipment.FirstOrDefault(i => i.Id == 11579);
                     if (w != null) character.Equip(w);
@@ -268,7 +363,7 @@ namespace Milimoe.FunGame.Testing.Tests
                     // 辅助
                     magicIds = [1049, 1020, 1031];
                     values = [(37, 0, 2), (0, 10, 30), (0, 10, 31)];
-                    m = FunGameService.GenerateMagicCardPack(3, QualityType.Red, magicIds, values);
+                    m = FunGameService.GenerateMagicCardPack(3, QualityType.Gold, magicIds, values);
                     if (m != null) character.Equip(m);
                     w = FunGameConstant.Equipment.FirstOrDefault(i => i.Id == 11578);
                     if (w != null) character.Equip(w);
@@ -285,7 +380,7 @@ namespace Milimoe.FunGame.Testing.Tests
                     // 治疗
                     magicIds = [1012, 1044, 1045];
                     values = [(0, 0, 39), (0, 0, 40), (0, 0, 41)];
-                    m = FunGameService.GenerateMagicCardPack(3, QualityType.Red, magicIds, values);
+                    m = FunGameService.GenerateMagicCardPack(3, QualityType.Gold, magicIds, values);
                     if (m != null) character.Equip(m);
                     w = FunGameConstant.Equipment.FirstOrDefault(i => i.Id == 11578);
                     if (w != null) character.Equip(w);
