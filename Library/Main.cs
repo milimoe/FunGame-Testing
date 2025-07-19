@@ -28,6 +28,8 @@ FunGameService.InitFunGame();
 FunGameSimulation.InitFunGameSimulation();
 FunGameController controller = new(new Logger<FunGameController>(new LoggerFactory()));
 
+StoreTest.StoreTest1();
+
 await CharacterTest.CharacterTest2();
 
 //ActivityTest.Test2();

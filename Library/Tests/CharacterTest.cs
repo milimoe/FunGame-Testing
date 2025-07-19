@@ -1,5 +1,6 @@
 ﻿using Milimoe.FunGame.Core.Api.Utility;
 using Milimoe.FunGame.Core.Entity;
+using Milimoe.FunGame.Core.Interface.Entity;
 using Milimoe.FunGame.Core.Library.Constant;
 using Milimoe.FunGame.Core.Model;
 using Oshima.Core.Constant;
@@ -77,21 +78,21 @@ namespace Milimoe.FunGame.Testing.Tests
             Character character1 = new CustomCharacter(1, "测试1-Carry", primaryAttribute: PrimaryAttribute.AGI)
             {
                 Id = 2,
-                Level = 60,
+                Level = 50,
                 FirstRoleType = RoleType.Core,
                 InitialHP = 65,
             };
             Character character2 = new CustomCharacter(1, "测试A-Tank", primaryAttribute: PrimaryAttribute.STR)
             {
                 Id = 3,
-                Level = 60,
+                Level = 50,
                 FirstRoleType = RoleType.Guardian,
                 InitialHP = 85,
             };
             Character character3 = new CustomCharacter(1, "测试α-Support", primaryAttribute: PrimaryAttribute.INT)
             {
                 Id = 10,
-                Level = 60,
+                Level = 50,
                 FirstRoleType = RoleType.Support,
                 SecondRoleType = RoleType.Vanguard,
                 InitialHP = 65,
@@ -99,7 +100,7 @@ namespace Milimoe.FunGame.Testing.Tests
             Character character4 = new CustomCharacter(1, "测试Ⅰ-Medic", primaryAttribute: PrimaryAttribute.INT)
             {
                 Id = 4,
-                Level = 60,
+                Level = 50,
                 FirstRoleType = RoleType.Medic,
                 InitialHP = 65,
             };
@@ -164,10 +165,10 @@ namespace Milimoe.FunGame.Testing.Tests
                 character2.Recovery();
                 character3.Recovery();
                 character4.Recovery();
-                character1.Effects.Clear();
-                character2.Effects.Clear();
-                character3.Effects.Clear();
-                character4.Effects.Clear();
+                RemoveEffect(character1);
+                RemoveEffect(character2);
+                RemoveEffect(character3);
+                RemoveEffect(character4);
                 times++;
                 Console.WriteLine($"账户金币：{user.Inventory.Credits}，材料：{user.Inventory.Materials}.");
                 if (instanceType == InstanceType.Explore)
@@ -314,6 +315,19 @@ namespace Milimoe.FunGame.Testing.Tests
                 {
                     instanceType = InstanceType.SkillLevelUp;
                     Console.WriteLine("已切换至技能升级材料秘境模式。");
+                }
+            }
+        }
+
+        public static void RemoveEffect(Character character)
+        {
+            Effect[] effects = [.. character.Effects];
+            foreach (Effect effect in effects)
+            {
+                if (effect.IsInEffect && effect.DurativeWithoutDuration || (effect.Durative && effect.Duration > 0) || effect.DurationTurn > 0)
+                {
+                    character.Effects.Remove(effect);
+                    effect.OnEffectLost(character);
                 }
             }
         }
