@@ -2,6 +2,7 @@
 using Milimoe.FunGame.Core.Entity;
 using Milimoe.FunGame.Core.Library.Constant;
 using Milimoe.FunGame.Core.Model;
+using Oshima.FunGame.OshimaModules.Models;
 using Oshima.FunGame.OshimaServers.Service;
 
 namespace Milimoe.FunGame.Testing.Tests

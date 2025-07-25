@@ -1,11 +1,11 @@
 ﻿using Milimoe.FunGame.Core.Api.Utility;
 using Milimoe.FunGame.Core.Entity;
-using Milimoe.FunGame.Core.Interface.Entity;
 using Milimoe.FunGame.Core.Library.Constant;
 using Milimoe.FunGame.Core.Model;
 using Oshima.Core.Constant;
 using Oshima.FunGame.OshimaModules.Characters;
 using Oshima.FunGame.OshimaModules.Effects.PassiveEffects;
+using Oshima.FunGame.OshimaModules.Models;
 using Oshima.FunGame.OshimaModules.Regions;
 using Oshima.FunGame.OshimaModules.Skills;
 using Oshima.FunGame.OshimaServers.Model;

@@ -2,7 +2,7 @@
 using Milimoe.FunGame.Core.Entity;
 using Milimoe.FunGame.Core.Library.Constant;
 using Oshima.FunGame.OshimaModules.Items;
-using Oshima.FunGame.OshimaServers.Service;
+using Oshima.FunGame.OshimaModules.Models;
 
 namespace Milimoe.FunGame.Testing.Tests
 {
@@ -124,12 +124,23 @@ namespace Milimoe.FunGame.Testing.Tests
             store4.AddItem(item, -1);
             store4.Goods[1].Quota = 1;
             store4.Goods[1].ExpireTime = new DateTime(2025, 7, 26, 03, 59, 59);
+            Store store5 = new("锻造积分商店")
+            {
+                AutoRefresh = true,
+                RefreshInterval = 3,
+                NextRefreshDate = DateTime.Today.AddHours(4),
+                GlobalStock = true,
+            };
+            item = new 大师锻造券();
+            store5.AddItem(item, -1);
+            store5.SetPrice(1, "锻造积分", 400);
             EntityModuleConfig<Store> dokyoStores = new("stores", "dokyo")
             {
                 { "dokyo_logistics", store1 },
                 { "dokyo_weapons", store2 },
                 { "dokyo_yuki", store3 },
                 { "dokyo_welfare", store4 },
+                { "dokyo_forge", store5 },
             };
             dokyoStores.SaveConfig();
             Console.WriteLine("读取中……");
@@ -138,10 +149,12 @@ namespace Milimoe.FunGame.Testing.Tests
             Store? test2 = dokyoStores.Get("dokyo_weapons");
             Store? test3 = dokyoStores.Get("dokyo_yuki");
             Store? test4 = dokyoStores.Get("dokyo_welfare");
+            Store? test5 = dokyoStores.Get("dokyo_forge");
             Console.WriteLine(test1);
             Console.WriteLine(test2);
             Console.WriteLine(test3);
             Console.WriteLine(test4);
+            Console.WriteLine(test5);
             Console.ReadKey();
         }
     }

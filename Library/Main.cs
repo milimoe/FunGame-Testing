@@ -5,6 +5,7 @@ using Milimoe.FunGame.Core.Entity;
 using Milimoe.FunGame.Core.Library.Constant;
 using Milimoe.FunGame.Testing.Tests;
 using Oshima.FunGame.OshimaModules;
+using Oshima.FunGame.OshimaModules.Models;
 using Oshima.FunGame.OshimaModules.Regions;
 using Oshima.FunGame.OshimaServers.Service;
 using Oshima.FunGame.WebAPI.Controllers;

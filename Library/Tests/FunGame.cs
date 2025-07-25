@@ -5,6 +5,7 @@ using Milimoe.FunGame.Core.Library.Constant;
 using Milimoe.FunGame.Core.Model;
 using Oshima.Core.Constant;
 using Oshima.FunGame.OshimaModules.Effects.OpenEffects;
+using Oshima.FunGame.OshimaModules.Models;
 using Oshima.FunGame.OshimaModules.Skills;
 using Oshima.FunGame.OshimaServers.Service;
 
