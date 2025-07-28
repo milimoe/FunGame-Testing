@@ -183,7 +183,7 @@ namespace Milimoe.FunGame.Testing.Tests
                     approval += ((int)region.Difficulty + 1) * 4;
                     Console.WriteLine($"第 {times} 次探索，难度：{CharacterSet.GetRarityTypeName(region.Difficulty)}，消耗 {((int)region.Difficulty + 1) * 4} 探索许可，累计已消耗 {approval} 探索许可。");
                     await FunGameService.GenerateExploreModel(model, region, [1, 2, 3, 4], user);
-                    Console.WriteLine(model.GetExploreInfo(user.Inventory.Characters, FunGameConstant.Regions));
+                    Console.WriteLine(FunGameService.GetExploreInfo(model, user.Inventory.Characters, FunGameConstant.Regions));
                     Console.WriteLine(model.String);
                     PluginConfig pc2 = new("exploring", user.Id.ToString());
                     pc2.LoadConfig();
