@@ -1,0 +1,32 @@
+﻿<Window x:Class="Milimoe.FunGame.Testing.Desktop.InputDialog"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        mc:Ignorable="d"
+        Title="输入" Height="180" Width="350"
+        WindowStartupLocation="CenterOwner"
+        ResizeMode="NoResize"
+        ShowInTaskbar="False">
+    <Grid Margin="10">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <!-- 提示文本 -->
+        <TextBlock x:Name="PromptTextBlock" Grid.Row="0" Margin="0,0,0,10" TextWrapping="Wrap"
+                   Text="请输入文本:"/>
+
+        <!-- 输入框 -->
+        <TextBox x:Name="InputTextBox" Grid.Row="1" Height="30" VerticalContentAlignment="Center"
+                 AcceptsReturn="False" TextWrapping="NoWrap" />
+
+        <!-- 按钮区域 -->
+        <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,15,0,0">
+            <Button Content="确定" Width="75" Margin="0,0,10,0" Click="OkButton_Click" IsDefault="True"/>
+            <Button Content="取消" Width="75" Click="CancelButton_Click" IsCancel="True"/>
+        </StackPanel>
+    </Grid>
+</Window>
