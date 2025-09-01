@@ -2,7 +2,6 @@
 // using System.Windows; // 不再需要，因为移除了 InputDialog
 using Milimoe.FunGame.Core.Api.Utility;
 using Milimoe.FunGame.Core.Entity;
-using Milimoe.FunGame.Core.Interface.Entity;
 using Milimoe.FunGame.Core.Library.Common.Addon;
 using Milimoe.FunGame.Core.Library.Constant;
 using Milimoe.FunGame.Core.Model;
@@ -137,7 +136,7 @@ namespace Milimoe.FunGame.Testing.Desktop.GameMapTesting
                 int qWeapon = 5;
                 int qArmor = 5;
                 int qShoes = 5;
-                int qAccessory = 4;
+                int qAccessory = 5;
                 WriteLine($"社区送温暖了，现在随机发放空投！！");
                 DropItems(_gamingQueue, qMagicCardPack, qWeapon, qArmor, qShoes, qAccessory);
                 WriteLine("");
@@ -499,7 +498,7 @@ namespace Milimoe.FunGame.Testing.Desktop.GameMapTesting
             if (IsPlayer_OnlyTest(queue, character))
             {
                 // 通过UI按钮请求行动类型
-                CharacterActionType actionType = await Controller.RequestActionType(character, skills, items);
+                CharacterActionType actionType = await Controller.RequestActionType(character, items);
                 Controller.ResolveActionType(actionType);
                 return actionType;
             }

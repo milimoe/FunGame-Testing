@@ -3,6 +3,7 @@ using System.Globalization;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Data;
+using System.Windows.Documents;
 using System.Windows.Input;
 using System.Windows.Media;
 using Milimoe.FunGame.Core.Api.Utility;
@@ -14,14 +15,14 @@ using static Milimoe.FunGame.Core.Library.Constant.General;
 using Brushes = System.Windows.Media.Brushes;
 using Button = System.Windows.Controls.Button;
 using Grid = Milimoe.FunGame.Core.Library.Common.Addon.Grid;
+using MouseEventArgs = System.Windows.Input.MouseEventArgs;
 using Panel = System.Windows.Controls.Panel;
 using Rectangle = System.Windows.Shapes.Rectangle;
+using RichTextBox = System.Windows.Controls.RichTextBox;
 using UserControl = System.Windows.Controls.UserControl;
 
 namespace Milimoe.FunGame.Testing.Desktop.GameMapTesting
 {
-    // ... (CharacterQueueItem, FirstCharConverter, CharacterToStringWithLevelConverter 保持不变) ...
-
     public class CharacterQueueItem(Character character, double atDelay)
     {
         public Character Character { get; set; } = character;
@@ -57,6 +58,85 @@ namespace Milimoe.FunGame.Testing.Desktop.GameMapTesting
         }
 
         public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
+        {
+            throw new NotImplementedException();
+        }
+    }
+
+    public class SkillItemFormatterConverter : IValueConverter
+    {
+        public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+        {
+            string name = "";
+            if (value is Skill skill)
+            {
+                Character? character = skill.Character;
+                name = $"【{(skill.IsSuperSkill ? "爆发技" : (skill.IsMagic ? "魔法" : "战技"))}】{skill.Name}";
+                if (skill.CurrentCD > 0)
+                {
+                    name += $" - 冷却剩余 {skill.CurrentCD:0.##} 秒";
+                }
+                else if (skill.RealEPCost > 0 && skill.RealMPCost > 0 && character != null && character.EP < skill.RealEPCost && character.MP < skill.RealMPCost)
+                {
+                    name += $" - 能量/魔法要求 {skill.RealEPCost:0.##} / {skill.RealMPCost:0.##} 点";
+                }
+                else if (skill.RealEPCost > 0 && character != null && character.EP < skill.RealEPCost)
+                {
+                    name += $" - 能量不足，要求 {skill.RealEPCost:0.##} 点";
+                }
+                else if (skill.RealMPCost > 0 && character != null && character.MP < skill.RealMPCost)
+                {
+                    name += $" - 魔法不足，要求 {skill.RealMPCost:0.##} 点";
+                }
+            }
+            else if (value is Item item)
+            {
+                name = item.Name;
+            }
+            else
+            {
+                name = value?.ToString() ?? name;
+            }
+            return name;
+        }
+
+        public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
+        {
+            throw new NotImplementedException();
+        }
+    }
+
+    /// <summary>
+    /// 组合转换器：判断技能或物品是否可用。
+    /// 接收 Skill/Item 对象和当前 Character 对象。
+    /// </summary>
+    public class SkillUsabilityConverter : IMultiValueConverter
+    {
+        public object Convert(object[] values, Type targetType, object parameter, CultureInfo culture)
+        {
+            // values[0] 应该是 Skill 或 Item 对象
+            // values[1] 应该是 CurrentCharacter 对象
+            if (values.Length < 2 || values[1] is not Character character)
+            {
+                return false;
+            }
+
+            if (values[0] is Skill s)
+            {
+                return s.Level > 0 && s.SkillType != SkillType.Passive && s.Enable && !s.IsInEffect && s.CurrentCD == 0 &&
+                    ((s.SkillType == SkillType.SuperSkill || s.SkillType == SkillType.Skill) && s.RealEPCost <= character.EP || s.SkillType == SkillType.Magic && s.RealMPCost <= character.MP);
+            }
+            else if (values[0] is Item i)
+            {
+                return i.IsActive && i.Skills.Active != null && i.Enable && i.IsInGameItem &&
+                    i.Skills.Active.SkillType == SkillType.Item && i.Skills.Active.Enable && !i.Skills.Active.IsInEffect && i.Skills.Active.CurrentCD == 0 &&
+                    i.Skills.Active.RealMPCost <= character.MP && i.Skills.Active.RealEPCost <= character.EP;
+            }
+
+            return false;
+        }
+
+        public object[] ConvertBack(object value, Type[] targetTypes, object parameter, CultureInfo culture)
         {
             throw new NotImplementedException();
         }
@@ -234,7 +314,7 @@ namespace Milimoe.FunGame.Testing.Desktop.GameMapTesting
             viewer.UpdateBottomInfoPanel();
             viewer.UpdateCharacterStatisticsPanel(); // 角色改变时也更新统计面板
             // 角色改变时，清除装备/状态描述
-            viewer.DescriptionTextBlock.Text = "点击装备或状态图标查看详情。";
+            SetRichTextBoxText(viewer.DescriptionRichTextBox, "点击装备或状态图标查看详情。");
             viewer.ClearEquipSlotHighlights();
             viewer.ClearStatusIconHighlights();
         }
@@ -275,23 +355,36 @@ namespace Milimoe.FunGame.Testing.Desktop.GameMapTesting
 
             int maxLines = 1000;
 
-            string currentText = DebugLogTextBlock.Text;
-            List<string> lines = [.. currentText.Split([Environment.NewLine], StringSplitOptions.None)];
-
-            if (lines.Count == 1 && lines[0] == "调试日志:")
+            // 获取 FlowDocument
+            FlowDocument doc = DebugLogRichTextBox.Document;
+            if (doc == null)
             {
-                lines.Clear();
+                doc = new FlowDocument();
+                DebugLogRichTextBox.Document = doc;
             }
 
-            lines.Add($"{message}");
-
-            while (lines.Count > maxLines)
+            // 如果是初始的“调试日志:”段落，则清空它
+            if (doc.Blocks.FirstBlock is Paragraph firstParagraph && firstParagraph.Inlines.FirstInline is Run firstRun && firstRun.Text == "调试日志:")
             {
-                lines.RemoveAt(0);
+                doc.Blocks.Clear();
             }
 
-            DebugLogTextBlock.Text = string.Join(Environment.NewLine, lines);
-            DebugLogScrollViewer?.ScrollToEnd();
+            // 添加新的段落
+            Paragraph newParagraph = new(new Run(message))
+            {
+                Margin = new Thickness(0) // 移除默认段落间距
+            };
+            doc.Blocks.Add(newParagraph);
+
+            // 限制行数
+            while (doc.Blocks.Count > maxLines)
+            {
+                doc.Blocks.Remove(doc.Blocks.FirstBlock);
+            }
+
+            // 滚动到底部
+            DebugLogRichTextBox.ScrollToEnd();
+            DebugLogScrollViewer.ScrollToEnd();
         }
 
         /// <summary>
@@ -460,7 +553,7 @@ namespace Milimoe.FunGame.Testing.Desktop.GameMapTesting
             }
 
             // 每次更新面板时，清除装备/状态描述和高亮
-            DescriptionTextBlock.Text = "点击装备或状态图标查看详情。";
+            SetRichTextBoxText(DescriptionRichTextBox, "点击装备或状态图标查看详情。"); // 新代码
             ClearEquipSlotHighlights();
             ClearStatusIconHighlights();
 
@@ -541,7 +634,7 @@ namespace Milimoe.FunGame.Testing.Desktop.GameMapTesting
                         Border effectBorder = new()
                         {
                             Style = (Style)this.FindResource("StatusIconStyle"),
-                            ToolTip = effect.Description ?? effect.GetType().Name // 鼠标悬停显示完整效果名称或描述
+                            ToolTip = effect.ToString() // 鼠标悬停显示完整效果名称或描述
                         };
                         TextBlock effectText = new()
                         {
@@ -658,7 +751,7 @@ namespace Milimoe.FunGame.Testing.Desktop.GameMapTesting
                 textBlock.Text = item.Name.Length > 0 ? item.Name[0].ToString().ToUpper() : defaultText;
                 parentBorder.Background = Brushes.LightGreen; // 装备槽有物品时显示浅绿色背景
                 textBlock.Foreground = Brushes.Black; // 文本颜色变深
-                parentBorder.ToolTip = item.Description ?? item.Name; // 显示物品名称或描述作为ToolTip
+                parentBorder.ToolTip = item.ToString(); // 显示物品名称或描述作为ToolTip
             }
             else
             {
@@ -700,9 +793,8 @@ namespace Milimoe.FunGame.Testing.Desktop.GameMapTesting
                 CharacterStatistics? stats = dict.Where(kv => kv.Key == CurrentCharacter).Select(kv => kv.Value).FirstOrDefault();
                 if (stats != null)
                 {
-                    // 第一行：技术得分 / 击杀数 / 助攻数 / 死亡数 (可选)
-                    string deathPart = (MaxRespawnTimes != 0) ? $" / 死亡数：{stats.Deaths}" : "";
-                    StatsRatingKillsAssistsDeathsTextBlock.Text = $"技术得分：{FunGameService.CalculateRating(stats):0.0#} / 击杀数：{stats.Kills} / 助攻数：{stats.Assists}{deathPart}";
+                    // 第一行：技术得分 / 击杀数 / 助攻数 / 死亡数
+                    StatsRatingKillsAssistsDeathsTextBlock.Text = $"技术得分：{FunGameService.CalculateRating(stats):0.0#} / 击杀数：{stats.Kills} / 助攻数：{stats.Assists} / 死亡数：{stats.Deaths}";
 
                     // 第二行：存活时长 / 存活回合数 / 行动回合数
                     StatsLiveTimeRoundTurnTextBlock.Text = $"存活时长：{stats.LiveTime:0.##} / 存活回合数：{stats.LiveRound} / 行动回合数：{stats.ActionTurn}";
@@ -848,12 +940,11 @@ namespace Milimoe.FunGame.Testing.Desktop.GameMapTesting
             if (e.OriginalSource == GameMapCanvas)
             {
                 AppendDebugLog("点击了地图空白区域。");
-                // 隐藏格子信息面板
-                GridInfoPanel.Visibility = Visibility.Collapsed;
-                // 清除所有格子的边框高亮
-                ClearGridHighlights();
+                // 调用关闭格子信息面板的逻辑，它现在也会重置描述和高亮
+                CloseGridInfoButton_Click(new(), new());
                 // 将当前角色设置回玩家角色
                 this.CurrentCharacter = this.PlayerCharacter;
+                e.Handled = true; // 标记事件已处理，防止冒泡
             }
         }
 
@@ -869,6 +960,8 @@ namespace Milimoe.FunGame.Testing.Desktop.GameMapTesting
             {
                 CurrentCharacter = PlayerCharacter;
             }
+            // 新增：关闭格子信息面板时，重置装备/状态描述和高亮
+            ResetDescriptionAndHighlights();
         }
 
         /// <summary>
@@ -883,14 +976,13 @@ namespace Milimoe.FunGame.Testing.Desktop.GameMapTesting
             }
         }
 
-        // --- 新增：装备槽位点击事件和辅助方法 ---
         private void EquipSlot_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
         {
             if (sender is Border clickedBorder)
             {
-                ClearEquipSlotHighlights(); // 清除所有装备槽位的旧高亮
-                ClearStatusIconHighlights(); // 清除所有状态图标的旧高亮
-                clickedBorder.BorderBrush = Brushes.Blue; // 高亮当前点击的槽位
+                ClearEquipSlotHighlights();
+                ClearStatusIconHighlights();
+                clickedBorder.BorderBrush = Brushes.Blue;
                 clickedBorder.BorderThickness = new Thickness(2);
 
                 Item? item = null;
@@ -906,12 +998,12 @@ namespace Milimoe.FunGame.Testing.Desktop.GameMapTesting
 
                 if (item != null)
                 {
-                    DescriptionTextBlock.Text = item.Description ?? item.Name; // 显示物品描述，如果不存在则显示名称
+                    SetRichTextBoxText(DescriptionRichTextBox, item.ToString());
                     AppendDebugLog($"查看装备: {item.Name}");
                 }
                 else
                 {
-                    DescriptionTextBlock.Text = "此槽位未装备物品。";
+                    SetRichTextBoxText(DescriptionRichTextBox, "此槽位未装备物品。");
                     AppendDebugLog("查看空装备槽位。");
                 }
             }
@@ -946,7 +1038,7 @@ namespace Milimoe.FunGame.Testing.Desktop.GameMapTesting
                 clickedBorder.BorderBrush = Brushes.Blue; // 高亮当前点击的状态图标
                 clickedBorder.BorderThickness = new Thickness(1.5);
 
-                DescriptionTextBlock.Text = effect.Description ?? effect.GetType().Name; // 显示效果描述，如果不存在则显示类型名称
+                SetRichTextBoxText(DescriptionRichTextBox, effect.ToString());
                 AppendDebugLog($"查看状态: {effect.GetType().Name}");
             }
         }
@@ -974,7 +1066,6 @@ namespace Milimoe.FunGame.Testing.Desktop.GameMapTesting
             MoveButton.IsEnabled = enabled;
             AttackButton.IsEnabled = enabled;
             SkillButton.IsEnabled = enabled;
-            CastButton.IsEnabled = enabled;
             UseItemButton.IsEnabled = enabled;
             EndTurnButton.IsEnabled = enabled;
         }
@@ -1001,6 +1092,7 @@ namespace Milimoe.FunGame.Testing.Desktop.GameMapTesting
         {
             _resolveCharacterSelection = callback;
             CharacterSelectionItemsControl.ItemsSource = availableCharacters;
+            SetRichTextBoxText(CharacterDetailsRichTextBox, "将鼠标悬停在角色名称上查看详情。");
             CharacterSelectionOverlay.Visibility = Visibility.Visible;
         }
 
@@ -1009,9 +1101,22 @@ namespace Milimoe.FunGame.Testing.Desktop.GameMapTesting
         /// </summary>
         private void CharacterSelectionItem_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
         {
-            if (sender is Border border && border.Tag is long characterId)
+            if (sender is Border border && border.Tag is Character character)
             {
-                _resolveCharacterSelection?.Invoke(characterId);
+                _resolveCharacterSelection?.Invoke(character.Id);
+            }
+        }
+
+        /// <summary>
+        /// 角色选择项的鼠标进入事件。
+        /// </summary>
+        private void CharacterSelectionItem_MouseEnter(object sender, MouseEventArgs e)
+        {
+            // Tag 现在是 Character 对象
+            if (sender is Border border && border.Tag is Character hoveredCharacter)
+            {
+                string details = hoveredCharacter.GetInfo();
+                SetRichTextBoxText(CharacterDetailsRichTextBox, details);
             }
         }
 
@@ -1023,26 +1128,25 @@ namespace Milimoe.FunGame.Testing.Desktop.GameMapTesting
             CharacterSelectionOverlay.Visibility = Visibility.Collapsed;
             CharacterSelectionItemsControl.ItemsSource = null;
             _resolveCharacterSelection = null;
+            SetRichTextBoxText(CharacterDetailsRichTextBox, "");
         }
 
         /// <summary>
         /// 显示行动按钮，并根据可用技能和物品启用/禁用相关按钮。
         /// </summary>
         /// <param name="character">当前行动的角色。</param>
-        /// <param name="availableSkills">可用的技能列表。</param>
         /// <param name="availableItems">可用的物品列表。</param>
         /// <param name="callback">选择行动后调用的回调函数。</param>
-        public void ShowActionButtons(Character character, List<Skill> availableSkills, List<Item> availableItems, Action<CharacterActionType> callback)
+        public void ShowActionButtons(Character character, List<Item> availableItems, Action<CharacterActionType> callback)
         {
             _resolveActionType = callback;
             SetActionButtonsEnabled(true);
 
-            // 根据实际情况启用/禁用技能和物品按钮
-            // 技能按钮：检查是否有任何技能是当前角色可施放的
-            SkillButton.IsEnabled = character.Skills.Any(availableSkills.Contains);
-            // 物品按钮：检查是否有任何物品可用
+            MoveButton.IsEnabled = character.CharacterState != CharacterState.NotActionable && character.CharacterState != CharacterState.ActionRestricted;
+            AttackButton.IsEnabled = character.CharacterState != CharacterState.NotActionable && character.CharacterState != CharacterState.ActionRestricted &&
+                        character.CharacterState != CharacterState.BattleRestricted && character.CharacterState != CharacterState.AttackRestricted;
+            SkillButton.IsEnabled = true;
             UseItemButton.IsEnabled = availableItems.Count != 0;
-            // 移动按钮：假设总是可用，或者需要更复杂的逻辑来判断
 
             // 如果当前角色不是正在行动的角色，更新CurrentCharacter
             if (CurrentCharacter != character)
@@ -1063,27 +1167,30 @@ namespace Milimoe.FunGame.Testing.Desktop.GameMapTesting
         /// <summary>
         /// 显示技能选择UI。
         /// </summary>
-        /// <param name="availableSkills">可供选择的技能列表。</param>
+        /// <param name="character">可供选择的技能列表。</param>
         /// <param name="callback">选择完成后调用的回调函数。</param>
-        public void ShowSkillSelectionUI(Character character, List<Skill> availableSkills, Action<long> callback)
+        public void ShowSkillSelectionUI(Character character, Action<long> callback)
         {
             _resolveSkillSelection = callback;
             SkillItemSelectionTitle.Text = "请选择技能";
-            // 只显示当前角色可施放的技能
-            SkillItemSelectionItemsControl.ItemsSource = character.Skills.Where(availableSkills.Contains).ToList();
+            SkillItemDescription.Text = "技能详情";
+            SetRichTextBoxText(SkillItemDetailsRichTextBox, "将鼠标悬停在名称上以查看详情。");
+            SkillItemSelectionItemsControl.ItemsSource = character.Skills.Where(s => s.SkillType != SkillType.Passive).ToList();
             SkillItemSelectionOverlay.Visibility = Visibility.Visible;
         }
 
         /// <summary>
         /// 显示物品选择UI。
         /// </summary>
-        /// <param name="availableItems">可供选择的物品列表。</param>
+        /// <param name="character">可供选择的物品列表。</param>
         /// <param name="callback">选择完成后调用的回调函数。</param>
-        public void ShowItemSelectionUI(List<Item> availableItems, Action<long> callback)
+        public void ShowItemSelectionUI(Character character, Action<long> callback)
         {
             _resolveItemSelection = callback;
             SkillItemSelectionTitle.Text = "请选择物品";
-            SkillItemSelectionItemsControl.ItemsSource = availableItems;
+            SkillItemDescription.Text = "物品详情";
+            SetRichTextBoxText(SkillItemDetailsRichTextBox, "将鼠标悬停在名称上以查看详情。");
+            SkillItemSelectionItemsControl.ItemsSource = character.Items;
             SkillItemSelectionOverlay.Visibility = Visibility.Visible;
         }
 
@@ -1092,16 +1199,36 @@ namespace Milimoe.FunGame.Testing.Desktop.GameMapTesting
         /// </summary>
         private void SkillItemSelectionItem_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
         {
-            if (sender is Border border && border.Tag is long id)
+            if (sender is Border border)
             {
-                if (SkillItemSelectionTitle.Text == "请选择技能")
+                if (border.Tag is Skill skill)
                 {
-                    _resolveSkillSelection?.Invoke(id);
+                    _resolveSkillSelection?.Invoke(skill.Id);
                 }
-                else if (SkillItemSelectionTitle.Text == "请选择物品")
+                else if (border.Tag is Item item)
                 {
-                    _resolveItemSelection?.Invoke(id);
+                    _resolveItemSelection?.Invoke(item.Id);
                 }
+            }
+        }
+
+        /// <summary>
+        /// 角色选择项的鼠标进入事件。
+        /// </summary>
+        private void SkillItemSelectionItem_MouseEnter(object sender, MouseEventArgs e)
+        {
+            if (sender is Border border)
+            {
+                string details = "";
+                if (border.Tag is Skill hoveredSkill)
+                {
+                    details = hoveredSkill.ToString();
+                }
+                else if (border.Tag is Item hoveredItem)
+                {
+                    details = hoveredItem.ToString();
+                }
+                SetRichTextBoxText(SkillItemDetailsRichTextBox, details);
             }
         }
 
@@ -1110,13 +1237,15 @@ namespace Milimoe.FunGame.Testing.Desktop.GameMapTesting
         /// </summary>
         private void CancelSkillItemSelection_Click(object sender, RoutedEventArgs e)
         {
-            if (SkillItemSelectionTitle.Text == "请选择技能")
+            if (SkillItemDescription.Text == "技能详情")
             {
-                _resolveSkillSelection?.Invoke(-1); // 返回-1表示取消
+                SkillItemDescription.Text = "";
+                _resolveSkillSelection?.Invoke(-1);
             }
-            else if (SkillItemSelectionTitle.Text == "请选择物品")
+            else if (SkillItemDescription.Text == "物品详情")
             {
-                _resolveItemSelection?.Invoke(-1); // 返回-1表示取消
+                SkillItemDescription.Text = "";
+                _resolveItemSelection?.Invoke(-1);
             }
         }
 
@@ -1341,6 +1470,35 @@ namespace Milimoe.FunGame.Testing.Desktop.GameMapTesting
         private static SolidColorBrush ToWpfBrush(System.Drawing.Color color)
         {
             return new SolidColorBrush(System.Windows.Media.Color.FromArgb(color.A, color.R, color.G, color.B));
+        }
+
+        private void EquipStatusInfoBorder_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
+        {
+            // 只有当点击事件的原始源是Border本身时才处理，这意味着没有点击到任何子元素（如装备槽位或状态图标）
+            if (sender is Border clickedBorder && e.OriginalSource == clickedBorder)
+            {
+                ResetDescriptionAndHighlights();
+                AppendDebugLog("点击了装备/状态区域空白处。");
+                e.Handled = true; // 标记事件已处理
+            }
+        }
+
+        private void ResetDescriptionAndHighlights()
+        {
+            SetRichTextBoxText(DescriptionRichTextBox, "点击装备或状态图标查看详情。");
+            ClearEquipSlotHighlights();
+            ClearStatusIconHighlights();
+        }
+
+        /// <summary>
+        /// 设置 RichTextBox 的纯文本内容。
+        /// </summary>
+        /// <param name="richTextBox">要设置内容的 RichTextBox。</param>
+        /// <param name="text">要设置的纯文本。</param>
+        private static void SetRichTextBoxText(RichTextBox richTextBox, string text)
+        {
+            richTextBox.Document.Blocks.Clear();
+            richTextBox.Document.Blocks.Add(new Paragraph(new Run(text)) { Margin = new Thickness(0) });
         }
     }
 }

@@ -33,11 +33,11 @@ namespace Milimoe.FunGame.Testing.Desktop.GameMapTesting
             );
         }
 
-        public async Task<CharacterActionType> RequestActionType(Character character, List<Skill> availableSkills, List<Item> availableItems)
+        public async Task<CharacterActionType> RequestActionType(Character character, List<Item> availableItems)
         {
             WriteLine($"现在是 {character.NickName} 的回合，请选择行动。");
             return await _actionTypeRequester.RequestInput(
-                (callback) => UI.Invoke(() => UI.ShowActionButtons(character, availableSkills, availableItems, callback))
+                (callback) => UI.Invoke(() => UI.ShowActionButtons(character, availableItems, callback))
             );
         }
 
@@ -55,7 +55,7 @@ namespace Milimoe.FunGame.Testing.Desktop.GameMapTesting
         {
             WriteLine($"请为 {character.NickName} 选择一个技能。");
             long? skillId = await _skillSelectionRequester.RequestInput(
-                (callback) => UI.Invoke(() => UI.ShowSkillSelectionUI(character, availableSkills, callback))
+                (callback) => UI.Invoke(() => UI.ShowSkillSelectionUI(character, callback))
             );
             return skillId.HasValue ? availableSkills.FirstOrDefault(s => s.Id == skillId.Value) : null;
         }
@@ -64,7 +64,7 @@ namespace Milimoe.FunGame.Testing.Desktop.GameMapTesting
         {
             WriteLine($"请为 {character.NickName} 选择一个物品。");
             long? itemId = await _itemSelectionRequester.RequestInput(
-                (callback) => UI.Invoke(() => UI.ShowItemSelectionUI(availableItems, callback))
+                (callback) => UI.Invoke(() => UI.ShowItemSelectionUI(character, callback))
             );
             return itemId.HasValue ? availableItems.FirstOrDefault(i => i.Id == itemId.Value) : null;
         }
