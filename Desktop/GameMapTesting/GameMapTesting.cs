@@ -219,8 +219,8 @@ namespace Milimoe.FunGame.Testing.Desktop.GameMapTesting
 
                     // 检查是否有角色可以行动
                     Character? characterToAct = await _gamingQueue.NextCharacterAsync();
-                    Controller.UpdateQueue();
-                    Controller.UpdateCharacterPositionsOnMap();
+                    await Controller.UpdateQueue();
+                    await Controller.UpdateCharacterPositionsOnMap();
 
                     // 处理回合
                     if (characterToAct != null)
@@ -252,9 +252,9 @@ namespace Milimoe.FunGame.Testing.Desktop.GameMapTesting
                     double timeLapse = await _gamingQueue.TimeLapse();
                     totalTime += timeLapse;
                     nextDropItemTime -= timeLapse;
-                    Controller.UpdateBottomInfoPanel();
-                    Controller.UpdateQueue();
-                    Controller.UpdateCharacterPositionsOnMap();
+                    await Controller.UpdateBottomInfoPanel();
+                    await Controller.UpdateQueue();
+                    await Controller.UpdateCharacterPositionsOnMap();
 
                     if (roundMsg != "")
                     {
@@ -390,7 +390,7 @@ namespace Milimoe.FunGame.Testing.Desktop.GameMapTesting
 
         private async Task GamingQueue_CharacterMove(GamingQueue queue, Character actor, Grid grid)
         {
-            Controller.UpdateCharacterPositionsOnMap();
+            await Controller.UpdateCharacterPositionsOnMap();
             await Task.CompletedTask;
         }
 
@@ -398,7 +398,7 @@ namespace Milimoe.FunGame.Testing.Desktop.GameMapTesting
         {
             if (reason != QueueUpdatedReason.Action)
             {
-                Controller.UpdateQueue();
+                await Controller.UpdateQueue();
             }
             if (IsPlayer_OnlyTest(queue, character))
             {
@@ -418,7 +418,7 @@ namespace Milimoe.FunGame.Testing.Desktop.GameMapTesting
 
         private async Task<bool> GamingQueue_TurnStart(GamingQueue queue, Character character, List<Character> enemys, List<Character> teammates, List<Skill> skills, List<Item> items)
         {
-            Controller.UpdateBottomInfoPanel();
+            await Controller.UpdateBottomInfoPanel();
             if (IsPlayer_OnlyTest(queue, character))
             {
                 // 确保玩家角色在回合开始时取消AI托管，以便玩家可以控制
@@ -432,20 +432,12 @@ namespace Milimoe.FunGame.Testing.Desktop.GameMapTesting
         {
             if (!IsPlayer_OnlyTest(queue, character)) return [];
 
-            List<Character> potentialTargets = [];
-            if (attack.CanSelectEnemy) potentialTargets.AddRange(enemys);
-            if (attack.CanSelectTeammate) potentialTargets.AddRange(teammates);
-            if (attack.CanSelectSelf) potentialTargets.Add(character);
-
             // 通过UI请求目标选择
             List<Character> selectedTargets = await Controller.RequestTargetSelection(
                 character,
-                potentialTargets,
                 attack,
-                attack.CanSelectTargetCount,
-                attack.CanSelectSelf,
-                attack.CanSelectEnemy,
-                attack.CanSelectTeammate
+                enemys,
+                teammates
             );
             Controller.ResolveTargetSelection(selectedTargets);
 
@@ -474,12 +466,9 @@ namespace Milimoe.FunGame.Testing.Desktop.GameMapTesting
             // 通过UI请求目标选择
             List<Character>? selectedTargets = await Controller.RequestTargetSelection(
                 caster,
-                potentialTargets,
                 skill,
-                skill.CanSelectTargetCount,
-                skill.CanSelectSelf,
-                skill.CanSelectEnemy,
-                skill.CanSelectTeammate
+                enemys,
+                teammates
             );
             Controller.ResolveTargetSelection(selectedTargets);
 
@@ -500,7 +489,7 @@ namespace Milimoe.FunGame.Testing.Desktop.GameMapTesting
         {
             double ht = queue.HardnessTime[character];
             Controller.SetPredictCharacter(character.NickName, ht);
-            Controller.UpdateBottomInfoPanel();
+            await Controller.UpdateBottomInfoPanel();
             if (IsRoundHasPlayer_OnlyTest(queue, character))
             {
                 // 玩家回合结束，等待玩家确认

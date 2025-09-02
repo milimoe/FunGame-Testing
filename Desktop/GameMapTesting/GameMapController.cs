@@ -1,4 +1,5 @@
-﻿using Milimoe.FunGame.Core.Entity;
+﻿using System.Threading.Tasks;
+using Milimoe.FunGame.Core.Entity;
 using Milimoe.FunGame.Core.Interface.Entity;
 using Milimoe.FunGame.Core.Library.Common.Addon;
 using Milimoe.FunGame.Core.Library.Constant;
@@ -55,14 +56,14 @@ namespace Milimoe.FunGame.Testing.Desktop.GameMapTesting
             );
         }
 
-        public async Task<List<Character>> RequestTargetSelection(Character actor, List<Character> potentialTargets, ISkill skill, long maxTargets, bool canSelectSelf, bool canSelectEnemy, bool canSelectTeammate)
+        public async Task<List<Character>> RequestTargetSelection(Character character, ISkill skill, List<Character> enemys, List<Character> teammates)
         {
-            await WriteLine($"请为 {actor.NickName} 选择目标 (最多 {maxTargets} 个)。");
+            await WriteLine($"请为 {character.NickName} 选择目标 (最多 {skill.CanSelectTargetCount} 个)。");
             List<Character> targetIds = await _targetSelectionRequester.RequestInput(
-                (callback) => UI.Invoke(() => UI.ShowTargetSelectionUI(actor, potentialTargets, skill, maxTargets, canSelectSelf, canSelectEnemy, canSelectTeammate, callback))
+                (callback) => UI.Invoke(() => UI.ShowTargetSelectionUI(character, skill, enemys, teammates, callback))
             ) ?? [];
             if (targetIds == null) return [];
-            return [.. potentialTargets.Where(targetIds.Contains)];
+            return [.. enemys.Where(targetIds.Contains), .. teammates.Where(targetIds.Contains)];
         }
 
         public async Task<Skill?> RequestSkillSelection(Character character, List<Skill> availableSkills)
@@ -154,19 +155,19 @@ namespace Milimoe.FunGame.Testing.Desktop.GameMapTesting
             return false;
         }
 
-        public void UpdateBottomInfoPanel()
+        public async Task UpdateBottomInfoPanel()
         {
-            UI.Invoke(UI.UpdateBottomInfoPanel);
+            await UI.Invoke(UI.UpdateBottomInfoPanel);
         }
         
-        public void UpdateQueue()
+        public async Task UpdateQueue()
         {
-            UI.Invoke(UI.UpdateLeftQueuePanel);
+            await UI.Invoke(UI.UpdateLeftQueuePanel);
         }
         
-        public void UpdateCharacterPositionsOnMap()
+        public async Task UpdateCharacterPositionsOnMap()
         {
-            UI.Invoke(UI.UpdateCharacterPositionsOnMap);
+            await UI.Invoke(UI.UpdateCharacterPositionsOnMap);
         }
 
         public void SetQueue(Dictionary<Character, double> dict)

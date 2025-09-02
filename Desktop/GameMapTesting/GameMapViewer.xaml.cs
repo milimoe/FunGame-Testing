@@ -3,6 +3,7 @@ using System.Collections.Specialized;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Documents;
+using System.Windows.Forms;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Threading;
@@ -62,7 +63,7 @@ namespace Milimoe.FunGame.Testing.Desktop.GameMapTesting
         private Character? _actingCharacterForTargetSelection;
         private List<Character> _potentialTargetsForSelection = [];
         private long _maxTargetsForSelection;
-        private bool _canSelectSelf, _canSelectEnemy, _canSelectTeammate;
+        private bool _canSelectAllTeammates, _canSelectAllEnemies, _canSelectSelf, _canSelectEnemy, _canSelectTeammate;
         private bool _isSelectingTargets = false; // 标记当前是否处于目标选择模式
         private readonly CharacterQueueItem _selectionPredictCharacter = new(Factory.GetCharacter(), 0); // 选择时进行下轮预测（用于行动顺序表显示）
 
@@ -212,7 +213,7 @@ namespace Milimoe.FunGame.Testing.Desktop.GameMapTesting
         {
             if (!this.Dispatcher.CheckAccess())
             {
-                await this.Dispatcher.BeginInvoke(async () => await action());
+                await this.Dispatcher.InvokeAsync(async () => await action());
             }
             else await action();
         }
@@ -232,8 +233,8 @@ namespace Milimoe.FunGame.Testing.Desktop.GameMapTesting
         private static void OnCurrentGameMapChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
         {
             GameMapViewer viewer = (GameMapViewer)d;
-            viewer.RenderMap();
-            viewer.UpdateCharacterPositionsOnMap();
+            _ = viewer.RenderMap();
+            _ = viewer.UpdateCharacterPositionsOnMap();
         }
 
         // CurrentRound
@@ -285,8 +286,8 @@ namespace Milimoe.FunGame.Testing.Desktop.GameMapTesting
         private static void OnCurrentCharacterChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
         {
             GameMapViewer viewer = (GameMapViewer)d;
-            viewer.UpdateBottomInfoPanel();
-            viewer.UpdateCharacterStatisticsPanel(); // 角色改变时也更新统计面板
+            _ = viewer.UpdateBottomInfoPanel();
+            _ = viewer.UpdateCharacterStatisticsPanel(); // 角色改变时也更新统计面板
             // 角色改变时，清除装备/状态描述
             SetRichTextBoxText(viewer.DescriptionRichTextBox, "点击装备或状态图标查看详情。");
             viewer.ClearEquipSlotHighlights();
@@ -297,21 +298,21 @@ namespace Milimoe.FunGame.Testing.Desktop.GameMapTesting
         private static void OnCharacterQueueDataChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
         {
             GameMapViewer viewer = (GameMapViewer)d;
-            viewer.UpdateLeftQueuePanel();
+            _ = viewer.UpdateLeftQueuePanel();
         }
 
         // 新增：当CharacterStatistics属性改变时，更新数据统计面板
         private static void OnCharacterStatisticsChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
         {
             GameMapViewer viewer = (GameMapViewer)d;
-            viewer.UpdateCharacterStatisticsPanel();
+            _ = viewer.UpdateCharacterStatisticsPanel();
         }
 
         // 新增：当MaxRespawnTimes属性改变时，更新数据统计面板（因为会影响死亡数显示）
         private static void OnMaxRespawnTimesChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
         {
             GameMapViewer viewer = (GameMapViewer)d;
-            viewer.UpdateCharacterStatisticsPanel();
+            _ = viewer.UpdateCharacterStatisticsPanel();
         }
 
         /// <summary>
@@ -323,7 +324,7 @@ namespace Milimoe.FunGame.Testing.Desktop.GameMapTesting
             // 检查当前线程是否是UI线程
             if (!this.Dispatcher.CheckAccess())
             {
-                await this.Dispatcher.BeginInvoke(new Action(async () => await AppendDebugLog(message)));
+                await this.Dispatcher.InvokeAsync(async () => await AppendDebugLog(message));
                 return;
             }
 
@@ -369,8 +370,14 @@ namespace Milimoe.FunGame.Testing.Desktop.GameMapTesting
         /// <summary>
         /// 渲染地图：根据CurrentGameMap对象在Canvas上绘制所有格子
         /// </summary>
-        private void RenderMap()
+        private async Task RenderMap()
         {
+            if (!this.Dispatcher.CheckAccess())
+            {
+                await this.Dispatcher.InvokeAsync(async () => await RenderMap());
+                return;
+            }
+
             GameMapCanvas.Children.Clear(); // 清除Canvas上所有旧的UI元素 (包括角色图标，后续会重新绘制)
             _gridIdToUiElement.Clear();     // 清除旧的关联
             _uiElementToGrid.Clear();       // 清除旧的关联
@@ -424,11 +431,14 @@ namespace Milimoe.FunGame.Testing.Desktop.GameMapTesting
         /// <summary>
         /// 在地图上更新所有角色的位置和显示。
         /// </summary>
-        public void UpdateCharacterPositionsOnMap()
+        /// <summary>
+        /// 在地图上更新所有角色的位置和显示。
+        /// </summary>
+        public async Task UpdateCharacterPositionsOnMap()
         {
             if (!this.Dispatcher.CheckAccess())
             {
-                this.Dispatcher.Invoke(() => UpdateCharacterPositionsOnMap());
+                await this.Dispatcher.InvokeAsync(async () => await UpdateCharacterPositionsOnMap());
                 return;
             }
 
@@ -463,11 +473,39 @@ namespace Milimoe.FunGame.Testing.Desktop.GameMapTesting
                     IsHitTestVisible = true // 确保角色图标可以被点击
                 };
 
+                // --- 根据HP动态设置背景颜色 END ---
+
                 TextBlock characterText = new()
                 {
                     Style = (Style)this.FindResource("CharacterIconTextStyle"),
                     Text = character.NickName.Length > 0 ? character.NickName[0].ToString().ToUpper() : "?"
                 };
+
+                // --- 根据HP动态设置背景颜色 START ---
+                double hpPercentage = character.HP / character.MaxHP;
+
+                if (hpPercentage > 0.75)
+                {
+                    characterBorder.Background = Brushes.Green;
+                }
+                else if (hpPercentage > 0.50)
+                {
+                    characterBorder.Background = Brushes.Yellow;
+                    characterText.Foreground = Brushes.Black;
+                }
+                else if (hpPercentage > 0.25)
+                {
+                    characterBorder.Background = Brushes.Orange;
+                    characterText.Foreground = Brushes.Black;
+                }
+                else if (hpPercentage > 0)
+                {
+                    characterBorder.Background = Brushes.Red;
+                }
+                else
+                {
+                    characterBorder.Background = Brushes.Gray;
+                }
                 characterBorder.Child = characterText;
 
                 // 设置位置
@@ -493,12 +531,12 @@ namespace Milimoe.FunGame.Testing.Desktop.GameMapTesting
         /// <summary>
         /// 更新左侧动态队列面板，显示角色及其AT Delay。
         /// </summary>
-        public void UpdateLeftQueuePanel()
+        public async Task UpdateLeftQueuePanel()
         {
             // 确保在UI线程上执行
             if (!this.Dispatcher.CheckAccess())
             {
-                this.Dispatcher.Invoke(() => UpdateLeftQueuePanel());
+                await this.Dispatcher.InvokeAsync(async () => await UpdateLeftQueuePanel());
                 return;
             }
 
@@ -522,12 +560,12 @@ namespace Milimoe.FunGame.Testing.Desktop.GameMapTesting
         /// <summary>
         /// 更新底部信息面板显示当前角色的详细信息、装备和状态。
         /// </summary>
-        public void UpdateBottomInfoPanel()
+        public async Task UpdateBottomInfoPanel()
         {
             // 确保在UI线程上执行
             if (!this.Dispatcher.CheckAccess())
             {
-                this.Dispatcher.Invoke(() => UpdateBottomInfoPanel());
+                await this.Dispatcher.InvokeAsync(async () => await UpdateBottomInfoPanel());
                 return;
             }
 
@@ -715,7 +753,7 @@ namespace Milimoe.FunGame.Testing.Desktop.GameMapTesting
             }
 
             // 更新数据统计面板
-            UpdateCharacterStatisticsPanel();
+            await UpdateCharacterStatisticsPanel();
         }
 
         /// <summary>
@@ -749,11 +787,11 @@ namespace Milimoe.FunGame.Testing.Desktop.GameMapTesting
         /// <summary>
         /// 更新数据统计面板显示指定角色的统计信息。
         /// </summary>
-        public void UpdateCharacterStatisticsPanel()
+        public async Task UpdateCharacterStatisticsPanel()
         {
             if (!this.Dispatcher.CheckAccess())
             {
-                this.Dispatcher.Invoke(() => UpdateCharacterStatisticsPanel());
+                await this.Dispatcher.Invoke(async () => await UpdateCharacterStatisticsPanel());
                 return;
             }
 
@@ -1292,32 +1330,49 @@ namespace Milimoe.FunGame.Testing.Desktop.GameMapTesting
         /// <summary>
         /// 显示目标选择UI。
         /// </summary>
-        /// <param name="actor">发起行动的角色。</param>
-        /// <param name="potentialTargets">所有潜在的可选目标列表。</param>
-        /// <param name="skill">请求选择目标的技能。</param>
-        /// <param name="maxTargets">最大可选目标数量。</param>
-        /// <param name="canSelectSelf">是否可选择自身。</param>
-        /// <param name="canSelectEnemy">是否可选择敌方。</param>
-        /// <param name="canSelectTeammate">是否可选择友方。</param>
+        /// <param name="character">发起行动的角色。</param>
+        /// <param name="skill">请求选择目标的技能/普攻。</param>
+        /// <param name="enemys">所有可选敌方目标列表。</param>
+        /// <param name="teammates">所有可选友方目标列表。</param>
         /// <param name="callback">选择完成后调用的回调函数。</param>
-        public void ShowTargetSelectionUI(Character actor, List<Character> potentialTargets, ISkill skill, long maxTargets, bool canSelectSelf, bool canSelectEnemy, bool canSelectTeammate, Action<List<Character>> callback)
+        public void ShowTargetSelectionUI(Character character, ISkill skill, List<Character> enemys, List<Character> teammates, Action<List<Character>> callback)
         {
             _resolveTargetSelection = callback;
-            _actingCharacterForTargetSelection = actor;
-            _potentialTargetsForSelection = potentialTargets;
-            _maxTargetsForSelection = maxTargets;
-            _canSelectSelf = canSelectSelf;
-            _canSelectEnemy = canSelectEnemy;
-            _canSelectTeammate = canSelectTeammate;
+            _actingCharacterForTargetSelection = character;
+            _potentialTargetsForSelection = skill.GetSelectableTargets(character, enemys, teammates);
+            _maxTargetsForSelection = skill.CanSelectTargetCount;
+            _canSelectAllTeammates = skill.SelectAllTeammates;
+            _canSelectAllEnemies = skill.SelectAllEnemies;
+            _canSelectSelf = skill.CanSelectSelf;
+            _canSelectEnemy = skill.CanSelectEnemy;
+            _canSelectTeammate = skill.CanSelectTeammate;
             _isSelectingTargets = true; // 进入目标选择模式
 
             SelectedTargets.Clear(); // 清空之前的选择
-            TargetSelectionTitle.Text = $"选择 {actor.NickName} 的目标 (最多 {maxTargets} 个)";
+            TargetSelectionTitle.Text = $"选择 {character.NickName} 的目标 (最多 {skill.CanSelectTargetCount} 个)";
             TargetSelectionOverlay.Visibility = Visibility.Visible;
+            if (_canSelectAllTeammates)
+            {
+                foreach (Character teammate in teammates)
+                {
+                    SelectedTargets.Add(teammate);
+                }
+            }
+            else if (_canSelectAllEnemies)
+            {
+                foreach (Character enemy in enemys)
+                {
+                    SelectedTargets.Add(enemy);
+                }
+            }
+            else if (_canSelectSelf && !_canSelectEnemy && !_canSelectTeammate)
+            {
+                SelectedTargets.Add(character);
+            }
 
             if (!CharacterQueueItems.Contains(_selectionPredictCharacter))
             {
-                SetPredictCharacter(actor.NickName, skill.RealHardnessTime);
+                SetPredictCharacter(character.NickName, skill.RealHardnessTime);
             }
 
             // 更新地图上角色的高亮，以显示潜在目标和已选目标

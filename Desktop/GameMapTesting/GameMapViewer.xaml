@@ -119,9 +119,9 @@
 
     <Grid>
         <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="Auto"/>
+            <ColumnDefinition Width="0.3*"/>
             <!-- 左侧动态队列 -->
-            <ColumnDefinition Width="*"/>
+            <ColumnDefinition Width="1*"/>
             <!-- 地图区域 -->
             <ColumnDefinition Width="0.8*"/>
             <!-- 新增：右侧调试日志 -->
@@ -407,11 +407,46 @@
                                     <ItemsControl.ItemTemplate>
                                         <DataTemplate>
                                             <Border BorderBrush="LightGray" BorderThickness="0,0,0,1" Padding="2" Margin="0,2">
-                                                <StackPanel Orientation="Horizontal">
-                                                    <TextBlock Text="{Binding NickName}" FontWeight="SemiBold" Margin="0,0,5,0"/>
-                                                    <Button Content="X" Margin="5,0,0,0" Tag="{Binding Id}" Click="RemoveTarget_Click"
-                                                            Style="{StaticResource {x:Static ToolBar.ButtonStyleKey}}"/>
-                                                </StackPanel>
+                                                <Grid>
+                                                    <Grid.ColumnDefinitions>
+                                                        <ColumnDefinition Width="*"/>
+                                                        <!-- 用于名称和属性条 -->
+                                                        <ColumnDefinition Width="Auto"/>
+                                                        <!-- 用于 "X" 按钮 -->
+                                                    </Grid.ColumnDefinitions>
+                                                    <StackPanel Grid.Column="0">
+                                                        <!-- 角色名称 -->
+                                                        <TextBlock Text="{Binding NickName}" FontWeight="SemiBold" Margin="0,0,5,0" FontSize="11"/>
+
+                                                        <!-- HP 条 -->
+                                                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="0,1">
+                                                            <TextBlock Text="HP:" VerticalAlignment="Center" Width="25" FontSize="9"/>
+                                                            <ProgressBar Value="{Binding HP}" Maximum="{Binding MaxHP}" Height="8" Width="100" Background="LightGray" BorderBrush="Gray" BorderThickness="0.5" Foreground="Green"/>
+                                                            <TextBlock Text="{Binding HP, StringFormat={}{0:0.##}}" Margin="5,0,0,0" VerticalAlignment="Center" FontSize="9"/>
+                                                            <TextBlock Text="{Binding MaxHP, StringFormat=/{0:0.##}}" VerticalAlignment="Center" FontSize="9"/>
+                                                        </StackPanel>
+
+                                                        <!-- MP 条 -->
+                                                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="0,1">
+                                                            <TextBlock Text="MP:" VerticalAlignment="Center" Width="25" FontSize="9"/>
+                                                            <ProgressBar Value="{Binding MP}" Maximum="{Binding MaxMP}" Height="8" Width="100" Background="LightGray" BorderBrush="Gray" BorderThickness="0.5" Foreground="Blue"/>
+                                                            <TextBlock Text="{Binding MP, StringFormat={}{0:0.##}}" Margin="5,0,0,0" VerticalAlignment="Center" FontSize="9"/>
+                                                            <TextBlock Text="{Binding MaxMP, StringFormat=/{0:0.##}}" VerticalAlignment="Center" FontSize="9"/>
+                                                        </StackPanel>
+
+                                                        <!-- EP 条 -->
+                                                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="0,1">
+                                                            <TextBlock Text="EP:" VerticalAlignment="Center" Width="25" FontSize="9"/>
+                                                            <ProgressBar Value="{Binding EP}" Maximum="{Binding GameplayEquilibriumConstant.MaxEP}" Height="8" Width="100" Background="LightGray" BorderBrush="Gray" BorderThickness="0.5" Foreground="Orange"/>
+                                                            <TextBlock Text="{Binding EP, StringFormat={}{0:0.##}}" Margin="5,0,0,0" VerticalAlignment="Center" FontSize="9"/>
+                                                            <TextBlock Text="{Binding GameplayEquilibriumConstant.MaxEP, StringFormat=/{0:0.##}}" VerticalAlignment="Center" FontSize="9"/>
+                                                        </StackPanel>
+                                                    </StackPanel>
+
+                                                    <!-- 移除按钮 -->
+                                                    <Button Grid.Column="1" Content="X" Margin="5,0,0,0" Tag="{Binding Id}" Click="RemoveTarget_Click"
+                                                            Style="{StaticResource {x:Static ToolBar.ButtonStyleKey}}" VerticalAlignment="Center"/>
+                                                </Grid>
                                             </Border>
                                         </DataTemplate>
                                     </ItemsControl.ItemTemplate>
