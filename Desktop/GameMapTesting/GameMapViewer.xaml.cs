@@ -1,13 +1,15 @@
 ﻿using System.Collections.ObjectModel;
-using System.Globalization;
+using System.Collections.Specialized;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Data;
 using System.Windows.Documents;
 using System.Windows.Input;
 using System.Windows.Media;
+using System.Windows.Threading;
+using System.Xml.Linq;
 using Milimoe.FunGame.Core.Api.Utility;
 using Milimoe.FunGame.Core.Entity;
+using Milimoe.FunGame.Core.Interface.Entity;
 using Milimoe.FunGame.Core.Library.Common.Addon;
 using Milimoe.FunGame.Core.Library.Constant;
 using Oshima.FunGame.OshimaServers.Service;
@@ -23,125 +25,6 @@ using UserControl = System.Windows.Controls.UserControl;
 
 namespace Milimoe.FunGame.Testing.Desktop.GameMapTesting
 {
-    public class CharacterQueueItem(Character character, double atDelay)
-    {
-        public Character Character { get; set; } = character;
-        public double ATDelay { get; set; } = atDelay;
-    }
-
-    public class FirstCharConverter : IValueConverter
-    {
-        public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
-        {
-            if (value is string s && s.Length > 0)
-            {
-                return s[0].ToString().ToUpper();
-            }
-            return "?";
-        }
-
-        public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
-        {
-            throw new NotImplementedException();
-        }
-    }
-
-    public class CharacterToStringWithLevelConverter : IValueConverter
-    {
-        public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
-        {
-            if (value is Character character)
-            {
-                return character.ToString();
-            }
-            return "[未知角色]";
-        }
-
-        public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
-        {
-            throw new NotImplementedException();
-        }
-    }
-
-    public class SkillItemFormatterConverter : IValueConverter
-    {
-        public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
-        {
-            string name = "";
-            if (value is Skill skill)
-            {
-                Character? character = skill.Character;
-                name = $"【{(skill.IsSuperSkill ? "爆发技" : (skill.IsMagic ? "魔法" : "战技"))}】{skill.Name}";
-                if (skill.CurrentCD > 0)
-                {
-                    name += $" - 冷却剩余 {skill.CurrentCD:0.##} 秒";
-                }
-                else if (skill.RealEPCost > 0 && skill.RealMPCost > 0 && character != null && character.EP < skill.RealEPCost && character.MP < skill.RealMPCost)
-                {
-                    name += $" - 能量/魔法要求 {skill.RealEPCost:0.##} / {skill.RealMPCost:0.##} 点";
-                }
-                else if (skill.RealEPCost > 0 && character != null && character.EP < skill.RealEPCost)
-                {
-                    name += $" - 能量不足，要求 {skill.RealEPCost:0.##} 点";
-                }
-                else if (skill.RealMPCost > 0 && character != null && character.MP < skill.RealMPCost)
-                {
-                    name += $" - 魔法不足，要求 {skill.RealMPCost:0.##} 点";
-                }
-            }
-            else if (value is Item item)
-            {
-                name = item.Name;
-            }
-            else
-            {
-                name = value?.ToString() ?? name;
-            }
-            return name;
-        }
-
-        public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
-        {
-            throw new NotImplementedException();
-        }
-    }
-
-    /// <summary>
-    /// 组合转换器：判断技能或物品是否可用。
-    /// 接收 Skill/Item 对象和当前 Character 对象。
-    /// </summary>
-    public class SkillUsabilityConverter : IMultiValueConverter
-    {
-        public object Convert(object[] values, Type targetType, object parameter, CultureInfo culture)
-        {
-            // values[0] 应该是 Skill 或 Item 对象
-            // values[1] 应该是 CurrentCharacter 对象
-            if (values.Length < 2 || values[1] is not Character character)
-            {
-                return false;
-            }
-
-            if (values[0] is Skill s)
-            {
-                return s.Level > 0 && s.SkillType != SkillType.Passive && s.Enable && !s.IsInEffect && s.CurrentCD == 0 &&
-                    ((s.SkillType == SkillType.SuperSkill || s.SkillType == SkillType.Skill) && s.RealEPCost <= character.EP || s.SkillType == SkillType.Magic && s.RealMPCost <= character.MP);
-            }
-            else if (values[0] is Item i)
-            {
-                return i.IsActive && i.Skills.Active != null && i.Enable && i.IsInGameItem &&
-                    i.Skills.Active.SkillType == SkillType.Item && i.Skills.Active.Enable && !i.Skills.Active.IsInEffect && i.Skills.Active.CurrentCD == 0 &&
-                    i.Skills.Active.RealMPCost <= character.MP && i.Skills.Active.RealEPCost <= character.EP;
-            }
-
-            return false;
-        }
-
-        public object[] ConvertBack(object value, Type[] targetTypes, object parameter, CultureInfo culture)
-        {
-            throw new NotImplementedException();
-        }
-    }
-
     /// <summary>
     /// GameMapViewer.xaml 的交互逻辑
     /// </summary>
@@ -159,11 +42,13 @@ namespace Milimoe.FunGame.Testing.Desktop.GameMapTesting
         // 新增：存储UI元素（Border）到Character对象的反向关联
         private readonly Dictionary<Border, Character> _uiElementToCharacter = [];
 
-        // 新增：用于左侧动态队列的ObservableCollection
-        public ObservableCollection<CharacterQueueItem> CharacterQueueItems { get; set; }
-
         // 新增：用于目标选择UI的ObservableCollection
         public ObservableCollection<Character> SelectedTargets { get; set; } = [];
+
+        // 新增：倒计时相关的字段
+        private readonly DispatcherTimer _countdownTimer;
+        private int _remainingCountdownSeconds;
+        private Action<bool>? _currentContinueCallback;
 
         // 回调Action，用于将UI选择结果传递给Controller
         private Action<long>? _resolveCharacterSelection;
@@ -179,12 +64,20 @@ namespace Milimoe.FunGame.Testing.Desktop.GameMapTesting
         private long _maxTargetsForSelection;
         private bool _canSelectSelf, _canSelectEnemy, _canSelectTeammate;
         private bool _isSelectingTargets = false; // 标记当前是否处于目标选择模式
+        private readonly CharacterQueueItem _selectionPredictCharacter = new(Factory.GetCharacter(), 0); // 选择时进行下轮预测（用于行动顺序表显示）
 
         public GameMapViewer()
         {
             InitializeComponent();
             CharacterQueueItems = [];
+            _selectionPredictCharacter.Character.Promotion = 1800;
             this.DataContext = this; // 将UserControl自身设置为DataContext，以便ItemsControl可以绑定到CharacterQueueItems和SelectedTargets属性
+
+            _countdownTimer = new()
+            {
+                Interval = TimeSpan.FromSeconds(1) // 每秒触发一次
+            };
+            _countdownTimer.Tick += CountdownTimer_Tick; // 绑定事件处理器
 
             // 初始化 SelectedTargetsItemsControl 的 ItemsSource
             SelectedTargetsItemsControl.ItemsSource = SelectedTargets;
@@ -208,10 +101,46 @@ namespace Milimoe.FunGame.Testing.Desktop.GameMapTesting
             set { SetValue(CurrentGameMapProperty, value); }
         }
 
+        // 当前回合
+        public static readonly DependencyProperty CurrentRoundProperty =
+            DependencyProperty.Register("CurrentRound", typeof(int), typeof(GameMapViewer),
+                                        new PropertyMetadata(0, OnCurrentRoundChanged));
+
+        public int CurrentRound
+        {
+            get { return (int)GetValue(CurrentRoundProperty); }
+            set { SetValue(CurrentRoundProperty, value); }
+        }
+        
+        // 回合奖励
+        public static readonly DependencyProperty TurnRewardsProperty =
+            DependencyProperty.Register("TurnRewards", typeof(Dictionary<int, List<Skill>>), typeof(GameMapViewer),
+                                        new PropertyMetadata(new Dictionary<int, List<Skill>>(), OnTurnRewardsChanged));
+
+        public Dictionary<int, List<Skill>> TurnRewards
+        {
+            get { return (Dictionary<int, List<Skill>>)GetValue(TurnRewardsProperty); }
+            set { SetValue(TurnRewardsProperty, value); }
+        }
+        
         // 新增 CurrentCharacter 依赖属性：用于显示当前玩家角色的信息
         public static readonly DependencyProperty CurrentCharacterProperty =
             DependencyProperty.Register("CurrentCharacter", typeof(Character), typeof(GameMapViewer),
                                         new PropertyMetadata(null, OnCurrentCharacterChanged));
+
+        public static readonly DependencyProperty CharacterQueueItemsProperty =
+        DependencyProperty.Register("CharacterQueueItems", typeof(ObservableCollection<CharacterQueueItem>), typeof(GameMapViewer),
+                                    new PropertyMetadata(null, OnCharacterQueueItemsChanged));
+
+        // 用于左侧动态队列的ObservableCollection
+        public ObservableCollection<CharacterQueueItem> CharacterQueueItems
+        {
+            get { return (ObservableCollection<CharacterQueueItem>)GetValue(CharacterQueueItemsProperty); }
+            set { SetValue(CharacterQueueItemsProperty, value); }
+        }
+
+        // 用于 UI 绑定的 ViewModel 集合
+        public ObservableCollection<CharacterQueueItemViewModel> CharacterQueueDisplayItems { get; } = [];
 
         public Character? CurrentCharacter
         {
@@ -307,6 +236,51 @@ namespace Milimoe.FunGame.Testing.Desktop.GameMapTesting
             viewer.UpdateCharacterPositionsOnMap();
         }
 
+        // CurrentRound
+        private static void OnCurrentRoundChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+        {
+            GameMapViewer viewer = (GameMapViewer)d;
+            viewer.CurrentRoundChanged();
+            viewer.UpdateCharacterQueueDisplayItems();
+        }
+
+        private static void OnCharacterQueueItemsChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+        {
+            if (d is GameMapViewer viewer)
+            {
+                // 解除旧集合的事件订阅
+                if (e.OldValue is ObservableCollection<CharacterQueueItem> oldCollection)
+                {
+                    oldCollection.CollectionChanged -= viewer.CharacterQueueItems_CollectionChanged;
+                }
+                // 订阅新集合的事件
+                if (e.NewValue is ObservableCollection<CharacterQueueItem> newCollection)
+                {
+                    newCollection.CollectionChanged += viewer.CharacterQueueItems_CollectionChanged;
+                }
+                // 立即更新显示队列
+                viewer.UpdateCharacterQueueDisplayItems();
+            }
+        }
+
+        // 当原始队列 CharacterQueueItems 内部发生变化时 (添加、删除、移动、替换)
+        private void CharacterQueueItems_CollectionChanged(object? sender, NotifyCollectionChangedEventArgs e)
+        {
+            // 任何集合内容的变动或排序变动，都需要重新计算 PredictedTurnNumber 和奖励
+            // 因为索引变了，PredictedTurnNumber 就会变，进而可能影响奖励
+            UpdateCharacterQueueDisplayItems();
+        }
+
+        // TurnRewards
+        private static void OnTurnRewardsChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+        {
+            GameMapViewer viewer = (GameMapViewer)d;
+            foreach (CharacterQueueItemViewModel vm in viewer.CharacterQueueDisplayItems)
+            {
+                vm.UpdateRewardProperties();
+            }
+        }
+
         // 当CurrentCharacter属性改变时，更新底部信息面板
         private static void OnCurrentCharacterChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
         {
@@ -344,16 +318,16 @@ namespace Milimoe.FunGame.Testing.Desktop.GameMapTesting
         /// 向调试日志文本框添加一条消息。
         /// </summary>
         /// <param name="message">要添加的日志消息。</param>
-        public void AppendDebugLog(string message)
+        public async Task AppendDebugLog(string message)
         {
             // 检查当前线程是否是UI线程
             if (!this.Dispatcher.CheckAccess())
             {
-                this.Dispatcher.BeginInvoke(new Action(() => AppendDebugLog(message)));
+                await this.Dispatcher.BeginInvoke(new Action(async () => await AppendDebugLog(message)));
                 return;
             }
 
-            int maxLines = 1000;
+            int maxLines = 300;
 
             // 获取 FlowDocument
             FlowDocument doc = DebugLogRichTextBox.Document;
@@ -387,6 +361,11 @@ namespace Milimoe.FunGame.Testing.Desktop.GameMapTesting
             DebugLogScrollViewer.ScrollToEnd();
         }
 
+        private void CurrentRoundChanged()
+        {
+            QueueTitle.Text = $"行动顺序表{(CurrentRound > 0 ? $" - 第 {CurrentRound} 回合" : "")}";
+        }
+
         /// <summary>
         /// 渲染地图：根据CurrentGameMap对象在Canvas上绘制所有格子
         /// </summary>
@@ -401,7 +380,7 @@ namespace Milimoe.FunGame.Testing.Desktop.GameMapTesting
 
             if (CurrentGameMap == null)
             {
-                AppendDebugLog("地图未加载。");
+                _ = AppendDebugLog("地图未加载。");
                 return;
             }
 
@@ -480,7 +459,7 @@ namespace Milimoe.FunGame.Testing.Desktop.GameMapTesting
                 Border characterBorder = new()
                 {
                     Style = (Style)this.FindResource("CharacterIconStyle"),
-                    ToolTip = character.ToStringWithLevel(),
+                    ToolTip = character.GetInfo(),
                     IsHitTestVisible = true // 确保角色图标可以被点击
                 };
 
@@ -614,6 +593,8 @@ namespace Milimoe.FunGame.Testing.Desktop.GameMapTesting
                 EpProgressBar.Value = character.EP;
                 EpProgressBar.Maximum = GameplayEquilibriumConstant.MaxEP;
                 EpValueTextBlock.Text = $"{character.EP:0.##}/{GameplayEquilibriumConstant.MaxEP}";
+                PreCastButton.IsEnabled = character.CharacterState == CharacterState.Actionable || character.CharacterState == CharacterState.AttackRestricted ||
+                    character.CharacterState == CharacterState.Casting || character.HP > 0 || character.EP >= 100;
 
                 // --- 更新装备槽位 ---
                 EquipSlot equipSlot = character.EquipSlot;
@@ -888,7 +869,7 @@ namespace Milimoe.FunGame.Testing.Desktop.GameMapTesting
                     this.CurrentCharacter = this.PlayerCharacter;
                 }
 
-                AppendDebugLog($"选中格子: ID={grid.Id}, 坐标=({grid.X},{grid.Y},{grid.Z})");
+                _ = AppendDebugLog($"选中格子: ID={grid.Id}, 坐标=({grid.X},{grid.Y},{grid.Z})");
                 e.Handled = true; // 标记事件已处理，防止冒泡到Canvas
             }
         }
@@ -922,7 +903,7 @@ namespace Milimoe.FunGame.Testing.Desktop.GameMapTesting
                         }
                         UpdateGridInfoPanel(grid);
                     }
-                    AppendDebugLog($"选中角色: {character.ToStringWithLevel()} (通过点击图标)");
+                    _ = AppendDebugLog($"选中角色: {character.ToStringWithLevel()} (通过点击图标)");
                 }
                 e.Handled = true; // 阻止事件冒泡到下方的Grid_MouseLeftButtonDown 或 GameMapCanvas_MouseLeftButtonDown
             }
@@ -939,7 +920,7 @@ namespace Milimoe.FunGame.Testing.Desktop.GameMapTesting
             // 只有当点击事件的原始源是Canvas本身时才处理，这意味着没有点击到任何子元素（如格子或角色图标）
             if (e.OriginalSource == GameMapCanvas)
             {
-                AppendDebugLog("点击了地图空白区域。");
+                _ = AppendDebugLog("点击了地图空白区域。");
                 // 调用关闭格子信息面板的逻辑，它现在也会重置描述和高亮
                 CloseGridInfoButton_Click(new(), new());
                 // 将当前角色设置回玩家角色
@@ -999,12 +980,12 @@ namespace Milimoe.FunGame.Testing.Desktop.GameMapTesting
                 if (item != null)
                 {
                     SetRichTextBoxText(DescriptionRichTextBox, item.ToString());
-                    AppendDebugLog($"查看装备: {item.Name}");
+                    _ = AppendDebugLog($"查看装备: {item.Name}");
                 }
                 else
                 {
                     SetRichTextBoxText(DescriptionRichTextBox, "此槽位未装备物品。");
-                    AppendDebugLog("查看空装备槽位。");
+                    _ = AppendDebugLog("查看空装备槽位。");
                 }
             }
         }
@@ -1039,7 +1020,7 @@ namespace Milimoe.FunGame.Testing.Desktop.GameMapTesting
                 clickedBorder.BorderThickness = new Thickness(1.5);
 
                 SetRichTextBoxText(DescriptionRichTextBox, effect.ToString());
-                AppendDebugLog($"查看状态: {effect.GetType().Name}");
+                _ = AppendDebugLog($"查看状态: {effect.GetType().Name}");
             }
         }
 
@@ -1078,6 +1059,29 @@ namespace Milimoe.FunGame.Testing.Desktop.GameMapTesting
             if (sender is Button button && button.Tag is CharacterActionType actionType)
             {
                 _resolveActionType?.Invoke(actionType);
+            }
+        }
+        
+        /// <summary>
+        /// 预释放爆发技的特殊处理。
+        /// </summary>
+        private async void PreCastSkillButton_Click(object sender, RoutedEventArgs e)
+        {
+            if (PlayerCharacter != null)
+            {
+                Skill? skill = PlayerCharacter.Skills.FirstOrDefault(s => s.IsSuperSkill && s.Enable && s.CurrentCD == 0 && s.RealEPCost <= PlayerCharacter.EP);
+                if (skill != null)
+                {
+                    await _controller.SetPreCastSuperSkill(PlayerCharacter, skill);
+                }
+                else
+                {
+                    await AppendDebugLog("当前无法预释放爆发技，因为找不到可用的爆发技。");
+                }
+            }
+            else
+            {
+                await AppendDebugLog("找不到角色。");
             }
         }
 
@@ -1220,15 +1224,30 @@ namespace Milimoe.FunGame.Testing.Desktop.GameMapTesting
             if (sender is Border border)
             {
                 string details = "";
+                double hardnessTime = 0;
+                string name = "";
                 if (border.Tag is Skill hoveredSkill)
                 {
                     details = hoveredSkill.ToString();
+                    if (!hoveredSkill.IsMagic) hardnessTime = hoveredSkill.RealHardnessTime;
+                    else hardnessTime = hoveredSkill.RealCastTime;
+                    name = hoveredSkill.Character?.NickName ?? "未知角色";
                 }
                 else if (border.Tag is Item hoveredItem)
                 {
                     details = hoveredItem.ToString();
+                    if (hoveredItem.Skills.Active != null)
+                    {
+                        hardnessTime = hoveredItem.Skills.Active.RealHardnessTime;
+                    }
+                    if (hardnessTime == 0)
+                    {
+                        hardnessTime = 5;
+                    }
+                    name = hoveredItem.Character?.NickName ?? "未知角色";
                 }
                 SetRichTextBoxText(SkillItemDetailsRichTextBox, details);
+                SetPredictCharacter(name, hardnessTime);
             }
         }
 
@@ -1247,6 +1266,7 @@ namespace Milimoe.FunGame.Testing.Desktop.GameMapTesting
                 SkillItemDescription.Text = "";
                 _resolveItemSelection?.Invoke(-1);
             }
+            CharacterQueueItems.Remove(_selectionPredictCharacter);
         }
 
         /// <summary>
@@ -1274,12 +1294,13 @@ namespace Milimoe.FunGame.Testing.Desktop.GameMapTesting
         /// </summary>
         /// <param name="actor">发起行动的角色。</param>
         /// <param name="potentialTargets">所有潜在的可选目标列表。</param>
+        /// <param name="skill">请求选择目标的技能。</param>
         /// <param name="maxTargets">最大可选目标数量。</param>
         /// <param name="canSelectSelf">是否可选择自身。</param>
         /// <param name="canSelectEnemy">是否可选择敌方。</param>
         /// <param name="canSelectTeammate">是否可选择友方。</param>
         /// <param name="callback">选择完成后调用的回调函数。</param>
-        public void ShowTargetSelectionUI(Character actor, List<Character> potentialTargets, long maxTargets, bool canSelectSelf, bool canSelectEnemy, bool canSelectTeammate, Action<List<Character>> callback)
+        public void ShowTargetSelectionUI(Character actor, List<Character> potentialTargets, ISkill skill, long maxTargets, bool canSelectSelf, bool canSelectEnemy, bool canSelectTeammate, Action<List<Character>> callback)
         {
             _resolveTargetSelection = callback;
             _actingCharacterForTargetSelection = actor;
@@ -1294,6 +1315,11 @@ namespace Milimoe.FunGame.Testing.Desktop.GameMapTesting
             TargetSelectionTitle.Text = $"选择 {actor.NickName} 的目标 (最多 {maxTargets} 个)";
             TargetSelectionOverlay.Visibility = Visibility.Visible;
 
+            if (!CharacterQueueItems.Contains(_selectionPredictCharacter))
+            {
+                SetPredictCharacter(actor.NickName, skill.RealHardnessTime);
+            }
+
             // 更新地图上角色的高亮，以显示潜在目标和已选目标
             UpdateCharacterHighlights();
         }
@@ -1307,7 +1333,7 @@ namespace Milimoe.FunGame.Testing.Desktop.GameMapTesting
             // 检查是否是潜在目标
             if (_potentialTargetsForSelection == null || !_potentialTargetsForSelection.Contains(clickedCharacter))
             {
-                AppendDebugLog($"无法选择 {clickedCharacter.NickName}：不是潜在目标。");
+                _ = AppendDebugLog($"无法选择 {clickedCharacter.NickName}：不是潜在目标。");
                 return;
             }
 
@@ -1332,7 +1358,7 @@ namespace Milimoe.FunGame.Testing.Desktop.GameMapTesting
 
             if (!isValidTarget)
             {
-                AppendDebugLog($"无法选择 {clickedCharacter.NickName}：不符合目标选择规则。");
+                _ = AppendDebugLog($"无法选择 {clickedCharacter.NickName}：不符合目标选择规则。");
                 return;
             }
 
@@ -1344,7 +1370,7 @@ namespace Milimoe.FunGame.Testing.Desktop.GameMapTesting
                 }
                 else
                 {
-                    AppendDebugLog($"已达到最大目标数量 ({_maxTargetsForSelection})。");
+                    _ = AppendDebugLog($"已达到最大目标数量 ({_maxTargetsForSelection})。");
                 }
             }
             UpdateCharacterHighlights(); // 更新地图上的高亮显示
@@ -1416,6 +1442,7 @@ namespace Milimoe.FunGame.Testing.Desktop.GameMapTesting
         private void CancelTargetSelection_Click(object sender, RoutedEventArgs e)
         {
             _resolveTargetSelection?.Invoke([]); // 返回空表示取消
+            CharacterQueueItems.Remove(_selectionPredictCharacter);
         }
 
         /// <summary>
@@ -1461,6 +1488,45 @@ namespace Milimoe.FunGame.Testing.Desktop.GameMapTesting
             _resolveContinuePrompt = null;
         }
 
+        private void CountdownTimer_Tick(object? sender, EventArgs e)
+        {
+            _remainingCountdownSeconds--;
+
+            if (_remainingCountdownSeconds > 0)
+            {
+                // 更新倒计时文本
+                CountdownTextBlock.Text = $"{_remainingCountdownSeconds} 秒后继续...";
+            }
+            else
+            {
+                // 倒计时结束
+                _countdownTimer.Stop(); // 停止计时器
+                CountdownTextBlock.Visibility = Visibility.Collapsed; // 隐藏倒计时文本
+
+                // 触发继续回调
+                _currentContinueCallback?.Invoke(true);
+                _currentContinueCallback = null; // 清除回调，防止重复触发
+            }
+        }
+
+        /// <summary>
+        /// 启动倒计时，并在倒计时结束后自动触发继续。
+        /// </summary>
+        /// <param name="seconds">倒计时秒数。</param>
+        /// <param name="callback">倒计时结束后调用的回调函数。</param>
+        public void StartCountdownForContinue(int seconds, Action<bool> callback)
+        {
+            _remainingCountdownSeconds = seconds;
+            _currentContinueCallback = callback;
+
+            // 显示倒计时文本并设置初始值
+            CountdownTextBlock.Text = $"{_remainingCountdownSeconds} 秒后继续...";
+            CountdownTextBlock.Visibility = Visibility.Visible;
+
+            // 启动计时器
+            _countdownTimer.Start();
+        }
+
         /// <summary>
         /// 辅助方法：将 System.Drawing.Color 转换为 System.Windows.Media.SolidColorBrush
         /// WPF UI元素使用System.Windows.Media.Brush，而Grid类使用System.Drawing.Color
@@ -1478,7 +1544,7 @@ namespace Milimoe.FunGame.Testing.Desktop.GameMapTesting
             if (sender is Border clickedBorder && e.OriginalSource == clickedBorder)
             {
                 ResetDescriptionAndHighlights();
-                AppendDebugLog("点击了装备/状态区域空白处。");
+                _ = AppendDebugLog("点击了装备/状态区域空白处。");
                 e.Handled = true; // 标记事件已处理
             }
         }
@@ -1499,6 +1565,105 @@ namespace Milimoe.FunGame.Testing.Desktop.GameMapTesting
         {
             richTextBox.Document.Blocks.Clear();
             richTextBox.Document.Blocks.Add(new Paragraph(new Run(text)) { Margin = new Thickness(0) });
+        }
+
+        public static void InsertSorted<T>(ObservableCollection<T> collection, T item, Func<T, double> keySelector)
+        {
+            // 处理空集合情况
+            if (collection.Count == 0)
+            {
+                collection.Add(item);
+                return;
+            }
+
+            // 二分查找插入位置
+            int low = 0;
+            int high = collection.Count - 1;
+            int index = 0;
+
+            while (low <= high)
+            {
+                int mid = (low + high) / 2;
+                double midValue = keySelector(collection[mid]);
+                double newValue = keySelector(item);
+
+                if (Math.Abs(midValue - newValue) < double.Epsilon) // 处理浮点精度
+                {
+                    index = mid + 1; // 相同值插入后面
+                    break;
+                }
+                else if (midValue < newValue)
+                {
+                    low = mid + 1;
+                }
+                else
+                {
+                    high = mid - 1;
+                }
+
+                if (low > high) index = low;
+            }
+
+            collection.Insert(index, item);
+        }
+
+        private void UpdateCharacterQueueDisplayItems()
+        {
+            if (CharacterQueueItems == null)
+            {
+                CharacterQueueDisplayItems.Clear();
+                return;
+            }
+
+            // 1. 创建一个新的 ViewModel 列表，同时尝试重用现有实例
+            List<CharacterQueueItemViewModel> newDisplayItems = [];
+            // 使用字典快速查找现有 ViewModel
+            Dictionary<CharacterQueueItem, CharacterQueueItemViewModel> existingVmMap = CharacterQueueDisplayItems.ToDictionary(vm => vm.Model);
+
+            for (int i = 0; i < CharacterQueueItems.Count; i++)
+            {
+                CharacterQueueItem rawItem = CharacterQueueItems[i];
+                CharacterQueueItemViewModel vm;
+
+                // 尝试从现有 ViewModel 映射中获取
+                if (existingVmMap.TryGetValue(rawItem, out CharacterQueueItemViewModel? existingVm))
+                {
+                    vm = existingVm;
+                }
+                else
+                {
+                    // 如果没有，则创建新的 ViewModel
+                    vm = new CharacterQueueItemViewModel(rawItem, () => TurnRewards);
+                }
+
+                // 2. 更新 ViewModel 的派生属性
+                // 预测回合数会因为队列顺序或 CurrentRound 变化而变化
+                int predictedTurn = CurrentRound + i;
+                if (vm.PredictedTurnNumber != predictedTurn) // 只有当实际变化时才设置，触发 INPC
+                {
+                    vm.PredictedTurnNumber = predictedTurn;
+                }
+                // 奖励信息可能因为 PredictedTurnNumber 变化而变化 (即使 TurnRewards 字典本身不变)
+                vm.UpdateRewardProperties(); // 会在内部检查 TurnRewardSkillName 是否变化并触发 INPC
+
+                newDisplayItems.Add(vm);
+            }
+
+            // 3. 高效同步 CharacterQueueDisplayItems
+            // 这是一个简单的同步策略：清空并重新添加。
+            CharacterQueueDisplayItems.Clear();
+            foreach (CharacterQueueItemViewModel vm in newDisplayItems)
+            {
+                CharacterQueueDisplayItems.Add(vm);
+            }
+        }
+
+        public void SetPredictCharacter(string name, double ht)
+        {
+            CharacterQueueItems.Remove(_selectionPredictCharacter);
+            _selectionPredictCharacter.Character.NickName = $"{name} [ 下轮预测 ]";
+            _selectionPredictCharacter.ATDelay = ht;
+            InsertSorted(CharacterQueueItems, _selectionPredictCharacter, cq => cq.ATDelay);
         }
     }
 }

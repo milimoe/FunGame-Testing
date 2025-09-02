@@ -39,7 +39,7 @@ namespace Milimoe.FunGame.Testing.Desktop.GameMapTesting
                 List<string> result = [];
                 Msg = "";
                 List<Character> allCharactersInGame = [.. FunGameConstant.Characters]; // 使用不同的名称以避免与后面的 `characters` 冲突
-                Controller.WriteLine("--- 游戏开始 ---");
+                await Controller.WriteLine("--- 游戏开始 ---");
 
                 int clevel = 60;
                 int slevel = 6;
@@ -62,7 +62,10 @@ namespace Milimoe.FunGame.Testing.Desktop.GameMapTesting
                 }
 
                 // 显示角色信息
-                characters.ForEach(c => Controller.WriteLine($"角色编号：{c.Id}\r\n{c.GetInfo()}"));
+                foreach (Character c in characters)
+                {
+                    await Controller.WriteLine($"角色编号：{c.Id}\r\n{c.GetInfo()}");
+                }
 
                 // 询问玩家需要选择哪个角色 (通过UI界面选择)
                 Character? player = null;
@@ -73,7 +76,8 @@ namespace Milimoe.FunGame.Testing.Desktop.GameMapTesting
                     player = characters.FirstOrDefault(c => c.Id == selectedPlayerId);
                     if (player != null)
                     {
-                        Controller.WriteLine($"选择了 [ {player} ]！");
+                        await Controller.WriteLine($"选择了 [ {player} ]！");
+                        player.Promotion = 200;
                         Controller.SetCurrentCharacter(player);
                         Controller.SetPlayerCharacter(player);
 
@@ -137,9 +141,9 @@ namespace Milimoe.FunGame.Testing.Desktop.GameMapTesting
                 int qArmor = 5;
                 int qShoes = 5;
                 int qAccessory = 5;
-                WriteLine($"社区送温暖了，现在随机发放空投！！");
+                await Controller.WriteLine($"社区送温暖了，现在随机发放空投！！");
                 DropItems(_gamingQueue, qMagicCardPack, qWeapon, qArmor, qShoes, qAccessory);
-                WriteLine("");
+                await Controller.WriteLine("");
                 if (isWeb) result.Add("=== 空投 ===\r\n" + Msg);
                 double nextDropItemTime = 40;
                 if (qMagicCardPack < 5) qMagicCardPack++;
@@ -149,20 +153,23 @@ namespace Milimoe.FunGame.Testing.Desktop.GameMapTesting
                 if (qAccessory < 5) qAccessory++;
 
                 // 显示角色信息
-                characters.ForEach(c => Controller.WriteLine(c.GetInfo()));
+                foreach (Character c in characters)
+                {
+                    await Controller.WriteLine(c.GetInfo());
+                }
 
                 // 初始化队列，准备开始游戏
                 _gamingQueue.InitActionQueue();
                 _gamingQueue.SetCharactersToAIControl(false, characters);
                 _gamingQueue.SetCharactersToAIControl(true, player);
                 _gamingQueue.CustomData.Add("player", player);
-                Controller.WriteLine();
+                await Controller.WriteLine();
 
                 // 显示初始顺序表
                 _gamingQueue.DisplayQueue();
-                Controller.WriteLine();
+                await Controller.WriteLine();
 
-                Controller.WriteLine($"你的角色是 [ {player} ]，详细信息：{player.GetInfo()}");
+                await Controller.WriteLine($"你的角色是 [ {player} ]，详细信息：{player.GetInfo()}");
 
                 // 总回合数
                 int maxRound = 999;
@@ -180,6 +187,7 @@ namespace Milimoe.FunGame.Testing.Desktop.GameMapTesting
                     effects.Add(effectID, isActive);
                 }
                 _gamingQueue.InitRoundRewards(maxRound, 1, effects, id => FunGameConstant.RoundRewards[(EffectID)id]);
+                Controller.SetTurnRewards(_gamingQueue.RoundRewards);
 
                 int i = 1;
                 while (i < maxRound)
@@ -187,7 +195,7 @@ namespace Milimoe.FunGame.Testing.Desktop.GameMapTesting
                     Msg = "";
                     if (i == maxRound - 1)
                     {
-                        WriteLine($"=== 终局审判 ===");
+                        await Controller.WriteLine($"=== 终局审判 ===");
                         Dictionary<Character, double> hpPercentage = [];
                         foreach (Character c in characters)
                         {
@@ -195,10 +203,10 @@ namespace Milimoe.FunGame.Testing.Desktop.GameMapTesting
                         }
                         double max = hpPercentage.Values.Max();
                         Character winner = hpPercentage.Keys.Where(c => hpPercentage[c] == max).First();
-                        WriteLine("[ " + winner + " ] 成为了天选之人！！");
+                        await Controller.WriteLine("[ " + winner + " ] 成为了天选之人！！");
                         foreach (Character c in characters.Where(c => c != winner && c.HP > 0))
                         {
-                            WriteLine("[ " + winner + " ] 对 [ " + c + " ] 造成了 99999999999 点真实伤害。");
+                            await Controller.WriteLine("[ " + winner + " ] 对 [ " + c + " ] 造成了 99999999999 点真实伤害。");
                             await _gamingQueue.DeathCalculationAsync(winner, c);
                         }
                         if (_gamingQueue is MixGamingQueue mix)
@@ -217,8 +225,9 @@ namespace Milimoe.FunGame.Testing.Desktop.GameMapTesting
                     // 处理回合
                     if (characterToAct != null)
                     {
-                        WriteLine($"=== 回合 {i++} ===");
-                        WriteLine("现在是 [ " + characterToAct + " ] 的回合！");
+                        Controller.SetCurrentRound(i);
+                        await Controller.WriteLine($"=== 回合 {i++} ===");
+                        await Controller.WriteLine("现在是 [ " + characterToAct + " ] 的回合！");
 
                         bool isGameEnd = await _gamingQueue.ProcessTurnAsync(characterToAct);
 
@@ -229,7 +238,7 @@ namespace Milimoe.FunGame.Testing.Desktop.GameMapTesting
                         }
 
                         if (isWeb) _gamingQueue.DisplayQueue();
-                        WriteLine("");
+                        await Controller.WriteLine("");
                     }
 
                     string roundMsg = "";
@@ -243,6 +252,7 @@ namespace Milimoe.FunGame.Testing.Desktop.GameMapTesting
                     double timeLapse = await _gamingQueue.TimeLapse();
                     totalTime += timeLapse;
                     nextDropItemTime -= timeLapse;
+                    Controller.UpdateBottomInfoPanel();
                     Controller.UpdateQueue();
                     Controller.UpdateCharacterPositionsOnMap();
 
@@ -259,9 +269,9 @@ namespace Milimoe.FunGame.Testing.Desktop.GameMapTesting
                     {
                         // 空投
                         Msg = "";
-                        WriteLine($"社区送温暖了，现在随机发放空投！！");
+                        await Controller.WriteLine($"社区送温暖了，现在随机发放空投！！");
                         DropItems(_gamingQueue, qMagicCardPack, qWeapon, qArmor, qShoes, qAccessory);
-                        WriteLine("");
+                        await Controller.WriteLine("");
                         if (isWeb) result.Add("=== 空投 ===\r\n" + Msg);
                         nextDropItemTime = 40;
                         if (qMagicCardPack < 5) qMagicCardPack++;
@@ -272,8 +282,8 @@ namespace Milimoe.FunGame.Testing.Desktop.GameMapTesting
                     }
                 }
 
-                Controller.WriteLine("--- 游戏结束 ---");
-                Controller.WriteLine($"总游戏时长：{totalTime:0.##} {_gamingQueue.GameplayEquilibriumConstant.InGameTime}");
+                await Controller.WriteLine("--- 游戏结束 ---");
+                await Controller.WriteLine($"总游戏时长：{totalTime:0.##} {_gamingQueue.GameplayEquilibriumConstant.InGameTime}");
 
                 // 赛后统计
                 FunGameService.GetCharacterRating(_gamingQueue.CharacterStatistics, false, []);
@@ -299,18 +309,18 @@ namespace Milimoe.FunGame.Testing.Desktop.GameMapTesting
                 int count = 1;
                 if (isWeb)
                 {
-                    WriteLine("=== 技术得分排行榜 ===");
+                    await Controller.WriteLine("=== 技术得分排行榜 ===");
                     Msg = $"=== 技术得分排行榜 TOP{top} ===\r\n";
                 }
                 else
                 {
                     StringBuilder ratingBuilder = new();
-                    WriteLine("=== 本场比赛最佳角色 ===");
+                    await Controller.WriteLine("=== 本场比赛最佳角色 ===");
                     Msg = $"=== 本场比赛最佳角色 ===\r\n";
-                    WriteLine(mvpBuilder.ToString() + "\r\n\r\n" + ratingBuilder.ToString());
+                    await Controller.WriteLine(mvpBuilder.ToString() + "\r\n\r\n" + ratingBuilder.ToString());
 
-                    Controller.WriteLine();
-                    Controller.WriteLine("=== 技术得分排行榜 ===");
+                    await Controller.WriteLine();
+                    await Controller.WriteLine("=== 技术得分排行榜 ===");
                 }
 
                 foreach (Character character in _gamingQueue.CharacterStatistics.OrderByDescending(d => d.Value.Rating).Select(d => d.Key))
@@ -327,11 +337,11 @@ namespace Milimoe.FunGame.Testing.Desktop.GameMapTesting
                     builder.Append($"每秒伤害：{stats.DamagePerSecond:0.##} / 每回合伤害：{stats.DamagePerTurn:0.##}");
                     if (count++ <= top)
                     {
-                        WriteLine(builder.ToString());
+                        await Controller.WriteLine(builder.ToString());
                     }
                     else
                     {
-                        Controller.WriteLine(builder.ToString());
+                        await Controller.WriteLine(builder.ToString());
                     }
 
                     CharacterStatistics? totalStats = CharacterStatistics.Where(kv => kv.Key.GetName() == character.GetName()).Select(kv => kv.Value).FirstOrDefault();
@@ -364,7 +374,7 @@ namespace Milimoe.FunGame.Testing.Desktop.GameMapTesting
             }
             catch (Exception ex)
             {
-                Controller.WriteLine(ex.ToString());
+                await Controller.WriteLine(ex.ToString());
                 return [ex.ToString()];
             }
         }
@@ -380,26 +390,29 @@ namespace Milimoe.FunGame.Testing.Desktop.GameMapTesting
 
         private async Task GamingQueue_CharacterMove(GamingQueue queue, Character actor, Grid grid)
         {
+            Controller.UpdateCharacterPositionsOnMap();
             await Task.CompletedTask;
         }
 
         private async Task GamingQueue_QueueUpdated(GamingQueue queue, List<Character> characters, Character character, double hardnessTime, QueueUpdatedReason reason, string msg)
         {
+            if (reason != QueueUpdatedReason.Action)
+            {
+                Controller.UpdateQueue();
+            }
             if (IsPlayer_OnlyTest(queue, character))
             {
-                if (reason == QueueUpdatedReason.Action)
-                {
-                    queue.SetCharactersToAIControl(false, character);
-                }
-                if (reason == QueueUpdatedReason.PreCastSuperSkill)
-                {
-                    // 玩家释放爆发技后，需要等待玩家确认
-                    await Controller.RequestContinuePrompt("你的下一回合需要选择爆发技目标，知晓请点击继续. . .");
-                    Controller.ResolveContinuePrompt();
-                }
+                //if (reason == QueueUpdatedReason.Action)
+                //{
+                //    queue.SetCharactersToAIControl(false, character);
+                //}
+                //if (reason == QueueUpdatedReason.PreCastSuperSkill)
+                //{
+                //    // 玩家释放爆发技后，需要等待玩家确认
+                //    await Controller.RequestContinuePrompt("你的下一回合需要选择爆发技目标，知晓请点击继续. . .");
+                //    Controller.ResolveContinuePrompt();
+                //}
             }
-            Controller.UpdateQueue();
-            Controller.UpdateCharacterPositionsOnMap();
             await Task.CompletedTask;
         }
 
@@ -409,7 +422,7 @@ namespace Milimoe.FunGame.Testing.Desktop.GameMapTesting
             if (IsPlayer_OnlyTest(queue, character))
             {
                 // 确保玩家角色在回合开始时取消AI托管，以便玩家可以控制
-                queue.SetCharactersToAIControl(cancel: true, character);
+                //queue.SetCharactersToAIControl(cancel: true, character);
             }
             await Task.CompletedTask;
             return true;
@@ -428,6 +441,7 @@ namespace Milimoe.FunGame.Testing.Desktop.GameMapTesting
             List<Character> selectedTargets = await Controller.RequestTargetSelection(
                 character,
                 potentialTargets,
+                attack,
                 attack.CanSelectTargetCount,
                 attack.CanSelectSelf,
                 attack.CanSelectEnemy,
@@ -461,6 +475,7 @@ namespace Milimoe.FunGame.Testing.Desktop.GameMapTesting
             List<Character>? selectedTargets = await Controller.RequestTargetSelection(
                 caster,
                 potentialTargets,
+                skill,
                 skill.CanSelectTargetCount,
                 skill.CanSelectSelf,
                 skill.CanSelectEnemy,
@@ -483,12 +498,19 @@ namespace Milimoe.FunGame.Testing.Desktop.GameMapTesting
 
         private async Task GamingQueue_TurnEnd(GamingQueue queue, Character character)
         {
+            double ht = queue.HardnessTime[character];
+            Controller.SetPredictCharacter(character.NickName, ht);
             Controller.UpdateBottomInfoPanel();
             if (IsRoundHasPlayer_OnlyTest(queue, character))
             {
                 // 玩家回合结束，等待玩家确认
                 await Controller.RequestContinuePrompt("你的回合（或与你相关的回合）已结束，请查看本回合日志，然后点击继续. . .");
                 Controller.ResolveContinuePrompt();
+            }
+            else
+            {
+                await Controller.RequestCountDownContinuePrompt("该角色的回合已结束. . .");
+                Controller.ResolveCountDownContinuePrompt();
             }
             await Task.CompletedTask;
         }
@@ -507,7 +529,7 @@ namespace Milimoe.FunGame.Testing.Desktop.GameMapTesting
 
         private static bool IsPlayer_OnlyTest(GamingQueue queue, Character current)
         {
-            return queue.CustomData.TryGetValue("player", out object? value) && value is Character player && player == current;
+            return queue.CustomData.TryGetValue("player", out object? value) && value is Character player && player == current && !queue.IsCharacterInAIControlling(current);
         }
 
         private static bool IsRoundHasPlayer_OnlyTest(GamingQueue queue, Character current)
@@ -515,10 +537,18 @@ namespace Milimoe.FunGame.Testing.Desktop.GameMapTesting
             return queue.CustomData.TryGetValue("player", out object? value) && value is Character player && (player == current || (current.CharacterState != CharacterState.Casting && queue.LastRound.Targets.Any(c => c == player)));
         }
 
+        public async Task SetPreCastSuperSkill(Character character, Skill skill)
+        {
+            if (_gamingQueue is GamingQueue queue)
+            {
+                await queue.SetCharacterPreCastSuperSkill(character, skill);
+            }
+        }
+
         public void WriteLine(string str)
         {
             Msg += str + "\r\n";
-            Controller.WriteLine(str);
+            _ = Controller.WriteLine(str);
         }
 
         public static void DropItems(GamingQueue queue, int mQuality, int wQuality, int aQuality, int sQuality, int acQuality)
@@ -561,6 +591,7 @@ namespace Milimoe.FunGame.Testing.Desktop.GameMapTesting
                     for (int i = 0; i < 2; i++)
                     {
                         Item consumable = consumables[Random.Shared.Next(consumables.Length)].Copy();
+                        consumable.Character = character;
                         character.Items.Add(consumable);
                     }
                 }

@@ -137,20 +137,35 @@
         <Border Grid.Column="0" Grid.Row="0" BorderBrush="LightGray" BorderThickness="1" Margin="5" Padding="5">
             <StackPanel x:Name="LeftQueuePanel" MinWidth="180" Background="#FFF0F8FF">
                 <!-- AliceBlue -->
-                <TextBlock Text="行动顺序表" Margin="0,0,0,10" FontWeight="Bold" FontSize="14"/>
+                <TextBlock x:Name="QueueTitle" Text="行动顺序表" Margin="0,0,0,10" FontWeight="Bold" FontSize="14"/>
 
                 <!-- 动态内容将在此处添加 -->
                 <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" Height="Auto">
-                    <ItemsControl x:Name="CharacterQueueItemsControl" ItemsSource="{Binding CharacterQueueItems, RelativeSource={RelativeSource AncestorType=UserControl}}">
+                    <ItemsControl x:Name="CharacterQueueItemsControl" ItemsSource="{Binding CharacterQueueDisplayItems, RelativeSource={RelativeSource AncestorType=UserControl}}">
                         <ItemsControl.ItemTemplate>
                             <DataTemplate>
-                                <Border BorderBrush="LightGray" BorderThickness="0,0,0,1" Margin="0,2,0,2" Padding="2">
+                                <Border BorderThickness="0,0,0,1" Margin="0,2,0,2" Padding="2">
+                                    <Border.Style>
+                                        <Style TargetType="Border">
+                                            <Setter Property="BorderBrush" Value="LightGray"/>
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding Character.Promotion}" Value="200">
+                                                    <Setter Property="Background" Value="Bisque"/>
+                                                </DataTrigger>
+                                                <DataTrigger Binding="{Binding Character.Promotion}" Value="1800">
+                                                    <Setter Property="Background" Value="#FFDDA0DD"/>
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </Border.Style>
                                     <Grid>
                                         <Grid.ColumnDefinitions>
-                                            <ColumnDefinition Width="Auto"/>
                                             <!-- 图标列 -->
-                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="Auto"/>
                                             <!-- 文本信息列 -->
+                                            <ColumnDefinition Width="*"/>
+                                            <!-- 新增：回合奖励列 -->
+                                            <ColumnDefinition Width="Auto"/>
                                         </Grid.ColumnDefinitions>
                                         <Grid.RowDefinitions>
                                             <RowDefinition Height="Auto"/>
@@ -158,9 +173,19 @@
                                         </Grid.RowDefinitions>
 
                                         <!-- 角色图标 (用大字代替) -->
-                                        <Border Grid.Column="0" Grid.RowSpan="2" Width="25" Height="25" BorderBrush="DarkGray" BorderThickness="1" CornerRadius="3" Margin="0,0,5,0"
-                                            Background="#FF6A5ACD">
+                                        <Border Grid.Column="0" Grid.RowSpan="2" Width="25" Height="25" BorderBrush="DarkGray" BorderThickness="1" CornerRadius="3" Margin="0,0,5,0">
                                             <!-- 默认背景色，可根据角色动态改变 -->
+                                            <Border.Style>
+                                                <Style TargetType="Border">
+                                                    <!-- 默认背景色 -->
+                                                    <Setter Property="Background" Value="#FF6A5ACD"/>
+                                                    <Style.Triggers>
+                                                        <DataTrigger Binding="{Binding Character.Promotion}" Value="1800">
+                                                            <Setter Property="Background" Value="#FF228B22"/>
+                                                        </DataTrigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </Border.Style>
                                             <TextBlock Text="{Binding Character.NickName, Converter={StaticResource FirstCharConverter}}"
                                                    Foreground="White"
                                                    FontSize="10"
@@ -176,6 +201,17 @@
                                         <!-- ATDelay -->
                                         <TextBlock Grid.Column="1" Grid.Row="1" Text="{Binding ATDelay, StringFormat=AT Delay: {0:0.##}}"
                                                FontSize="11" Foreground="DimGray"/>
+
+                                        <!-- 新增：回合奖励显示 -->
+                                        <StackPanel Grid.Column="2" Grid.RowSpan="2" VerticalAlignment="Center" Margin="5,0,0,0">
+                                            <!-- 直接绑定到 ViewModel 的 PredictedTurnNumber -->
+                                            <TextBlock FontSize="9" Foreground="Gray" HorizontalAlignment="Right"
+                                               Text="{Binding PredictedTurnNumber, StringFormat=回合: {0}}" />
+
+                                            <!-- 直接绑定到 ViewModel 的 TurnRewardSkillName -->
+                                            <TextBlock FontSize="10" Foreground="DarkGreen" FontWeight="SemiBold" HorizontalAlignment="Right"
+                                               Text="{Binding TurnRewardSkillName}" />
+                                        </StackPanel>
                                     </Grid>
                                 </Border>
                             </DataTemplate>
@@ -406,6 +442,19 @@
                             <Button Content="继续" Width="80" Click="ContinuePromptButton_Click"/>
                         </StackPanel>
                     </Border>
+
+                    <TextBlock x:Name="CountdownTextBlock"
+                        Panel.ZIndex="200"
+                        HorizontalAlignment="Right"
+                        VerticalAlignment="Top"
+                        Margin="15"
+                        FontSize="18"
+                        FontWeight="Bold"
+                        Foreground="White"
+                        Background="#88000000"
+                        Padding="8"
+                        Visibility="Collapsed"
+                        Text="0 秒后继续..." />
 
                 </Grid>
             </Border>
@@ -643,6 +692,7 @@
                             <Button x:Name="SkillButton" Content="战技/魔法" Width="100" Height="30" Margin="5" Click="ActionButton_Click" Tag="{x:Static constant:CharacterActionType.PreCastSkill}" IsEnabled="False"/>
                             <Button x:Name="UseItemButton" Content="使用物品" Width="100" Height="30" Margin="5" Click="ActionButton_Click" Tag="{x:Static constant:CharacterActionType.UseItem}" IsEnabled="False"/>
                             <Button x:Name="EndTurnButton" Content="结束回合" Width="100" Height="30" Margin="5" Click="ActionButton_Click" Tag="{x:Static constant:CharacterActionType.EndTurn}" IsEnabled="False"/>
+                            <Button x:Name="PreCastButton" Content="爆发技插队" Width="100" Height="30" Margin="5" Click="PreCastSkillButton_Click" Tag="" IsEnabled="False"/>
                         </WrapPanel>
 
                         <!-- 新增：数据统计 -->

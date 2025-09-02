@@ -1,4 +1,5 @@
 ﻿using Milimoe.FunGame.Core.Entity;
+using Milimoe.FunGame.Core.Interface.Entity;
 using Milimoe.FunGame.Core.Library.Common.Addon;
 using Milimoe.FunGame.Core.Library.Constant;
 
@@ -17,7 +18,7 @@ namespace Milimoe.FunGame.Testing.Desktop.GameMapTesting
         private readonly UserInputRequester<long> _itemSelectionRequester = new();
         private readonly UserInputRequester<bool> _continuePromptRequester = new(); // 用于“按任意键继续”提示
 
-        public void WriteLine(string str = "") => UI.AppendDebugLog(str);
+        public async Task WriteLine(string str = "") => await UI.AppendDebugLog(str);
 
         public async Task Start()
         {
@@ -25,9 +26,22 @@ namespace Milimoe.FunGame.Testing.Desktop.GameMapTesting
             await _game.StartGame(false);
         }
 
+        public async Task SetPreCastSuperSkill(Character character, Skill skill)
+        {
+            if (_game != null)
+            {
+                await _game.SetPreCastSuperSkill(character, skill);
+            }
+        }
+
+        public void SetPredictCharacter(string name, double ht)
+        {
+            UI.Invoke(() => UI.SetPredictCharacter(name, ht));
+        }
+
         public async Task<long> RequestCharacterSelection(List<Character> availableCharacters)
         {
-            WriteLine("请选择你想玩的角色。");
+            await WriteLine("请选择你想玩的角色。");
             return await _characterSelectionRequester.RequestInput(
                 (callback) => UI.Invoke(() => UI.ShowCharacterSelectionPrompt(availableCharacters, callback))
             );
@@ -35,17 +49,17 @@ namespace Milimoe.FunGame.Testing.Desktop.GameMapTesting
 
         public async Task<CharacterActionType> RequestActionType(Character character, List<Item> availableItems)
         {
-            WriteLine($"现在是 {character.NickName} 的回合，请选择行动。");
+            await WriteLine($"现在是 {character.NickName} 的回合，请选择行动。");
             return await _actionTypeRequester.RequestInput(
                 (callback) => UI.Invoke(() => UI.ShowActionButtons(character, availableItems, callback))
             );
         }
 
-        public async Task<List<Character>> RequestTargetSelection(Character actor, List<Character> potentialTargets, long maxTargets, bool canSelectSelf, bool canSelectEnemy, bool canSelectTeammate)
+        public async Task<List<Character>> RequestTargetSelection(Character actor, List<Character> potentialTargets, ISkill skill, long maxTargets, bool canSelectSelf, bool canSelectEnemy, bool canSelectTeammate)
         {
-            WriteLine($"请为 {actor.NickName} 选择目标 (最多 {maxTargets} 个)。");
+            await WriteLine($"请为 {actor.NickName} 选择目标 (最多 {maxTargets} 个)。");
             List<Character> targetIds = await _targetSelectionRequester.RequestInput(
-                (callback) => UI.Invoke(() => UI.ShowTargetSelectionUI(actor, potentialTargets, maxTargets, canSelectSelf, canSelectEnemy, canSelectTeammate, callback))
+                (callback) => UI.Invoke(() => UI.ShowTargetSelectionUI(actor, potentialTargets, skill, maxTargets, canSelectSelf, canSelectEnemy, canSelectTeammate, callback))
             ) ?? [];
             if (targetIds == null) return [];
             return [.. potentialTargets.Where(targetIds.Contains)];
@@ -53,7 +67,7 @@ namespace Milimoe.FunGame.Testing.Desktop.GameMapTesting
 
         public async Task<Skill?> RequestSkillSelection(Character character, List<Skill> availableSkills)
         {
-            WriteLine($"请为 {character.NickName} 选择一个技能。");
+            await WriteLine($"请为 {character.NickName} 选择一个技能。");
             long? skillId = await _skillSelectionRequester.RequestInput(
                 (callback) => UI.Invoke(() => UI.ShowSkillSelectionUI(character, callback))
             );
@@ -62,7 +76,7 @@ namespace Milimoe.FunGame.Testing.Desktop.GameMapTesting
 
         public async Task<Item?> RequestItemSelection(Character character, List<Item> availableItems)
         {
-            WriteLine($"请为 {character.NickName} 选择一个物品。");
+            await WriteLine($"请为 {character.NickName} 选择一个物品。");
             long? itemId = await _itemSelectionRequester.RequestInput(
                 (callback) => UI.Invoke(() => UI.ShowItemSelectionUI(character, callback))
             );
@@ -71,9 +85,18 @@ namespace Milimoe.FunGame.Testing.Desktop.GameMapTesting
 
         public async Task RequestContinuePrompt(string message)
         {
-            WriteLine(message);
+            await WriteLine(message);
             await _continuePromptRequester.RequestInput(
                 (callback) => UI.Invoke(() => UI.ShowContinuePrompt(message, callback))
+            );
+        }
+
+        public async Task RequestCountDownContinuePrompt(string message, int countdownSeconds = 2)
+        {
+            await WriteLine(message);
+            // 调用 _continuePromptRequester 的 RequestInput 方法，它会等待回调被触发
+            await _continuePromptRequester.RequestInput(
+                (callback) => UI.Invoke(() => UI.StartCountdownForContinue(countdownSeconds, callback))
             );
         }
 
@@ -112,6 +135,12 @@ namespace Milimoe.FunGame.Testing.Desktop.GameMapTesting
         public void ResolveContinuePrompt()
         {
             _continuePromptRequester.ResolveInput(true); // 任何值都可以，只要完成Task
+            UI.Invoke(() => UI.HideContinuePrompt());
+        }
+        
+        public void ResolveCountDownContinuePrompt()
+        {
+            _continuePromptRequester.ResolveInput(true);
             UI.Invoke(() => UI.HideContinuePrompt());
         }
 
@@ -153,6 +182,22 @@ namespace Milimoe.FunGame.Testing.Desktop.GameMapTesting
             UI.Invoke(() =>
             {
                 UI.CurrentGameMap = map;
+            });
+        }
+        
+        public void SetCurrentRound(int round)
+        {
+            UI.Invoke(() =>
+            {
+                UI.CurrentRound = round;
+            });
+        }
+        
+        public void SetTurnRewards(Dictionary<int, List<Skill>> rewards)
+        {
+            UI.Invoke(() =>
+            {
+                UI.TurnRewards = rewards;
             });
         }
 
