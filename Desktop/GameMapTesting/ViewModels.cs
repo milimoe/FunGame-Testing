@@ -1,9 +1,47 @@
 ﻿using System.ComponentModel;
 using System.Runtime.CompilerServices;
 using Milimoe.FunGame.Core.Entity;
+using Milimoe.FunGame.Core.Interface.Entity;
 
 namespace Milimoe.FunGame.Testing.Desktop.GameMapTesting
 {
+    public class CharacterSkillsAndItemsViewModel : INotifyPropertyChanged
+    {
+        public List<ISkill> Skills
+        {
+            get => _skills;
+            set
+            {
+                if (_skills != value)
+                {
+                    _skills = value;
+                    OnPropertyChanged();
+                }
+            }
+        }
+        private List<ISkill> _skills = [];
+        
+        public List<Item> Items
+        {
+            get => _items;
+            set
+            {
+                if (_items != value)
+                {
+                    _items = value;
+                    OnPropertyChanged();
+                }
+            }
+        }
+        private List<Item> _items = [];
+
+        public event PropertyChangedEventHandler? PropertyChanged;
+        protected virtual void OnPropertyChanged([CallerMemberName] string? propertyName = null)
+        {
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+        }
+    }
+
     public class CharacterQueueItemViewModel(CharacterQueueItem model, Func<Dictionary<int, List<Skill>>> getTurnRewards) : INotifyPropertyChanged
     {
         public CharacterQueueItem Model { get; } = model ?? throw new ArgumentNullException(nameof(model));

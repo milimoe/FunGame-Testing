@@ -69,6 +69,8 @@
         <local:SkillItemFormatterConverter x:Key="SkillItemFormatterConverter"/>
         <!-- 新增：技能/物品可用性判断转换器 -->
         <local:SkillUsabilityConverter x:Key="SkillUsabilityConverter"/>
+        <!-- 新增：通用ToString转换器 -->
+        <local:ToStringConverter x:Key="ToStringConverter"/>
 
         <!-- 新增：角色图标的样式 (圆形) -->
         <Style x:Key="CharacterIconStyle" TargetType="Border">
@@ -119,28 +121,35 @@
 
     <Grid>
         <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="0.3*"/>
             <!-- 左侧动态队列 -->
-            <ColumnDefinition Width="1*"/>
+            <ColumnDefinition Width="0.3*"/>
             <!-- 地图区域 -->
+            <ColumnDefinition Width="1*"/>
+            <!-- 右侧调试日志 -->
             <ColumnDefinition Width="0.8*"/>
-            <!-- 新增：右侧调试日志 -->
         </Grid.ColumnDefinitions>
         <Grid.RowDefinitions>
-            <RowDefinition Height="*"/>
             <!-- 地图、左侧队列、右侧日志占据的行 -->
-            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
             <!-- 底部信息界面占据的行 -->
+            <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
 
         <!-- 左侧动态更新队列面板 -->
         <Border Grid.Column="0" Grid.Row="0" BorderBrush="LightGray" BorderThickness="1" Margin="5" Padding="5">
-            <StackPanel x:Name="LeftQueuePanel" MinWidth="180" Background="#FFF0F8FF">
-                <!-- AliceBlue -->
-                <TextBlock x:Name="QueueTitle" Text="行动顺序表" Margin="0,0,0,10" FontWeight="Bold" FontSize="14"/>
+            <!-- 将 StackPanel 替换为 Grid -->
+            <Grid x:Name="LeftQueuePanelGrid" MinWidth="180" Background="#FFF0F8FF">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <!-- 标题占据所需高度 -->
+                    <RowDefinition Height="*"/>
+                    <!-- ScrollViewer 占据剩余所有高度 -->
+                </Grid.RowDefinitions>
+
+                <TextBlock Grid.Row="0" x:Name="QueueTitle" Text="行动顺序表" Margin="0,0,0,10" FontWeight="Bold" FontSize="14"/>
 
                 <!-- 动态内容将在此处添加 -->
-                <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" Height="Auto">
+                <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
                     <ItemsControl x:Name="CharacterQueueItemsControl" ItemsSource="{Binding CharacterQueueDisplayItems, RelativeSource={RelativeSource AncestorType=UserControl}}">
                         <ItemsControl.ItemTemplate>
                             <DataTemplate>
@@ -149,8 +158,15 @@
                                         <Style TargetType="Border">
                                             <Setter Property="BorderBrush" Value="LightGray"/>
                                             <Style.Triggers>
+                                                <!-- 200：自己，300：队友，400：敌人，1800：下轮预测 -->
                                                 <DataTrigger Binding="{Binding Character.Promotion}" Value="200">
                                                     <Setter Property="Background" Value="Bisque"/>
+                                                </DataTrigger>
+                                                <DataTrigger Binding="{Binding Character.Promotion}" Value="300">
+                                                    <Setter Property="Background" Value="LightCyan"/>
+                                                </DataTrigger>
+                                                <DataTrigger Binding="{Binding Character.Promotion}" Value="400">
+                                                    <Setter Property="Background" Value="MistyRose"/>
                                                 </DataTrigger>
                                                 <DataTrigger Binding="{Binding Character.Promotion}" Value="1800">
                                                     <Setter Property="Background" Value="#FFDDA0DD"/>
@@ -178,39 +194,45 @@
                                             <Border.Style>
                                                 <Style TargetType="Border">
                                                     <!-- 默认背景色 -->
-                                                    <Setter Property="Background" Value="#FF6A5ACD"/>
+                                                    <Setter Property="Background" Value="Salmon"/>
                                                     <Style.Triggers>
+                                                        <DataTrigger Binding="{Binding Character.Promotion}" Value="200">
+                                                            <Setter Property="Background" Value="BurlyWood"/>
+                                                        </DataTrigger>
+                                                        <DataTrigger Binding="{Binding Character.Promotion}" Value="300">
+                                                            <Setter Property="Background" Value="SkyBlue"/>
+                                                        </DataTrigger>
                                                         <DataTrigger Binding="{Binding Character.Promotion}" Value="1800">
-                                                            <Setter Property="Background" Value="#FF228B22"/>
+                                                            <Setter Property="Background" Value="Orchid"/>
                                                         </DataTrigger>
                                                     </Style.Triggers>
                                                 </Style>
                                             </Border.Style>
                                             <TextBlock Text="{Binding Character.NickName, Converter={StaticResource FirstCharConverter}}"
-                                                   Foreground="White"
-                                                   FontSize="10"
-                                                   FontWeight="Bold"
-                                                   HorizontalAlignment="Center"
-                                                   VerticalAlignment="Center"/>
+                                               Foreground="White"
+                                               FontSize="10"
+                                               FontWeight="Bold"
+                                               HorizontalAlignment="Center"
+                                               VerticalAlignment="Center"/>
                                         </Border>
 
                                         <!-- 角色名称和等级 -->
                                         <TextBlock Grid.Column="1" Grid.Row="0" Text="{Binding Character, Converter={StaticResource CharacterToStringWithLevelConverter}}"
-                                               FontWeight="SemiBold" FontSize="10" Margin="0,0,0,2"/>
+                                           FontWeight="SemiBold" FontSize="10" Margin="0,0,0,2"/>
 
                                         <!-- ATDelay -->
                                         <TextBlock Grid.Column="1" Grid.Row="1" Text="{Binding ATDelay, StringFormat=AT Delay: {0:0.##}}"
-                                               FontSize="11" Foreground="DimGray"/>
+                                           FontSize="11" Foreground="DimGray"/>
 
                                         <!-- 新增：回合奖励显示 -->
                                         <StackPanel Grid.Column="2" Grid.RowSpan="2" VerticalAlignment="Center" Margin="5,0,0,0">
                                             <!-- 直接绑定到 ViewModel 的 PredictedTurnNumber -->
                                             <TextBlock FontSize="9" Foreground="Gray" HorizontalAlignment="Right"
-                                               Text="{Binding PredictedTurnNumber, StringFormat=回合: {0}}" />
+                                           Text="{Binding PredictedTurnNumber, StringFormat=回合: {0}}" />
 
                                             <!-- 直接绑定到 ViewModel 的 TurnRewardSkillName -->
                                             <TextBlock FontSize="10" Foreground="DarkGreen" FontWeight="SemiBold" HorizontalAlignment="Right"
-                                               Text="{Binding TurnRewardSkillName}" />
+                                           Text="{Binding TurnRewardSkillName}" />
                                         </StackPanel>
                                     </Grid>
                                 </Border>
@@ -218,12 +240,12 @@
                         </ItemsControl.ItemTemplate>
                     </ItemsControl>
                 </ScrollViewer>
-            </StackPanel>
+            </Grid>
         </Border>
 
         <!-- 地图区域 (使用ScrollViewer支持大地图滚动) -->
         <ScrollViewer Grid.Column="1" Grid.Row="0" HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto"
-                      Background="#FFE0FFFF">
+                  Background="#FFE0FFFF">
             <Border BorderBrush="DarkGray" BorderThickness="1" Margin="5">
                 <!-- 新增一个Grid来容纳Canvas和调试文本框，实现叠加效果 -->
                 <Grid>
@@ -235,18 +257,18 @@
 
                     <!-- 格子信息面板，叠加在Canvas之上，位于左侧 -->
                     <Border x:Name="GridInfoPanel"
-                            Panel.ZIndex="100"
-                            HorizontalAlignment="Left"
-                            VerticalAlignment="Top"
-                            Margin="10"
-                            Width="250"
-                            MaxHeight="300"
-                            Background="#CCFFFFFF"
-                            BorderBrush="DarkGray"
-                            BorderThickness="1"
-                            CornerRadius="5"
-                            Padding="10"
-                            Visibility="Collapsed">
+                        Panel.ZIndex="100"
+                        HorizontalAlignment="Left"
+                        VerticalAlignment="Top"
+                        Margin="10"
+                        Width="250"
+                        MaxHeight="300"
+                        Background="#CCFFFFFF"
+                        BorderBrush="DarkGray"
+                        BorderThickness="1"
+                        CornerRadius="5"
+                        Padding="10"
+                        Visibility="Collapsed">
                         <!-- 初始状态为隐藏 -->
                         <StackPanel>
                             <TextBlock Text="格子信息" FontWeight="Bold" FontSize="14" Margin="0,0,0,5"/>
@@ -256,15 +278,42 @@
                                     <TextBlock x:Name="GridCoordTextBlock" Text="坐标: " Margin="0,2"/>
                                     <TextBlock x:Name="GridColorTextBlock" Text="颜色: " Margin="0,2"/>
                                     <!-- 新增：格子上的角色列表 -->
-                                    <TextBlock Text="格子上的角色:" FontWeight="SemiBold" Margin="0,5,0,2"/>
+                                    <TextBlock Text="格子上的角色：" FontWeight="SemiBold" Margin="0,5,0,2"/>
                                     <ItemsControl x:Name="GridCharactersInfoItemsControl">
                                         <ItemsControl.ItemTemplate>
                                             <DataTemplate>
                                                 <Border BorderBrush="LightGray" BorderThickness="0,0,0,1" Padding="2" Margin="0,2">
-                                                    <StackPanel Orientation="Horizontal">
-                                                        <TextBlock Text="{Binding NickName}" FontWeight="SemiBold" Margin="0,0,5,0"/>
+                                                    <StackPanel>
+                                                        <!--<TextBlock Text="{Binding NickName}" FontWeight="SemiBold" Margin="0,0,5,0"/>
                                                         <TextBlock Text="{Binding HP, StringFormat=HP:{0:0.##}}"/>
-                                                        <TextBlock Text="{Binding MaxHP, StringFormat=/{0:0.##}}" Margin="0,0,5,0"/>
+                                                        <TextBlock Text="{Binding MaxHP, StringFormat=/{0:0.##}}" Margin="0,0,5,0"/>-->
+
+                                                        <!-- 角色名称 -->
+                                                        <TextBlock Text="{Binding NickName}" FontWeight="SemiBold" Margin="0,0,5,0" FontSize="11"/>
+
+                                                        <!-- HP 条 -->
+                                                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="0,1">
+                                                            <TextBlock Text="HP:" VerticalAlignment="Center" Width="25" FontSize="9"/>
+                                                            <ProgressBar Value="{Binding HP}" Maximum="{Binding MaxHP}" Height="8" Width="100" Background="LightGray" BorderBrush="Gray" BorderThickness="0.5" Foreground="Green"/>
+                                                            <TextBlock Text="{Binding HP, StringFormat={}{0:0.##}}" Margin="5,0,0,0" VerticalAlignment="Center" FontSize="9"/>
+                                                            <TextBlock Text="{Binding MaxHP, StringFormat=/{0:0.##}}" VerticalAlignment="Center" FontSize="9"/>
+                                                        </StackPanel>
+
+                                                        <!-- MP 条 -->
+                                                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="0,1">
+                                                            <TextBlock Text="MP:" VerticalAlignment="Center" Width="25" FontSize="9"/>
+                                                            <ProgressBar Value="{Binding MP}" Maximum="{Binding MaxMP}" Height="8" Width="100" Background="LightGray" BorderBrush="Gray" BorderThickness="0.5" Foreground="Blue"/>
+                                                            <TextBlock Text="{Binding MP, StringFormat={}{0:0.##}}" Margin="5,0,0,0" VerticalAlignment="Center" FontSize="9"/>
+                                                            <TextBlock Text="{Binding MaxMP, StringFormat=/{0:0.##}}" VerticalAlignment="Center" FontSize="9"/>
+                                                        </StackPanel>
+
+                                                        <!-- EP 条 -->
+                                                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="0,1">
+                                                            <TextBlock Text="EP:" VerticalAlignment="Center" Width="25" FontSize="9"/>
+                                                            <ProgressBar Value="{Binding EP}" Maximum="{Binding GameplayEquilibriumConstant.MaxEP}" Height="8" Width="100" Background="LightGray" BorderBrush="Gray" BorderThickness="0.5" Foreground="Orange"/>
+                                                            <TextBlock Text="{Binding EP, StringFormat={}{0:0.##}}" Margin="5,0,0,0" VerticalAlignment="Center" FontSize="9"/>
+                                                            <TextBlock Text="{Binding GameplayEquilibriumConstant.MaxEP, StringFormat=/{0:0.##}}" VerticalAlignment="Center" FontSize="9"/>
+                                                        </StackPanel>
                                                     </StackPanel>
                                                 </Border>
                                             </DataTemplate>
@@ -281,17 +330,17 @@
 
                     <!-- 新增：角色选择面板 (Overlay) -->
                     <Border x:Name="CharacterSelectionOverlay"
-                            Panel.ZIndex="200"
-                            HorizontalAlignment="Center"
-                            VerticalAlignment="Center"
-                            Width="400"
-                            MaxHeight="600"
-                            Background="#DDFFFFFF"
-                            BorderBrush="DarkBlue"
-                            BorderThickness="2"
-                            CornerRadius="10"
-                            Padding="20"
-                            Visibility="Collapsed">
+                        Panel.ZIndex="200"
+                        HorizontalAlignment="Center"
+                        VerticalAlignment="Center"
+                        Width="400"
+                        MaxHeight="600"
+                        Background="#DDFFFFFF"
+                        BorderBrush="DarkBlue"
+                        BorderThickness="2"
+                        CornerRadius="10"
+                        Padding="20"
+                        Visibility="Collapsed">
                         <StackPanel>
                             <TextBlock Text="请选择你的角色" FontWeight="Bold" FontSize="16" Margin="0,0,0,10" HorizontalAlignment="Center"/>
                             <ScrollViewer VerticalScrollBarVisibility="Auto" MaxHeight="300">
@@ -299,9 +348,9 @@
                                     <ItemsControl.ItemTemplate>
                                         <DataTemplate>
                                             <Border Style="{StaticResource SelectionItemStyle}"
-                                                    Tag="{Binding}"
-                                                    MouseLeftButtonDown="CharacterSelectionItem_MouseLeftButtonDown"
-                                                    MouseEnter="CharacterSelectionItem_MouseEnter">
+                                                Tag="{Binding}"
+                                                MouseLeftButtonDown="CharacterSelectionItem_MouseLeftButtonDown"
+                                                MouseEnter="CharacterSelectionItem_MouseEnter">
                                                 <TextBlock Text="{Binding NickName}" FontSize="14" FontWeight="SemiBold"/>
                                             </Border>
                                         </DataTemplate>
@@ -313,14 +362,14 @@
                             <ScrollViewer VerticalScrollBarVisibility="Auto" MaxHeight="200">
                                 <!-- 限制详情区域高度 -->
                                 <RichTextBox x:Name="CharacterDetailsRichTextBox"
-                                             IsReadOnly="True"
-                                             BorderThickness="0"
-                                             Background="Transparent"
-                                             Foreground="DimGray"
-                                             FontSize="11"
-                                             AcceptsReturn="True"
-                                             VerticalScrollBarVisibility="Disabled"
-                                             HorizontalScrollBarVisibility="Disabled">
+                                         IsReadOnly="True"
+                                         BorderThickness="0"
+                                         Background="Transparent"
+                                         Foreground="DimGray"
+                                         FontSize="11"
+                                         AcceptsReturn="True"
+                                         VerticalScrollBarVisibility="Disabled"
+                                         HorizontalScrollBarVisibility="Disabled">
                                     <FlowDocument>
                                         <Paragraph Margin="0">将鼠标悬停在角色名称上以查看详情。</Paragraph>
                                     </FlowDocument>
@@ -331,17 +380,17 @@
 
                     <!-- 新增：技能/物品选择面板 (Overlay) -->
                     <Border x:Name="SkillItemSelectionOverlay"
-                            Panel.ZIndex="200"
-                            HorizontalAlignment="Center"
-                            VerticalAlignment="Center"
-                            Width="400"
-                            MaxHeight="600"
-                            Background="#DDFFFFFF"
-                            BorderBrush="DarkGreen"
-                            BorderThickness="2"
-                            CornerRadius="10"
-                            Padding="20"
-                            Visibility="Collapsed">
+                        Panel.ZIndex="200"
+                        HorizontalAlignment="Center"
+                        VerticalAlignment="Center"
+                        Width="400"
+                        MaxHeight="600"
+                        Background="#DDFFFFFF"
+                        BorderBrush="DarkGreen"
+                        BorderThickness="2"
+                        CornerRadius="10"
+                        Padding="20"
+                        Visibility="Collapsed">
                         <StackPanel>
                             <TextBlock x:Name="SkillItemSelectionTitle" Text="请选择技能/物品" FontWeight="Bold" FontSize="16" Margin="0,0,0,10" HorizontalAlignment="Center"/>
                             <ScrollViewer VerticalScrollBarVisibility="Auto" MaxHeight="300">
@@ -349,9 +398,9 @@
                                     <ItemsControl.ItemTemplate>
                                         <DataTemplate>
                                             <Border Style="{StaticResource SelectionItemStyle}"
-                                                    Tag="{Binding}"
-                                                    MouseLeftButtonDown="SkillItemSelectionItem_MouseLeftButtonDown"
-                                                    MouseEnter="SkillItemSelectionItem_MouseEnter">
+                                                Tag="{Binding}"
+                                                MouseLeftButtonDown="SkillItemSelectionItem_MouseLeftButtonDown"
+                                                MouseEnter="SkillItemSelectionItem_MouseEnter">
                                                 <Border.IsEnabled>
                                                     <MultiBinding Converter="{StaticResource SkillUsabilityConverter}">
                                                         <Binding Path="."/>
@@ -369,14 +418,14 @@
                             <ScrollViewer VerticalScrollBarVisibility="Auto" MaxHeight="200">
                                 <!-- 限制详情区域高度 -->
                                 <RichTextBox x:Name="SkillItemDetailsRichTextBox"
-                                             IsReadOnly="True"
-                                             BorderThickness="0"
-                                             Background="Transparent"
-                                             Foreground="DimGray"
-                                             FontSize="11"
-                                             AcceptsReturn="True"
-                                             VerticalScrollBarVisibility="Disabled"
-                                             HorizontalScrollBarVisibility="Disabled">
+                                         IsReadOnly="True"
+                                         BorderThickness="0"
+                                         Background="Transparent"
+                                         Foreground="DimGray"
+                                         FontSize="11"
+                                         AcceptsReturn="True"
+                                         VerticalScrollBarVisibility="Disabled"
+                                         HorizontalScrollBarVisibility="Disabled">
                                     <FlowDocument>
                                         <Paragraph Margin="0">将鼠标悬停在名称上以查看详情。</Paragraph>
                                     </FlowDocument>
@@ -388,18 +437,18 @@
 
                     <!-- 新增：目标选择确认面板 (Overlay) -->
                     <Border x:Name="TargetSelectionOverlay"
-                            Panel.ZIndex="200"
-                            HorizontalAlignment="Right"
-                            VerticalAlignment="Top"
-                            Margin="10"
-                            Width="250"
-                            MaxHeight="300"
-                            Background="#CCFFFFFF"
-                            BorderBrush="DarkRed"
-                            BorderThickness="1"
-                            CornerRadius="5"
-                            Padding="10"
-                            Visibility="Collapsed">
+                        Panel.ZIndex="200"
+                        HorizontalAlignment="Right"
+                        VerticalAlignment="Top"
+                        Margin="10"
+                        Width="250"
+                        MaxHeight="300"
+                        Background="#CCFFFFFF"
+                        BorderBrush="DarkRed"
+                        BorderThickness="1"
+                        CornerRadius="5"
+                        Padding="10"
+                        Visibility="Collapsed">
                         <StackPanel>
                             <TextBlock x:Name="TargetSelectionTitle" Text="选择目标" FontWeight="Bold" FontSize="14" Margin="0,0,0,5"/>
                             <ScrollViewer VerticalScrollBarVisibility="Auto" MaxHeight="200">
@@ -445,7 +494,7 @@
 
                                                     <!-- 移除按钮 -->
                                                     <Button Grid.Column="1" Content="X" Margin="5,0,0,0" Tag="{Binding Id}" Click="RemoveTarget_Click"
-                                                            Style="{StaticResource {x:Static ToolBar.ButtonStyleKey}}" VerticalAlignment="Center"/>
+                                                        Style="{StaticResource {x:Static ToolBar.ButtonStyleKey}}" VerticalAlignment="Center"/>
                                                 </Grid>
                                             </Border>
                                         </DataTemplate>
@@ -461,17 +510,17 @@
 
                     <!-- 新增：继续提示面板 (Overlay) -->
                     <Border x:Name="ContinuePromptOverlay"
-                            Panel.ZIndex="200"
-                            HorizontalAlignment="Center"
-                            VerticalAlignment="Center"
-                            Width="300"
-                            Height="150"
-                            Background="#DDFFFFFF"
-                            BorderBrush="DarkOrange"
-                            BorderThickness="2"
-                            CornerRadius="10"
-                            Padding="20"
-                            Visibility="Collapsed">
+                        Panel.ZIndex="200"
+                        HorizontalAlignment="Center"
+                        VerticalAlignment="Center"
+                        Width="300"
+                        Height="150"
+                        Background="#DDFFFFFF"
+                        BorderBrush="DarkOrange"
+                        BorderThickness="2"
+                        CornerRadius="10"
+                        Padding="20"
+                        Visibility="Collapsed">
                         <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
                             <TextBlock x:Name="ContinuePromptTextBlock" Text="请点击继续..." TextWrapping="Wrap" HorizontalAlignment="Center" FontSize="14" Margin="0,0,0,15"/>
                             <Button Content="继续" Width="80" Click="ContinuePromptButton_Click"/>
@@ -479,17 +528,17 @@
                     </Border>
 
                     <TextBlock x:Name="CountdownTextBlock"
-                        Panel.ZIndex="200"
-                        HorizontalAlignment="Right"
-                        VerticalAlignment="Top"
-                        Margin="15"
-                        FontSize="18"
-                        FontWeight="Bold"
-                        Foreground="White"
-                        Background="#88000000"
-                        Padding="8"
-                        Visibility="Collapsed"
-                        Text="0 秒后继续..." />
+                    Panel.ZIndex="200"
+                    HorizontalAlignment="Right"
+                    VerticalAlignment="Top"
+                    Margin="15"
+                    FontSize="18"
+                    FontWeight="Bold"
+                    Foreground="White"
+                    Background="#88000000"
+                    Padding="8"
+                    Visibility="Collapsed"
+                    Text="0 秒后继续..." />
 
                 </Grid>
             </Border>
@@ -504,18 +553,18 @@
                 </Grid.RowDefinitions>
                 <TextBlock Grid.Row="0" Text="调试日志" Margin="0,0,0,10" FontWeight="Bold" FontSize="14"/>
                 <ScrollViewer Grid.Row="1" x:Name="DebugLogScrollViewer"
-                              VerticalScrollBarVisibility="Auto"
-                              HorizontalScrollBarVisibility="Disabled">
+                          VerticalScrollBarVisibility="Auto"
+                          HorizontalScrollBarVisibility="Disabled">
                     <!-- 修改：将 TextBlock 替换为 RichTextBox -->
                     <RichTextBox x:Name="DebugLogRichTextBox"
-                        IsReadOnly="True"
-                        BorderThickness="0"
-                        Background="Transparent"
-                        Foreground="DimGray"
-                        FontSize="11"
-                        AcceptsReturn="True"
-                        VerticalScrollBarVisibility="Disabled"
-                        HorizontalScrollBarVisibility="Disabled">
+                    IsReadOnly="True"
+                    BorderThickness="0"
+                    Background="Transparent"
+                    Foreground="DimGray"
+                    FontSize="11"
+                    AcceptsReturn="True"
+                    VerticalScrollBarVisibility="Disabled"
+                    HorizontalScrollBarVisibility="Disabled">
                         <FlowDocument>
                             <Paragraph Margin="0">调试日志:</Paragraph>
                         </FlowDocument>
@@ -559,16 +608,16 @@
 
                                 <!-- 头像框 - 显示字符 -->
                                 <Border x:Name="CharacterAvatarBorder" Grid.RowSpan="4" Grid.Column="0" Width="60" Height="60" BorderBrush="DarkGray" BorderThickness="1" CornerRadius="5" Margin="0,0,10,0"
-                                        Background="#FF6A5ACD">
+                                    Background="#FF6A5ACD">
                                     <!-- 默认背景色，可以根据角色动态改变 -->
                                     <Grid>
                                         <TextBlock x:Name="CharacterAvatarTextBlock"
-                                                   Text="?"
-                                                   Foreground="White"
-                                                   FontSize="28"
-                                                   FontWeight="Bold"
-                                                   HorizontalAlignment="Center"
-                                                   VerticalAlignment="Center"/>
+                                               Text="?"
+                                               Foreground="White"
+                                               FontSize="28"
+                                               FontWeight="Bold"
+                                               HorizontalAlignment="Center"
+                                               VerticalAlignment="Center"/>
                                     </Grid>
                                 </Border>
 
@@ -586,7 +635,7 @@
                                         <Rectangle x:Name="HpFillRectangle" HorizontalAlignment="Left" Fill="Green" Height="10" RadiusX="2" RadiusY="2"/>
                                         <!-- 护盾进度，叠加在HP之上 -->
                                         <Rectangle x:Name="ShieldFillRectangle" HorizontalAlignment="Left" Fill="Transparent" Height="10" RadiusX="2" RadiusY="2"
-                                            Visibility="Collapsed" Panel.ZIndex="1"/>
+                                        Visibility="Collapsed" Panel.ZIndex="1"/>
                                     </Grid>
                                     <TextBlock x:Name="HpValueTextBlock" Text="0/0" Margin="5,0,0,0" VerticalAlignment="Center" FontSize="10"/>
                                 </StackPanel>
@@ -652,7 +701,7 @@
 
                 <!-- 新增中间部分：装备和状态 -->
                 <Border Grid.Column="1" BorderBrush="LightGray" BorderThickness="0,0,1,0" Margin="0,0,5,0" Padding="5"
-                        x:Name="EquipStatusInfoBorder" MouseLeftButtonDown="EquipStatusInfoBorder_MouseLeftButtonDown">
+                    x:Name="EquipStatusInfoBorder" MouseLeftButtonDown="EquipStatusInfoBorder_MouseLeftButtonDown">
                     <StackPanel Orientation="Vertical">
                         <!-- 装备栏 -->
                         <TextBlock Text="装备" FontWeight="Bold" FontSize="14" Margin="0,0,0,5"/>
@@ -695,18 +744,18 @@
                         <Border BorderBrush="LightGray" BorderThickness="0,1,0,0" Margin="0,10,0,0" Padding="0,10,0,0">
                             <StackPanel>
                                 <TextBlock Text="详情描述" FontWeight="Bold" FontSize="14" Margin="0,0,0,5"/>
-                                <ScrollViewer VerticalScrollBarVisibility="Auto" MaxHeight="80">
+                                <ScrollViewer VerticalScrollBarVisibility="Auto" Height="140">
                                     <RichTextBox x:Name="DescriptionRichTextBox"
-                                             IsReadOnly="True"
-                                             BorderThickness="0"
-                                             Background="Transparent"
-                                             Foreground="DimGray"
-                                             FontSize="11"
-                                             AcceptsReturn="True"
-                                             VerticalScrollBarVisibility="Disabled"
-                                             HorizontalScrollBarVisibility="Disabled">
+                                         IsReadOnly="True"
+                                         BorderThickness="0"
+                                         Background="Transparent"
+                                         Foreground="DimGray"
+                                         FontSize="11"
+                                         AcceptsReturn="True"
+                                         VerticalScrollBarVisibility="Disabled"
+                                         HorizontalScrollBarVisibility="Disabled">
                                         <FlowDocument>
-                                            <Paragraph Margin="0">点击装备或状态图标查看详情。</Paragraph>
+                                            <Paragraph Margin="0">点击装备、状态、技能或物品的图标以查看详情。</Paragraph>
                                         </FlowDocument>
                                     </RichTextBox>
                                 </ScrollViewer>
@@ -715,36 +764,139 @@
                     </StackPanel>
                 </Border>
 
-                <!-- 右半部分：操作按钮 -->
+                <!-- 右半部分：操作按钮 和 数据统计 (Grid.Column="2") -->
                 <Border Grid.Column="2" Padding="5">
-                    <StackPanel Orientation="Vertical">
-                        <TextBlock Text="操作" FontWeight="Bold" FontSize="14" Margin="0,0,0,10"/>
-                        <WrapPanel Orientation="Horizontal" HorizontalAlignment="Center">
-                            <!-- IsEnabled 默认设置为 False，由代码控制 -->
-                            <!-- Tag 属性用于在 Click 事件中识别是哪个动作 -->
-                            <Button x:Name="MoveButton" Content="移动" Width="100" Height="30" Margin="5" Click="ActionButton_Click" Tag="{x:Static constant:CharacterActionType.Move}" IsEnabled="False"/>
-                            <Button x:Name="AttackButton" Content="普通攻击" Width="100" Height="30" Margin="5" Click="ActionButton_Click" Tag="{x:Static constant:CharacterActionType.NormalAttack}" IsEnabled="False"/>
-                            <Button x:Name="SkillButton" Content="战技/魔法" Width="100" Height="30" Margin="5" Click="ActionButton_Click" Tag="{x:Static constant:CharacterActionType.PreCastSkill}" IsEnabled="False"/>
-                            <Button x:Name="UseItemButton" Content="使用物品" Width="100" Height="30" Margin="5" Click="ActionButton_Click" Tag="{x:Static constant:CharacterActionType.UseItem}" IsEnabled="False"/>
-                            <Button x:Name="EndTurnButton" Content="结束回合" Width="100" Height="30" Margin="5" Click="ActionButton_Click" Tag="{x:Static constant:CharacterActionType.EndTurn}" IsEnabled="False"/>
-                            <Button x:Name="PreCastButton" Content="爆发技插队" Width="100" Height="30" Margin="5" Click="PreCastSkillButton_Click" Tag="" IsEnabled="False"/>
-                        </WrapPanel>
+                    <!-- 将原有的StackPanel替换为Grid，以容纳新的技能/物品区域 -->
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <!-- 新增：技能和物品图标区域 -->
+                            <RowDefinition Height="*"/>
+                            <!-- 原有的操作按钮和数据统计 -->
+                        </Grid.RowDefinitions>
 
-                        <!-- 新增：数据统计 -->
-                        <Border BorderBrush="LightGray" BorderThickness="0,1,0,0" Margin="0,10,0,0" Padding="0,10,0,0">
-                            <StackPanel>
-                                <TextBlock Text="数据统计" FontWeight="Bold" FontSize="14" Margin="0,0,0,5"/>
-                                <TextBlock x:Name="StatsRatingKillsAssistsDeathsTextBlock" Style="{StaticResource CharacterAttributeTextStyle}"/>
-                                <TextBlock x:Name="StatsLiveTimeRoundTurnTextBlock" Style="{StaticResource CharacterAttributeTextStyle}"/>
-                                <TextBlock x:Name="StatsControlHealShieldTextBlock" Style="{StaticResource CharacterAttributeTextStyle}"/>
-                                <TextBlock x:Name="StatsTotalDamageTextBlock" Style="{StaticResource CharacterAttributeTextStyle}"/>
-                                <TextBlock x:Name="StatsTotalTakenDamageTextBlock" Style="{StaticResource CharacterAttributeTextStyle}"/>
-                                <TextBlock x:Name="StatsTrueDamageTextBlock" Style="{StaticResource CharacterAttributeTextStyle}" Visibility="Collapsed"/>
-                                <!-- 初始隐藏，有真实伤害时显示 -->
-                                <TextBlock x:Name="StatsDamagePerSecondTurnTextBlock" Style="{StaticResource CharacterAttributeTextStyle}"/>
-                            </StackPanel>
+                        <!-- 新增：技能和物品图标区域 (Grid.Row="0") -->
+                        <Border Grid.Row="0" BorderBrush="LightGray" BorderThickness="0,0,0,1" Margin="0,0,0,10" Padding="0,0,0,10">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <!-- 技能列 -->
+                                    <ColumnDefinition Width="*"/>
+                                    <!-- 物品列 -->
+                                </Grid.ColumnDefinitions>
+
+                                <!-- 技能图标列表 -->
+                                <StackPanel Grid.Column="0" Margin="0,0,5,0">
+                                    <TextBlock Text="技能" FontWeight="Bold" FontSize="12" Margin="0,0,0,5"/>
+                                    <ScrollViewer VerticalScrollBarVisibility="Auto" MaxHeight="80">
+                                        <ItemsControl x:Name="CharacterSkillsPanel" ItemsSource="{Binding CharacterSkillsAndItems.Skills, RelativeSource={RelativeSource AncestorType=UserControl}}">
+                                            <ItemsControl.ItemsPanel>
+                                                <ItemsPanelTemplate>
+                                                    <WrapPanel/>
+                                                </ItemsPanelTemplate>
+                                            </ItemsControl.ItemsPanel>
+                                            <ItemsControl.ItemTemplate>
+                                                <DataTemplate>
+                                                    <Border Tag="{Binding}"
+                                                            ToolTip="{Binding Converter={StaticResource ToStringConverter}}"
+                                                            MouseLeftButtonDown="SkillIcon_MouseLeftButtonDown">
+                                                        <Border.Style>
+                                                            <Style TargetType="Border" BasedOn="{StaticResource StatusIconStyle}">
+                                                                <Style.Triggers>
+                                                                    <DataTrigger Value="False">
+                                                                        <DataTrigger.Binding>
+                                                                            <MultiBinding Converter="{StaticResource SkillUsabilityConverter}">
+                                                                                <Binding Path="."/>
+                                                                                <Binding ElementName="GameMapViewerControl" Path="CurrentCharacter"/>
+                                                                            </MultiBinding>
+                                                                        </DataTrigger.Binding>
+                                                                        <Setter Property="Opacity" Value="0.5"/>
+                                                                        <Setter Property="Background" Value="LightGray"/>
+                                                                        <Setter Property="BorderBrush" Value="DimGray"/>
+                                                                        <Setter Property="TextElement.Foreground" Value="DimGray"/>
+                                                                    </DataTrigger>
+                                                                </Style.Triggers>
+                                                            </Style>
+                                                        </Border.Style>
+                                                        <TextBlock Text="{Binding Name, Converter={StaticResource FirstCharConverter}}"
+                                                                   Style="{StaticResource StatusIconTextStyle}"/>
+                                                    </Border>
+                                                </DataTemplate>
+                                            </ItemsControl.ItemTemplate>
+                                        </ItemsControl>
+                                    </ScrollViewer>
+                                </StackPanel>
+
+                                <!-- 物品图标列表 -->
+                                <StackPanel Grid.Column="1" Margin="5,0,0,0">
+                                    <TextBlock Text="物品" FontWeight="Bold" FontSize="12" Margin="0,0,0,5"/>
+                                    <ScrollViewer VerticalScrollBarVisibility="Auto" MaxHeight="80">
+                                        <ItemsControl x:Name="CharacterItemsPanel" ItemsSource="{Binding CharacterSkillsAndItems.Items, RelativeSource={RelativeSource AncestorType=UserControl}}">
+                                            <ItemsControl.ItemsPanel>
+                                                <ItemsPanelTemplate>
+                                                    <WrapPanel/>
+                                                </ItemsPanelTemplate>
+                                            </ItemsControl.ItemsPanel>
+                                            <ItemsControl.ItemTemplate>
+                                                <DataTemplate>
+                                                    <Border Tag="{Binding}"
+                                                            ToolTip="{Binding Converter={StaticResource ToStringConverter}}"
+                                                            MouseLeftButtonDown="ItemIcon_MouseLeftButtonDown">
+                                                        <Border.Style>
+                                                            <Style TargetType="Border" BasedOn="{StaticResource StatusIconStyle}">
+                                                                <Style.Triggers>
+                                                                    <DataTrigger Binding="{Binding Enable}" Value="False">
+                                                                        <Setter Property="Opacity" Value="0.5"/>
+                                                                        <Setter Property="Background" Value="LightGray"/>
+                                                                        <Setter Property="BorderBrush" Value="DimGray"/>
+                                                                        <Setter Property="TextElement.Foreground" Value="DimGray"/>
+                                                                    </DataTrigger>
+                                                                </Style.Triggers>
+                                                            </Style>
+                                                        </Border.Style>
+                                                        <TextBlock Text="{Binding Name, Converter={StaticResource FirstCharConverter}}"
+                                                                   Style="{StaticResource StatusIconTextStyle}"/>
+                                                    </Border>
+                                                </DataTemplate>
+                                            </ItemsControl.ItemTemplate>
+                                        </ItemsControl>
+                                    </ScrollViewer>
+                                </StackPanel>
+                            </Grid>
                         </Border>
-                    </StackPanel>
+
+                        <!-- 原有的操作按钮和数据统计 (现在在 Grid.Row="1") -->
+                        <StackPanel Grid.Row="1" Orientation="Vertical">
+                            <TextBlock Text="操作" FontWeight="Bold" FontSize="14" Margin="0,0,0,10"/>
+                            <WrapPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                                <!-- IsEnabled 默认设置为 False，由代码控制 -->
+                                <!-- Tag 属性用于在 Click 事件中识别是哪个动作 -->
+                                <Button x:Name="MoveButton" Content="移动" Width="100" Height="30" Margin="5" Click="ActionButton_Click" Tag="{x:Static constant:CharacterActionType.Move}" IsEnabled="False"/>
+                                <Button x:Name="AttackButton" Content="普通攻击" Width="100" Height="30" Margin="5" Click="ActionButton_Click" Tag="{x:Static constant:CharacterActionType.NormalAttack}" IsEnabled="False"/>
+                                <Button x:Name="SkillButton" Content="战技/魔法" Width="100" Height="30" Margin="5" Click="ActionButton_Click" Tag="{x:Static constant:CharacterActionType.PreCastSkill}" IsEnabled="False"/>
+                                <Button x:Name="UseItemButton" Content="使用物品" Width="100" Height="30" Margin="5" Click="ActionButton_Click" Tag="{x:Static constant:CharacterActionType.UseItem}" IsEnabled="False"/>
+                                <Button x:Name="EndTurnButton" Content="结束回合" Width="100" Height="30" Margin="5" Click="ActionButton_Click" Tag="{x:Static constant:CharacterActionType.EndTurn}" IsEnabled="False"/>
+                                <Button x:Name="PreCastButton" Content="爆发技插队" Width="100" Height="30" Margin="5" Click="PreCastSkillButton_Click" Tag="" IsEnabled="False"/>
+                                <Button x:Name="AutoModeButton" Content="自动模式：关" Width="100" Height="30" Margin="5" Click="AutoModeButton_Click" Tag="" IsEnabled="True"/>
+                                <Button x:Name="FastModeButton" Content="快速模式：关" Width="100" Height="30" Margin="5" Click="FastModeButton_Click" Tag="" IsEnabled="True"/>
+                            </WrapPanel>
+
+                            <!-- 新增：数据统计 -->
+                            <Border BorderBrush="LightGray" BorderThickness="0,1,0,0" Margin="0,10,0,0" Padding="0,10,0,0">
+                                <StackPanel>
+                                    <TextBlock Text="数据统计" FontWeight="Bold" FontSize="14" Margin="0,0,0,5"/>
+                                    <TextBlock x:Name="StatsRatingKillsAssistsDeathsTextBlock" Style="{StaticResource CharacterAttributeTextStyle}"/>
+                                    <TextBlock x:Name="StatsLiveTimeRoundTurnTextBlock" Style="{StaticResource CharacterAttributeTextStyle}"/>
+                                    <TextBlock x:Name="StatsControlHealShieldTextBlock" Style="{StaticResource CharacterAttributeTextStyle}"/>
+                                    <TextBlock x:Name="StatsTotalDamageTextBlock" Style="{StaticResource CharacterAttributeTextStyle}"/>
+                                    <TextBlock x:Name="StatsTotalTakenDamageTextBlock" Style="{StaticResource CharacterAttributeTextStyle}"/>
+                                    <TextBlock x:Name="StatsTrueDamageTextBlock" Style="{StaticResource CharacterAttributeTextStyle}" Visibility="Collapsed"/>
+                                    <!-- 初始隐藏，有真实伤害时显示 -->
+                                    <TextBlock x:Name="StatsDamagePerSecondTurnTextBlock" Style="{StaticResource CharacterAttributeTextStyle}"/>
+                                </StackPanel>
+                            </Border>
+                        </StackPanel>
+                    </Grid>
                 </Border>
             </Grid>
         </Border>

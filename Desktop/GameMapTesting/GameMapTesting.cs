@@ -1,5 +1,4 @@
 ﻿using System.Text;
-// using System.Windows; // 不再需要，因为移除了 InputDialog
 using Milimoe.FunGame.Core.Api.Utility;
 using Milimoe.FunGame.Core.Entity;
 using Milimoe.FunGame.Core.Library.Common.Addon;
@@ -18,12 +17,16 @@ namespace Milimoe.FunGame.Testing.Desktop.GameMapTesting
         public GamingQueue? GamingQueue => _gamingQueue;
         public GameMapController Controller { get; }
         public Dictionary<Character, CharacterStatistics> CharacterStatistics { get; } = [];
-        public PluginConfig StatsConfig { get; } = new(nameof(FunGameSimulation), nameof(CharacterStatistics));
+        public static Dictionary<Character, CharacterStatistics> TeamCharacterStatistics { get; } = [];
+        public PluginConfig StatsConfig { get; } = new(nameof(GameMapTesting), nameof(CharacterStatistics));
+        public PluginConfig TeamStatsConfig { get; } = new(nameof(GameMapTesting), nameof(TeamCharacterStatistics));
         public GameMap GameMap { get; } = new TestMap();
         public bool IsWeb { get; set; } = false;
+        public bool TeamMode { get; set; } = false;
         public string Msg { get; set; } = "";
 
         private GamingQueue? _gamingQueue = null;
+        private bool _fastMode = false;
 
         public GameMapTesting(GameMapController controller)
         {
@@ -31,15 +34,18 @@ namespace Milimoe.FunGame.Testing.Desktop.GameMapTesting
             InitCharacter(); // 初始化角色统计数据
         }
 
-        public async Task<List<string>> StartGame(bool isWeb = false)
+        public async Task<List<string>> StartGame(bool isWeb = false, bool isTeam = false)
         {
             IsWeb = isWeb;
+            TeamMode = isTeam;
             try
             {
                 List<string> result = [];
                 Msg = "";
-                List<Character> allCharactersInGame = [.. FunGameConstant.Characters]; // 使用不同的名称以避免与后面的 `characters` 冲突
+                List<Character> allCharactersInGame = [.. FunGameConstant.Characters];
                 await Controller.WriteLine("--- 游戏开始 ---");
+                TeamGamingQueue? tgq = null;
+                MixGamingQueue? mgq = null;
 
                 int clevel = 60;
                 int slevel = 6;
@@ -70,7 +76,7 @@ namespace Milimoe.FunGame.Testing.Desktop.GameMapTesting
                 // 询问玩家需要选择哪个角色 (通过UI界面选择)
                 Character? player = null;
                 long selectedPlayerId = await Controller.RequestCharacterSelection(characters); // 异步等待UI选择
-                Controller.ResolveCharacterSelection(selectedPlayerId);
+                await Controller.ResolveCharacterSelection(selectedPlayerId);
                 if (selectedPlayerId != -1)
                 {
                     player = characters.FirstOrDefault(c => c.Id == selectedPlayerId);
@@ -78,9 +84,8 @@ namespace Milimoe.FunGame.Testing.Desktop.GameMapTesting
                     {
                         await Controller.WriteLine($"选择了 [ {player} ]！");
                         player.Promotion = 200;
-                        Controller.SetCurrentCharacter(player);
-                        Controller.SetPlayerCharacter(player);
-
+                        await Controller.SetCurrentCharacter(player);
+                        await Controller.SetPlayerCharacter(player);
                     }
                 }
 
@@ -90,10 +95,64 @@ namespace Milimoe.FunGame.Testing.Desktop.GameMapTesting
                 }
 
                 // 创建顺序表并排序
-                _gamingQueue = new MixGamingQueue(characters, WriteLine)
+                if (isTeam)
                 {
-                    GameplayEquilibriumConstant = OshimaGameModuleConstant.GameplayEquilibriumConstant
-                };
+                    tgq = new(characters, WriteLine)
+                    {
+                        GameplayEquilibriumConstant = OshimaGameModuleConstant.GameplayEquilibriumConstant
+                    };
+                    _gamingQueue = tgq;
+                    await Controller.WriteLine("=== 团队模式随机分组 ===");
+
+                    // 打乱角色列表
+                    List<Character> shuffledCharacters = [.. characters.OrderBy(c => Random.Shared.Next())];
+
+                    // 创建两个团队
+                    List<Character> group1 = [];
+                    List<Character> group2 = [];
+
+                    // 将角色交替分配到两个团队中
+                    for (int cid = 0; cid < shuffledCharacters.Count; cid++)
+                    {
+                        Character thisCharacter = shuffledCharacters[cid];
+                        if (cid % 2 == 0)
+                        {
+                            group1.Add(thisCharacter);
+                        }
+                        else
+                        {
+                            group2.Add(thisCharacter);
+                        }
+                    }
+
+                    // 添加到团队字典，第一个为队长
+                    tgq.AddTeam($"{group1.First().NickName}的小队", group1);
+                    tgq.AddTeam($"{group2.First().NickName}的小队", group2);
+
+                    foreach (Team team in tgq.Teams.Values)
+                    {
+                        await Controller.WriteLine($"团队【{team.Name}】的成员：\r\n{string.Join("\r\n", team.Members)}\r\n");
+                        if (team.IsOnThisTeam(player))
+                        {
+                            foreach (Character c in team.Members.Except([player]))
+                            {
+                                c.Promotion = 300;
+                            }
+                        }
+                        else
+                        {
+                            team.Members.ForEach(c => c.Promotion = 400);
+                        }
+                    }
+                }
+                else
+                {
+                    mgq = new MixGamingQueue(characters, WriteLine)
+                    {
+                        GameplayEquilibriumConstant = OshimaGameModuleConstant.GameplayEquilibriumConstant
+                    };
+                    _gamingQueue = mgq;
+                }
 
                 // 加载地图和绑定事件
                 _gamingQueue.LoadGameMap(GameMap);
@@ -114,14 +173,14 @@ namespace Milimoe.FunGame.Testing.Desktop.GameMapTesting
                         allocated.Add(grid);
                         map.SetCharacterCurrentGrid(character, grid);
                     }
-                    Controller.SetGameMap(map);
+                    await Controller.SetGameMap(map);
                     _gamingQueue.SelectTargetGrid += GamingQueue_SelectTargetGrid;
                     _gamingQueue.CharacterMove += GamingQueue_CharacterMove;
                 }
 
                 // 绑定事件
-                Controller.SetQueue(_gamingQueue.HardnessTime);
-                Controller.SetCharacterStatistics(_gamingQueue.CharacterStatistics);
+                await Controller.SetQueue(_gamingQueue.HardnessTime);
+                await Controller.SetCharacterStatistics(_gamingQueue.CharacterStatistics);
                 _gamingQueue.TurnStart += GamingQueue_TurnStart;
                 _gamingQueue.DecideAction += GamingQueue_DecideAction;
                 _gamingQueue.SelectNormalAttackTargets += GamingQueue_SelectNormalAttackTargets;
@@ -172,7 +231,7 @@ namespace Milimoe.FunGame.Testing.Desktop.GameMapTesting
                 await Controller.WriteLine($"你的角色是 [ {player} ]，详细信息：{player.GetInfo()}");
 
                 // 总回合数
-                int maxRound = 999;
+                int maxRound = isTeam ? 9999 : 999;
 
                 // 随机回合奖励
                 Dictionary<long, bool> effects = [];
@@ -187,7 +246,7 @@ namespace Milimoe.FunGame.Testing.Desktop.GameMapTesting
                     effects.Add(effectID, isActive);
                 }
                 _gamingQueue.InitRoundRewards(maxRound, 1, effects, id => FunGameConstant.RoundRewards[(EffectID)id]);
-                Controller.SetTurnRewards(_gamingQueue.RoundRewards);
+                await Controller.SetTurnRewards(_gamingQueue.RoundRewards);
 
                 int i = 1;
                 while (i < maxRound)
@@ -195,23 +254,31 @@ namespace Milimoe.FunGame.Testing.Desktop.GameMapTesting
                     Msg = "";
                     if (i == maxRound - 1)
                     {
-                        await Controller.WriteLine($"=== 终局审判 ===");
-                        Dictionary<Character, double> hpPercentage = [];
-                        foreach (Character c in characters)
+                        if (isTeam)
                         {
-                            hpPercentage.TryAdd(c, c.HP / c.MaxHP);
+                            WriteLine("两队打到天昏地暗，流局了！！");
+                            break;
                         }
-                        double max = hpPercentage.Values.Max();
-                        Character winner = hpPercentage.Keys.Where(c => hpPercentage[c] == max).First();
-                        await Controller.WriteLine("[ " + winner + " ] 成为了天选之人！！");
-                        foreach (Character c in characters.Where(c => c != winner && c.HP > 0))
+                        else
                         {
-                            await Controller.WriteLine("[ " + winner + " ] 对 [ " + c + " ] 造成了 99999999999 点真实伤害。");
-                            await _gamingQueue.DeathCalculationAsync(winner, c);
-                        }
-                        if (_gamingQueue is MixGamingQueue mix)
-                        {
-                            await mix.EndGameInfo(winner);
+                            await Controller.WriteLine($"=== 终局审判 ===");
+                            Dictionary<Character, double> hpPercentage = [];
+                            foreach (Character c in characters)
+                            {
+                                hpPercentage.TryAdd(c, c.HP / c.MaxHP);
+                            }
+                            double max = hpPercentage.Values.Max();
+                            Character winner = hpPercentage.Keys.Where(c => hpPercentage[c] == max).First();
+                            await Controller.WriteLine("[ " + winner + " ] 成为了天选之人！！");
+                            foreach (Character c in characters.Where(c => c != winner && c.HP > 0))
+                            {
+                                await Controller.WriteLine("[ " + winner + " ] 对 [ " + c + " ] 造成了 99999999999 点真实伤害。");
+                                await _gamingQueue.DeathCalculationAsync(winner, c);
+                            }
+                            if (mgq != null)
+                            {
+                                await mgq.EndGameInfo(winner);
+                            }
                         }
                         result.Add(Msg);
                         break;
@@ -225,7 +292,7 @@ namespace Milimoe.FunGame.Testing.Desktop.GameMapTesting
                     // 处理回合
                     if (characterToAct != null)
                     {
-                        Controller.SetCurrentRound(i);
+                        await Controller.SetCurrentRound(i);
                         await Controller.WriteLine($"=== 回合 {i++} ===");
                         await Controller.WriteLine("现在是 [ " + characterToAct + " ] 的回合！");
 
@@ -286,7 +353,7 @@ namespace Milimoe.FunGame.Testing.Desktop.GameMapTesting
                 await Controller.WriteLine($"总游戏时长：{totalTime:0.##} {_gamingQueue.GameplayEquilibriumConstant.InGameTime}");
 
                 // 赛后统计
-                FunGameService.GetCharacterRating(_gamingQueue.CharacterStatistics, false, []);
+                FunGameService.GetCharacterRating(_gamingQueue.CharacterStatistics, isTeam, tgq != null ? tgq.EliminatedTeams : []);
 
                 // 统计技术得分，评选 MVP
                 Character? mvp = _gamingQueue.CharacterStatistics.OrderByDescending(d => d.Value.Rating).Select(d => d.Key).FirstOrDefault();
@@ -295,7 +362,7 @@ namespace Milimoe.FunGame.Testing.Desktop.GameMapTesting
                 {
                     CharacterStatistics stats = _gamingQueue.CharacterStatistics[mvp];
                     stats.MVPs++;
-                    mvpBuilder.AppendLine($"[ {mvp.ToStringWithLevel()} ]");
+                    mvpBuilder.AppendLine($"{(tgq != null ? "[ " + tgq.GetTeamFromEliminated(mvp)?.Name + " ] " : "")}[ {mvp.ToStringWithLevel()} ]");
                     mvpBuilder.AppendLine($"技术得分：{stats.Rating:0.0#} / 击杀数：{stats.Kills} / 助攻数：{stats.Assists}{(_gamingQueue.MaxRespawnTimes != 0 ? " / 死亡数：" + stats.Deaths : "")}");
                     mvpBuilder.AppendLine($"存活时长：{stats.LiveTime:0.##} / 存活回合数：{stats.LiveRound} / 行动回合数：{stats.ActionTurn}");
                     mvpBuilder.AppendLine($"控制时长：{stats.ControlTime:0.##} / 总计治疗：{stats.TotalHeal:0.##} / 护盾抵消：{stats.TotalShield:0.##}");
@@ -327,7 +394,7 @@ namespace Milimoe.FunGame.Testing.Desktop.GameMapTesting
                 {
                     StringBuilder builder = new();
                     CharacterStatistics stats = _gamingQueue.CharacterStatistics[character];
-                    builder.AppendLine($"{(isWeb ? count + ". " : "")}[ {character.ToStringWithLevel()} ]");
+                    builder.AppendLine($"{(isWeb ? count + ". " : "")}[ {character.ToStringWithLevel()}{(tgq != null ? "（" + tgq.GetTeamFromEliminated(character)?.Name + "）" : "")} ]");
                     builder.AppendLine($"技术得分：{stats.Rating:0.0#} / 击杀数：{stats.Kills} / 助攻数：{stats.Assists}{(_gamingQueue.MaxRespawnTimes != 0 ? " / 死亡数：" + stats.Deaths : "")}");
                     builder.AppendLine($"存活时长：{stats.LiveTime:0.##} / 存活回合数：{stats.LiveRound} / 行动回合数：{stats.ActionTurn}");
                     builder.AppendLine($"控制时长：{stats.ControlTime:0.##} / 总计治疗：{stats.TotalHeal:0.##} / 护盾抵消：{stats.TotalShield:0.##}");
@@ -344,7 +411,9 @@ namespace Milimoe.FunGame.Testing.Desktop.GameMapTesting
                         await Controller.WriteLine(builder.ToString());
                     }
 
-                    CharacterStatistics? totalStats = CharacterStatistics.Where(kv => kv.Key.GetName() == character.GetName()).Select(kv => kv.Value).FirstOrDefault();
+                    CharacterStatistics? totalStats = isTeam ?
+                        TeamCharacterStatistics.Where(kv => kv.Key.GetName() == character.GetName()).Select(kv => kv.Value).FirstOrDefault() : 
+                        CharacterStatistics.Where(kv => kv.Key.GetName() == character.GetName()).Select(kv => kv.Value).FirstOrDefault();
                     if (totalStats != null)
                     {
                         UpdateStatistics(totalStats, stats);
@@ -361,13 +430,27 @@ namespace Milimoe.FunGame.Testing.Desktop.GameMapTesting
                     }
                 }
 
-                lock (StatsConfig)
+                if (isTeam)
                 {
-                    foreach (Character c in CharacterStatistics.Keys)
+                    lock (TeamStatsConfig)
                     {
-                        StatsConfig.Add(c.ToStringWithOutUser(), CharacterStatistics[c]);
+                        foreach (Character c in TeamCharacterStatistics.Keys)
+                        {
+                            TeamStatsConfig.Add(c.ToStringWithOutUser(), TeamCharacterStatistics[c]);
+                        }
+                        TeamStatsConfig.SaveConfig();
                     }
-                    StatsConfig.SaveConfig();
+                }
+                else
+                {
+                    lock (StatsConfig)
+                    {
+                        foreach (Character c in CharacterStatistics.Keys)
+                        {
+                            StatsConfig.Add(c.ToStringWithOutUser(), CharacterStatistics[c]);
+                        }
+                        StatsConfig.SaveConfig();
+                    }
                 }
 
                 return result;
@@ -400,31 +483,11 @@ namespace Milimoe.FunGame.Testing.Desktop.GameMapTesting
             {
                 await Controller.UpdateQueue();
             }
-            if (IsPlayer_OnlyTest(queue, character))
-            {
-                //if (reason == QueueUpdatedReason.Action)
-                //{
-                //    queue.SetCharactersToAIControl(false, character);
-                //}
-                //if (reason == QueueUpdatedReason.PreCastSuperSkill)
-                //{
-                //    // 玩家释放爆发技后，需要等待玩家确认
-                //    await Controller.RequestContinuePrompt("你的下一回合需要选择爆发技目标，知晓请点击继续. . .");
-                //    Controller.ResolveContinuePrompt();
-                //}
-            }
-            await Task.CompletedTask;
         }
 
         private async Task<bool> GamingQueue_TurnStart(GamingQueue queue, Character character, List<Character> enemys, List<Character> teammates, List<Skill> skills, List<Item> items)
         {
             await Controller.UpdateBottomInfoPanel();
-            if (IsPlayer_OnlyTest(queue, character))
-            {
-                // 确保玩家角色在回合开始时取消AI托管，以便玩家可以控制
-                //queue.SetCharactersToAIControl(cancel: true, character);
-            }
-            await Task.CompletedTask;
             return true;
         }
 
@@ -439,7 +502,7 @@ namespace Milimoe.FunGame.Testing.Desktop.GameMapTesting
                 enemys,
                 teammates
             );
-            Controller.ResolveTargetSelection(selectedTargets);
+            await Controller.ResolveTargetSelection(selectedTargets);
 
             return selectedTargets ?? []; // 如果取消，返回空列表
         }
@@ -450,7 +513,7 @@ namespace Milimoe.FunGame.Testing.Desktop.GameMapTesting
 
             // 通过UI请求物品选择
             Item? selectedItem = await Controller.RequestItemSelection(character, items);
-            Controller.ResolveItemSelection(selectedItem?.Id ?? 0);
+            await Controller.ResolveItemSelection(selectedItem?.Id ?? 0);
             return selectedItem;
         }
 
@@ -470,7 +533,7 @@ namespace Milimoe.FunGame.Testing.Desktop.GameMapTesting
                 enemys,
                 teammates
             );
-            Controller.ResolveTargetSelection(selectedTargets);
+            await Controller.ResolveTargetSelection(selectedTargets);
 
             return selectedTargets ?? []; // 如果取消，返回空列表
         }
@@ -481,27 +544,30 @@ namespace Milimoe.FunGame.Testing.Desktop.GameMapTesting
 
             // 通过UI请求技能选择
             Skill? selectedSkill = await Controller.RequestSkillSelection(character, skills);
-            Controller.ResolveSkillSelection(selectedSkill?.Id ?? 0);
+            await Controller.ResolveSkillSelection(selectedSkill?.Id ?? 0);
             return selectedSkill;
         }
 
         private async Task GamingQueue_TurnEnd(GamingQueue queue, Character character)
         {
             double ht = queue.HardnessTime[character];
-            Controller.SetPredictCharacter(character.NickName, ht);
+            await Controller.SetPredictCharacter(character.NickName, ht);
             await Controller.UpdateBottomInfoPanel();
-            if (IsRoundHasPlayer_OnlyTest(queue, character))
+            if (!_fastMode)
             {
-                // 玩家回合结束，等待玩家确认
-                await Controller.RequestContinuePrompt("你的回合（或与你相关的回合）已结束，请查看本回合日志，然后点击继续. . .");
-                Controller.ResolveContinuePrompt();
+                if (IsRoundHasPlayer_OnlyTest(queue, character))
+                {
+                    // 玩家回合结束，等待玩家确认
+                    await Controller.RequestContinuePrompt("你的回合（或与你相关的回合）已结束，请查看本回合日志，然后点击继续. . .");
+                    await Controller.ResolveContinuePrompt();
+                }
+                else
+                {
+                    await Controller.RequestCountDownContinuePrompt("该角色的回合已结束. . .");
+                    await Controller.ResolveCountDownContinuePrompt();
+                }
             }
-            else
-            {
-                await Controller.RequestCountDownContinuePrompt("该角色的回合已结束. . .");
-                Controller.ResolveCountDownContinuePrompt();
-            }
-            await Task.CompletedTask;
+            else await Task.Delay(100);
         }
 
         private async Task<CharacterActionType> GamingQueue_DecideAction(GamingQueue queue, Character character, List<Character> enemys, List<Character> teammates, List<Skill> skills, List<Item> items)
@@ -510,7 +576,7 @@ namespace Milimoe.FunGame.Testing.Desktop.GameMapTesting
             {
                 // 通过UI按钮请求行动类型
                 CharacterActionType actionType = await Controller.RequestActionType(character, items);
-                Controller.ResolveActionType(actionType);
+                await Controller.ResolveActionType(actionType);
                 return actionType;
             }
             return CharacterActionType.None; // 非玩家角色，由AI处理，或默认None
@@ -532,6 +598,16 @@ namespace Milimoe.FunGame.Testing.Desktop.GameMapTesting
             {
                 await queue.SetCharacterPreCastSuperSkill(character, skill);
             }
+        }
+
+        public void SetAutoMode(bool cancel, Character character)
+        {
+            _gamingQueue?.SetCharactersToAIControl(cancel, character);
+        }
+
+        public void SetFastMode(bool on)
+        {
+            _fastMode = on;
         }
 
         public void WriteLine(string str)
@@ -592,14 +668,23 @@ namespace Milimoe.FunGame.Testing.Desktop.GameMapTesting
             foreach (Character c in FunGameConstant.Characters)
             {
                 CharacterStatistics.Add(c, new());
+                TeamCharacterStatistics.Add(c, new());
             }
 
             StatsConfig.LoadConfig();
+            TeamStatsConfig.LoadConfig();
             foreach (Character character in CharacterStatistics.Keys)
             {
                 if (StatsConfig.ContainsKey(character.ToStringWithOutUser()))
                 {
                     CharacterStatistics[character] = StatsConfig.Get<CharacterStatistics>(character.ToStringWithOutUser()) ?? CharacterStatistics[character];
+                }
+            }
+            foreach (Character character in TeamCharacterStatistics.Keys)
+            {
+                if (TeamStatsConfig.ContainsKey(character.ToStringWithOutUser()))
+                {
+                    TeamCharacterStatistics[character] = TeamStatsConfig.Get<CharacterStatistics>(character.ToStringWithOutUser()) ?? TeamCharacterStatistics[character];
                 }
             }
         }

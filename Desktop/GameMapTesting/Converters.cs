@@ -1,10 +1,25 @@
 ﻿using System.Globalization;
 using System.Windows.Data;
 using Milimoe.FunGame.Core.Entity;
+using Milimoe.FunGame.Core.Interface.Entity;
 using Milimoe.FunGame.Core.Library.Constant;
 
 namespace Milimoe.FunGame.Testing.Desktop.GameMapTesting
 {
+    public class ToStringConverter : IValueConverter
+    {
+        public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+        {
+            // 如果值为 null，返回空字符串，否则返回其 ToString() 结果
+            return value?.ToString()?.Trim() ?? string.Empty;
+        }
+
+        public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
+        {
+            throw new NotImplementedException();
+        }
+    }
+
     public class FirstCharConverter : IValueConverter
     {
         public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
@@ -110,6 +125,10 @@ namespace Milimoe.FunGame.Testing.Desktop.GameMapTesting
             {
                 return s.Level > 0 && s.SkillType != SkillType.Passive && s.Enable && !s.IsInEffect && s.CurrentCD == 0 &&
                     ((s.SkillType == SkillType.SuperSkill || s.SkillType == SkillType.Skill) && s.RealEPCost <= character.EP || s.SkillType == SkillType.Magic && s.RealMPCost <= character.MP);
+            }
+            else if (values[0] is NormalAttack a)
+            {
+                return a.Level > 0 && a.Enable;
             }
             else if (values[0] is Item i)
             {

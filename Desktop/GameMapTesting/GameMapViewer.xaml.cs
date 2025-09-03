@@ -3,21 +3,22 @@ using System.Collections.Specialized;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Documents;
-using System.Windows.Forms;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Threading;
-using System.Xml.Linq;
 using Milimoe.FunGame.Core.Api.Utility;
 using Milimoe.FunGame.Core.Entity;
 using Milimoe.FunGame.Core.Interface.Entity;
 using Milimoe.FunGame.Core.Library.Common.Addon;
 using Milimoe.FunGame.Core.Library.Constant;
+using Milimoe.FunGame.Core.Model;
 using Oshima.FunGame.OshimaServers.Service;
 using static Milimoe.FunGame.Core.Library.Constant.General;
+using Brush = System.Windows.Media.Brush;
 using Brushes = System.Windows.Media.Brushes;
 using Button = System.Windows.Controls.Button;
 using Grid = Milimoe.FunGame.Core.Library.Common.Addon.Grid;
+using MessageBox = System.Windows.MessageBox;
 using MouseEventArgs = System.Windows.Input.MouseEventArgs;
 using Panel = System.Windows.Controls.Panel;
 using Rectangle = System.Windows.Shapes.Rectangle;
@@ -67,6 +68,14 @@ namespace Milimoe.FunGame.Testing.Desktop.GameMapTesting
         private bool _isSelectingTargets = false; // 标记当前是否处于目标选择模式
         private readonly CharacterQueueItem _selectionPredictCharacter = new(Factory.GetCharacter(), 0); // 选择时进行下轮预测（用于行动顺序表显示）
 
+        // 新增：用于跟踪当前高亮的技能和物品图标
+        private Border? _highlightedSkillIcon;
+        private Border? _highlightedItemIcon;
+
+        // 模式
+        private bool _isAutoMode = false;
+        private bool _isFastMode = false;
+
         public GameMapViewer()
         {
             InitializeComponent();
@@ -112,7 +121,7 @@ namespace Milimoe.FunGame.Testing.Desktop.GameMapTesting
             get { return (int)GetValue(CurrentRoundProperty); }
             set { SetValue(CurrentRoundProperty, value); }
         }
-        
+
         // 回合奖励
         public static readonly DependencyProperty TurnRewardsProperty =
             DependencyProperty.Register("TurnRewards", typeof(Dictionary<int, List<Skill>>), typeof(GameMapViewer),
@@ -123,7 +132,7 @@ namespace Milimoe.FunGame.Testing.Desktop.GameMapTesting
             get { return (Dictionary<int, List<Skill>>)GetValue(TurnRewardsProperty); }
             set { SetValue(TurnRewardsProperty, value); }
         }
-        
+
         // 新增 CurrentCharacter 依赖属性：用于显示当前玩家角色的信息
         public static readonly DependencyProperty CurrentCharacterProperty =
             DependencyProperty.Register("CurrentCharacter", typeof(Character), typeof(GameMapViewer),
@@ -142,6 +151,9 @@ namespace Milimoe.FunGame.Testing.Desktop.GameMapTesting
 
         // 用于 UI 绑定的 ViewModel 集合
         public ObservableCollection<CharacterQueueItemViewModel> CharacterQueueDisplayItems { get; } = [];
+
+        // 技能组
+        public CharacterSkillsAndItemsViewModel CharacterSkillsAndItems { get; set; } = new();
 
         public Character? CurrentCharacter
         {
@@ -199,23 +211,25 @@ namespace Milimoe.FunGame.Testing.Desktop.GameMapTesting
             set { SetValue(MaxRespawnTimesProperty, value); }
         }
 
-
-        public void Invoke(Action action)
+        public async Task InvokeAsync(Action action)
         {
             if (!this.Dispatcher.CheckAccess())
             {
-                this.Dispatcher.Invoke(() => action());
+                await this.Dispatcher.InvokeAsync(action);
             }
-            else action();
+            else
+            {
+                action();
+            }
         }
 
-        public async Task Invoke(Func<Task> action)
+        public async Task InvokeAsync(Func<Task> task)
         {
             if (!this.Dispatcher.CheckAccess())
             {
-                await this.Dispatcher.InvokeAsync(async () => await action());
+                await this.Dispatcher.InvokeAsync(task);
             }
-            else await action();
+            else await task();
         }
 
         // 原有的 ShowInput 方法不再用于游戏逻辑，可以删除或保留用于其他非游戏逻辑的通用输入
@@ -288,17 +302,15 @@ namespace Milimoe.FunGame.Testing.Desktop.GameMapTesting
             GameMapViewer viewer = (GameMapViewer)d;
             _ = viewer.UpdateBottomInfoPanel();
             _ = viewer.UpdateCharacterStatisticsPanel(); // 角色改变时也更新统计面板
-            // 角色改变时，清除装备/状态描述
-            SetRichTextBoxText(viewer.DescriptionRichTextBox, "点击装备或状态图标查看详情。");
-            viewer.ClearEquipSlotHighlights();
-            viewer.ClearStatusIconHighlights();
+            // 角色改变时，清除装备/状态/技能/物品描述和高亮
+            viewer.ResetDescriptionAndHighlights(); // 使用新的重置方法
         }
 
         // 新增：当CharacterQueueData属性改变时，更新左侧队列面板
         private static void OnCharacterQueueDataChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
         {
             GameMapViewer viewer = (GameMapViewer)d;
-            _ = viewer.UpdateLeftQueuePanel();
+            _ = viewer.UpdateLeftQueuePanelGrid();
         }
 
         // 新增：当CharacterStatistics属性改变时，更新数据统计面板
@@ -521,6 +533,20 @@ namespace Milimoe.FunGame.Testing.Desktop.GameMapTesting
                 _uiElementToCharacter.Add(characterBorder, character);
             }
 
+            // 清除所有角色的高亮
+            foreach (Character character in _characterToUiElement.Keys)
+            {
+                Border border = _characterToUiElement[character];
+                border.BorderBrush = character.Promotion switch
+                {
+                    200 => Brushes.BurlyWood,
+                    300 => Brushes.SkyBlue,
+                    400 => Brushes.Orchid,
+                    _ => Brushes.Salmon
+                };
+                border.BorderThickness = new Thickness(2);
+            }
+
             // 如果处于目标选择模式，重新应用高亮
             if (_isSelectingTargets)
             {
@@ -531,12 +557,12 @@ namespace Milimoe.FunGame.Testing.Desktop.GameMapTesting
         /// <summary>
         /// 更新左侧动态队列面板，显示角色及其AT Delay。
         /// </summary>
-        public async Task UpdateLeftQueuePanel()
+        public async Task UpdateLeftQueuePanelGrid()
         {
             // 确保在UI线程上执行
             if (!this.Dispatcher.CheckAccess())
             {
-                await this.Dispatcher.InvokeAsync(async () => await UpdateLeftQueuePanel());
+                await this.Dispatcher.InvokeAsync(async () => await UpdateLeftQueuePanelGrid());
                 return;
             }
 
@@ -569,10 +595,8 @@ namespace Milimoe.FunGame.Testing.Desktop.GameMapTesting
                 return;
             }
 
-            // 每次更新面板时，清除装备/状态描述和高亮
-            SetRichTextBoxText(DescriptionRichTextBox, "点击装备或状态图标查看详情。"); // 新代码
-            ClearEquipSlotHighlights();
-            ClearStatusIconHighlights();
+            // 每次更新面板时，清除所有描述和高亮
+            ResetDescriptionAndHighlights(true);
 
             Character? character = CurrentCharacter;
             if (character != null)
@@ -667,10 +691,15 @@ namespace Milimoe.FunGame.Testing.Desktop.GameMapTesting
                     }
                 }
 
+                // 更新技能组
+                CharacterSkillsAndItems.Skills = [character.NormalAttack, .. character.Skills];
+                CharacterSkillsAndItems.Items = [.. character.Items];
+
                 // --- 更新其他角色属性 ---
                 bool showGrowth = false; // 假设不显示成长值
 
-                AttackTextBlock.Text = $"攻击力：{character.ATK:0.##}" + (character.ExATK != 0 ? $" [{character.BaseATK:0.##} {(character.ExATK >= 0 ? "+" : "-")} {Math.Abs(character.ExATK):0.##}]" : "");
+                double exATK = character.ExATK + character.ExATK2 + character.ExATK3;
+                AttackTextBlock.Text = $"攻击力：{character.ATK:0.##}" + (exATK != 0 ? $" [{character.BaseATK:0.##} {(exATK >= 0 ? "+" : "-")} {Math.Abs(exATK):0.##}]" : "");
 
                 double exDEF = character.ExDEF + character.ExDEF2 + character.ExDEF3;
                 PhysicalDefTextBlock.Text = $"物理护甲：{character.DEF:0.##}" + (exDEF != 0 ? $" [{character.BaseDEF:0.##} {(exDEF >= 0 ? "+" : "-")} {Math.Abs(exDEF):0.##}]" : "") + $" ({character.PDR * 100:0.##}%)";
@@ -730,6 +759,10 @@ namespace Milimoe.FunGame.Testing.Desktop.GameMapTesting
 
                 // 清空状态条
                 CharacterEffectsPanel.Children.Clear();
+
+                // 清空技能组
+                CharacterSkillsAndItems.Skills = [];
+                CharacterSkillsAndItems.Items = [];
 
                 // 清空角色属性
                 AttackTextBlock.Text = "攻击力:";
@@ -979,7 +1012,7 @@ namespace Milimoe.FunGame.Testing.Desktop.GameMapTesting
             {
                 CurrentCharacter = PlayerCharacter;
             }
-            // 新增：关闭格子信息面板时，重置装备/状态描述和高亮
+            // 新增：关闭格子信息面板时，重置装备/状态/技能/物品描述和高亮
             ResetDescriptionAndHighlights();
         }
 
@@ -1001,6 +1034,9 @@ namespace Milimoe.FunGame.Testing.Desktop.GameMapTesting
             {
                 ClearEquipSlotHighlights();
                 ClearStatusIconHighlights();
+                ClearSkillIconHighlights();
+                ClearItemIconHighlights();
+
                 clickedBorder.BorderBrush = Brushes.Blue;
                 clickedBorder.BorderThickness = new Thickness(2);
 
@@ -1054,6 +1090,9 @@ namespace Milimoe.FunGame.Testing.Desktop.GameMapTesting
             {
                 ClearStatusIconHighlights(); // 清除所有状态图标的旧高亮
                 ClearEquipSlotHighlights(); // 清除所有装备槽位的旧高亮
+                ClearSkillIconHighlights(); // 清除技能图标高亮
+                ClearItemIconHighlights();  // 清除物品图标高亮
+
                 clickedBorder.BorderBrush = Brushes.Blue; // 高亮当前点击的状态图标
                 clickedBorder.BorderThickness = new Thickness(1.5);
 
@@ -1069,10 +1108,105 @@ namespace Milimoe.FunGame.Testing.Desktop.GameMapTesting
         {
             foreach (Border border in CharacterEffectsPanel.Children.OfType<Border>())
             {
-                border.BorderBrush = Brushes.Gray;
-                border.BorderThickness = new Thickness(0.5);
+                // 获取默认样式，以便恢复默认边框颜色和粗细
+                Style defaultStyle = (Style)this.FindResource("StatusIconStyle");
+                border.BorderBrush = (Brush)(defaultStyle.Setters.OfType<Setter>().FirstOrDefault(s => s.Property == Border.BorderBrushProperty)?.Value ?? Brushes.Gray);
+                border.BorderThickness = (Thickness)(defaultStyle.Setters.OfType<Setter>().FirstOrDefault(s => s.Property == Border.BorderThicknessProperty)?.Value ?? new Thickness(0.5));
             }
         }
+
+        // --- 新增：技能图标点击事件和辅助方法 ---
+        private void SkillIcon_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
+        {
+            if (sender is Border clickedBorder && clickedBorder.Tag is ISkill skill)
+            {
+                ClearSkillIconHighlights();
+                ClearItemIconHighlights();
+                ClearEquipSlotHighlights();
+                ClearStatusIconHighlights();
+
+                _highlightedSkillIcon = clickedBorder;
+                _highlightedSkillIcon.BorderBrush = Brushes.Blue;
+                _highlightedSkillIcon.BorderThickness = new Thickness(1.5);
+
+                SetRichTextBoxText(DescriptionRichTextBox, skill.ToString() ?? "");
+                _ = AppendDebugLog($"查看技能: {skill.Name}");
+            }
+        }
+
+        /// <summary>
+        /// 清除所有技能图标的边框高亮。
+        /// </summary>
+        private void ClearSkillIconHighlights()
+        {
+            if (_highlightedSkillIcon != null)
+            {
+                Style defaultStyle = (Style)this.FindResource("StatusIconStyle");
+                _highlightedSkillIcon.BorderBrush = (Brush)(defaultStyle.Setters.OfType<Setter>().FirstOrDefault(s => s.Property == Border.BorderBrushProperty)?.Value ?? Brushes.Gray);
+                _highlightedSkillIcon.BorderThickness = (Thickness)(defaultStyle.Setters.OfType<Setter>().FirstOrDefault(s => s.Property == Border.BorderThicknessProperty)?.Value ?? new Thickness(0.5));
+                _highlightedSkillIcon = null;
+            }
+            // 遍历 ItemsControl 中的所有生成的容器，确保所有图标都恢复默认样式
+            if (CharacterSkillsPanel.ItemsSource != null)
+            {
+                foreach (var item in CharacterSkillsPanel.ItemsSource)
+                {
+                    if (CharacterSkillsPanel.ItemContainerGenerator.ContainerFromItem(item) is Border border)
+                    {
+                        Style defaultStyle = (Style)this.FindResource("StatusIconStyle");
+                        border.BorderBrush = (Brush)(defaultStyle.Setters.OfType<Setter>().FirstOrDefault(s => s.Property == Border.BorderBrushProperty)?.Value ?? Brushes.Gray);
+                        border.BorderThickness = (Thickness)(defaultStyle.Setters.OfType<Setter>().FirstOrDefault(s => s.Property == Border.BorderThicknessProperty)?.Value ?? new Thickness(0.5));
+                    }
+                }
+            }
+        }
+
+        // --- 新增：物品图标点击事件和辅助方法 ---
+        private void ItemIcon_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
+        {
+            if (sender is Border clickedBorder && clickedBorder.Tag is Item item)
+            {
+                ClearSkillIconHighlights();
+                ClearItemIconHighlights();
+                ClearEquipSlotHighlights();
+                ClearStatusIconHighlights();
+
+                _highlightedItemIcon = clickedBorder;
+                _highlightedItemIcon.BorderBrush = Brushes.Blue;
+                _highlightedItemIcon.BorderThickness = new Thickness(1.5);
+
+                SetRichTextBoxText(DescriptionRichTextBox, item.ToString() ?? "");
+                _ = AppendDebugLog($"查看物品: {item.Name}");
+            }
+        }
+
+        /// <summary>
+        /// 清除所有物品图标的边框高亮。
+        /// </summary>
+        private void ClearItemIconHighlights()
+        {
+            if (_highlightedItemIcon != null)
+            {
+                Style defaultStyle = (Style)this.FindResource("StatusIconStyle");
+                _highlightedItemIcon.BorderBrush = (Brush)(defaultStyle.Setters.OfType<Setter>().FirstOrDefault(s => s.Property == Border.BorderBrushProperty)?.Value ?? Brushes.Gray);
+                _highlightedItemIcon.BorderThickness = (Thickness)(defaultStyle.Setters.OfType<Setter>().FirstOrDefault(s => s.Property == Border.BorderThicknessProperty)?.Value ?? new Thickness(0.5));
+                _highlightedItemIcon = null;
+            }
+            // 遍历 ItemsControl 中的所有生成的容器，确保所有图标都恢复默认样式
+            if (CharacterItemsPanel.ItemsSource != null)
+            {
+                foreach (var item in CharacterItemsPanel.ItemsSource)
+                {
+                    if (CharacterItemsPanel.ItemContainerGenerator.ContainerFromItem(item) is Border border)
+                    {
+                        Style defaultStyle = (Style)this.FindResource("StatusIconStyle");
+                        border.BorderBrush = (Brush)(defaultStyle.Setters.OfType<Setter>().FirstOrDefault(s => s.Property == Border.BorderBrushProperty)?.Value ?? Brushes.Gray);
+                        border.BorderThickness = (Thickness)(defaultStyle.Setters.OfType<Setter>().FirstOrDefault(s => s.Property == Border.BorderThicknessProperty)?.Value ?? new Thickness(0.5));
+                    }
+                }
+            }
+        }
+
 
         // --- 操作按钮 (底部右侧) ---
 
@@ -1099,7 +1233,7 @@ namespace Milimoe.FunGame.Testing.Desktop.GameMapTesting
                 _resolveActionType?.Invoke(actionType);
             }
         }
-        
+
         /// <summary>
         /// 预释放爆发技的特殊处理。
         /// </summary>
@@ -1123,6 +1257,59 @@ namespace Milimoe.FunGame.Testing.Desktop.GameMapTesting
             }
         }
 
+        /// <summary>
+        /// 自动模式（托管）的特殊处理。
+        /// </summary>
+        private async void AutoModeButton_Click(object sender, RoutedEventArgs e)
+        {
+            if (PlayerCharacter != null)
+            {
+                _isAutoMode = !_isAutoMode;
+                AutoModeButton.Content = _isAutoMode ? "自动模式：开" : "自动模式：关";
+                _controller.SetAutoMode(!_isAutoMode, PlayerCharacter);
+                await AppendDebugLog($"已切换到{(_isAutoMode ? "自动模式" : "手动模式")}。");
+                if (_resolveActionType != null)
+                {
+                    MessageBoxResult result = MessageBox.Show(
+                        "是否跳过当前回合？AI将代替你操作。",
+                        "自动模式跳过当前回合确认",
+                        MessageBoxButton.YesNo,
+                        MessageBoxImage.Question
+                    );
+                    if (result == MessageBoxResult.Yes)
+                    {
+                        _resolveActionType.Invoke(GamingQueue.GetActionType(0.33, 0.33, 0.34));
+                    }
+                    else
+                    {
+                        await AppendDebugLog("自动模式将在下一回合开始接管你的回合。");
+                    }
+                }
+            }
+            else
+            {
+                await AppendDebugLog("找不到角色。");
+            }
+        }
+
+        /// <summary>
+        /// 快速模式（仅看我的回合）的特殊处理。
+        /// </summary>
+        private async void FastModeButton_Click(object sender, RoutedEventArgs e)
+        {
+            if (PlayerCharacter != null)
+            {
+                _isFastMode = !_isFastMode;
+                FastModeButton.Content = _isFastMode ? "快速模式：开" : "快速模式：关";
+                _controller.SetFastMode(_isFastMode);
+                await AppendDebugLog($"已切换到{(_isFastMode ? "快速模式" : "正常模式")}。");
+            }
+            else
+            {
+                await AppendDebugLog("找不到角色。");
+            }
+        }
+
         // --- UI 提示方法 (由 GameMapController 调用) ---
 
         /// <summary>
@@ -1134,7 +1321,7 @@ namespace Milimoe.FunGame.Testing.Desktop.GameMapTesting
         {
             _resolveCharacterSelection = callback;
             CharacterSelectionItemsControl.ItemsSource = availableCharacters;
-            SetRichTextBoxText(CharacterDetailsRichTextBox, "将鼠标悬停在角色名称上查看详情。");
+            SetRichTextBoxText(CharacterDetailsRichTextBox, "将鼠标悬停在角色名称上以查看详情。");
             CharacterSelectionOverlay.Visibility = Visibility.Visible;
         }
 
@@ -1436,13 +1623,6 @@ namespace Milimoe.FunGame.Testing.Desktop.GameMapTesting
         /// </summary>
         private void UpdateCharacterHighlights()
         {
-            // 清除所有角色的高亮
-            foreach (var border in _characterToUiElement.Values)
-            {
-                border.BorderBrush = Brushes.DarkBlue; // 默认颜色
-                border.BorderThickness = new Thickness(1.5);
-            }
-
             // 高亮潜在目标（黄色边框）
             if (_potentialTargetsForSelection != null)
             {
@@ -1451,7 +1631,7 @@ namespace Milimoe.FunGame.Testing.Desktop.GameMapTesting
                     if (_characterToUiElement.TryGetValue(potentialTarget, out Border? border))
                     {
                         border.BorderBrush = Brushes.Yellow;
-                        border.BorderThickness = new Thickness(2);
+                        border.BorderThickness = new Thickness(4);
                     }
                 }
             }
@@ -1462,7 +1642,7 @@ namespace Milimoe.FunGame.Testing.Desktop.GameMapTesting
                 if (_characterToUiElement.TryGetValue(selectedTarget, out Border? border))
                 {
                     border.BorderBrush = Brushes.Red; // 已选目标颜色
-                    border.BorderThickness = new Thickness(3);
+                    border.BorderThickness = new Thickness(6);
                 }
             }
         }
@@ -1604,11 +1784,16 @@ namespace Milimoe.FunGame.Testing.Desktop.GameMapTesting
             }
         }
 
-        private void ResetDescriptionAndHighlights()
+        /// <summary>
+        /// 重置所有描述文本框并清除所有高亮。
+        /// </summary>
+        private void ResetDescriptionAndHighlights(bool clearHightlightsOnly = false)
         {
-            SetRichTextBoxText(DescriptionRichTextBox, "点击装备或状态图标查看详情。");
+            if (!clearHightlightsOnly) SetRichTextBoxText(DescriptionRichTextBox, "点击装备、状态、技能或物品的图标以查看详情。");
             ClearEquipSlotHighlights();
             ClearStatusIconHighlights();
+            ClearSkillIconHighlights();
+            ClearItemIconHighlights();
         }
 
         /// <summary>
