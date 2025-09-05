@@ -117,6 +117,40 @@
                 </Trigger>
             </Style.Triggers>
         </Style>
+        <!-- 新增：角色摘要显示模板 -->
+        <DataTemplate x:Key="CharacterSummaryTemplate">
+            <Border BorderBrush="LightGray" BorderThickness="0,0,0,1" Padding="2" Margin="0,2"
+                    Cursor="Hand"
+                    Tag="{Binding}"
+                    MouseLeftButtonDown="CharacterSummary_MouseLeftButtonDown">
+                <StackPanel>
+                    <!-- 角色名称 -->
+                    <TextBlock Text="{Binding Character.NickName}" FontWeight="SemiBold" Margin="0,0,5,0" FontSize="10"/>
+
+                    <!-- HP 条 -->
+                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="0,0.5">
+                        <TextBlock Text="HP:" VerticalAlignment="Center" Width="20" FontSize="8"/>
+                        <ProgressBar Value="{Binding Character.HP}" Maximum="{Binding Character.MaxHP}" Height="6" Width="40" Background="LightGray" BorderBrush="Gray" BorderThickness="0.5" Foreground="Green"/>
+                        <TextBlock Text="{Binding Character.HP, StringFormat={}{0:0.##}}" Margin="3,0,0,0" VerticalAlignment="Center" FontSize="8"/>
+                    </StackPanel>
+
+                    <!-- MP 条 -->
+                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="0,0.5">
+                        <TextBlock Text="MP:" VerticalAlignment="Center" Width="20" FontSize="8"/>
+                        <ProgressBar Value="{Binding Character.MP}" Maximum="{Binding Character.MaxMP}" Height="6" Width="40" Background="LightGray" BorderBrush="Gray" BorderThickness="0.5" Foreground="Blue"/>
+                        <TextBlock Text="{Binding Character.MP, StringFormat={}{0:0.##}}" Margin="3,0,0,0" VerticalAlignment="Center" FontSize="8"/>
+                    </StackPanel>
+
+                    <!-- EP 条 -->
+                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="0,0.5">
+                        <TextBlock Text="EP:" VerticalAlignment="Center" Width="20" FontSize="8"/>
+                        <ProgressBar Value="{Binding Character.EP}" Maximum="{Binding Character.GameplayEquilibriumConstant.MaxEP}" Height="6" Width="40" Background="LightGray" BorderBrush="Gray" BorderThickness="0.5" Foreground="Orange"/>
+                        <TextBlock Text="{Binding Character.EP, StringFormat={}{0:0.##}}" Margin="3,0,0,0" VerticalAlignment="Center" FontSize="8"/>
+                    </StackPanel>
+                </StackPanel>
+            </Border>
+        </DataTemplate>
+
     </UserControl.Resources>
 
     <Grid>
@@ -540,6 +574,47 @@
                     Visibility="Collapsed"
                     Text="0 秒后继续..." />
 
+                    <TextBlock x:Name="PointsTextBlock"
+                    Panel.ZIndex="0"
+                    HorizontalAlignment="Center"
+                    VerticalAlignment="Top"
+                    Margin="0"
+                    FontSize="18"
+                    FontWeight="Bold"
+                    Foreground="Orchid"
+                    Background="{x:Null}"
+                    Padding="0"
+                    Visibility="Collapsed"
+                    Text="团队模式比分" />
+
+                    <!-- 新增：地图区内的角色列表面板 -->
+                    <Grid Panel.ZIndex="40" Margin="0,100,0,0" Background="{x:Null}">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto"/>
+                            <!-- 左侧：我方/友方角色 -->
+                            <ColumnDefinition Width="*"/>
+                            <!-- 间隔 -->
+                            <ColumnDefinition Width="Auto"/>
+                            <!-- 右侧：敌方角色 -->
+                        </Grid.ColumnDefinitions>
+
+                        <!-- 左侧：Promotion=200/300 的角色 -->
+                        <StackPanel Grid.Column="0" VerticalAlignment="Top" Margin="5,5,0,5" Width="100">
+                            <TextBlock x:Name="TeammateTextBlock" Text="我方角色" FontWeight="Bold" FontSize="12" Margin="0,0,0,5" Foreground="DarkSlateBlue"/>
+                            <ScrollViewer VerticalScrollBarVisibility="Auto" MaxHeight="400">
+                                <ItemsControl ItemsSource="{Binding TeammateCharacters, RelativeSource={RelativeSource AncestorType=UserControl}}"  ItemTemplate="{StaticResource CharacterSummaryTemplate}"/>
+                            </ScrollViewer>
+                        </StackPanel>
+
+                        <!-- 右侧：Promotion=400 的角色 -->
+                        <StackPanel Grid.Column="2" VerticalAlignment="Top" Margin="0,5,5,5" Width="100">
+                            <TextBlock x:Name="EnemyTextBlock" Text="敌方角色" FontWeight="Bold" FontSize="12" Margin="0,0,0,5" Foreground="DarkRed" TextAlignment="Right"/>
+                            <ScrollViewer VerticalScrollBarVisibility="Auto" MaxHeight="400">
+                                <ItemsControl ItemsSource="{Binding EnemyCharacters, RelativeSource={RelativeSource AncestorType=UserControl}}" ItemTemplate="{StaticResource CharacterSummaryTemplate}"/>
+                            </ScrollViewer>
+                        </StackPanel>
+                    </Grid>
+
                 </Grid>
             </Border>
         </ScrollViewer>
@@ -744,7 +819,7 @@
                         <Border BorderBrush="LightGray" BorderThickness="0,1,0,0" Margin="0,10,0,0" Padding="0,10,0,0">
                             <StackPanel>
                                 <TextBlock Text="详情描述" FontWeight="Bold" FontSize="14" Margin="0,0,0,5"/>
-                                <ScrollViewer VerticalScrollBarVisibility="Auto" Height="140">
+                                <ScrollViewer VerticalScrollBarVisibility="Auto" MaxHeight="120">
                                     <RichTextBox x:Name="DescriptionRichTextBox"
                                          IsReadOnly="True"
                                          BorderThickness="0"
@@ -885,12 +960,10 @@
                             <Border BorderBrush="LightGray" BorderThickness="0,1,0,0" Margin="0,10,0,0" Padding="0,10,0,0">
                                 <StackPanel>
                                     <TextBlock Text="数据统计" FontWeight="Bold" FontSize="14" Margin="0,0,0,5"/>
-                                    <TextBlock x:Name="StatsRatingKillsAssistsDeathsTextBlock" Style="{StaticResource CharacterAttributeTextStyle}"/>
-                                    <TextBlock x:Name="StatsLiveTimeRoundTurnTextBlock" Style="{StaticResource CharacterAttributeTextStyle}"/>
-                                    <TextBlock x:Name="StatsControlHealShieldTextBlock" Style="{StaticResource CharacterAttributeTextStyle}"/>
-                                    <TextBlock x:Name="StatsTotalDamageTextBlock" Style="{StaticResource CharacterAttributeTextStyle}"/>
-                                    <TextBlock x:Name="StatsTotalTakenDamageTextBlock" Style="{StaticResource CharacterAttributeTextStyle}"/>
-                                    <TextBlock x:Name="StatsTrueDamageTextBlock" Style="{StaticResource CharacterAttributeTextStyle}" Visibility="Collapsed"/>
+                                    <TextBlock x:Name="StatsTextBlock1" Style="{StaticResource CharacterAttributeTextStyle}"/>
+                                    <TextBlock x:Name="StatsTextBlock2" Style="{StaticResource CharacterAttributeTextStyle}"/>
+                                    <TextBlock x:Name="StatsTextBlock3" Style="{StaticResource CharacterAttributeTextStyle}"/>
+                                    <TextBlock x:Name="StatsTextBlock4" Style="{StaticResource CharacterAttributeTextStyle}"/>
                                     <!-- 初始隐藏，有真实伤害时显示 -->
                                     <TextBlock x:Name="StatsDamagePerSecondTurnTextBlock" Style="{StaticResource CharacterAttributeTextStyle}"/>
                                 </StackPanel>

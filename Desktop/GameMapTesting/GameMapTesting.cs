@@ -95,9 +95,10 @@ namespace Milimoe.FunGame.Testing.Desktop.GameMapTesting
                 }
 
                 // 创建顺序表并排序
+                Team? team1 = null, team2 = null;
                 if (isTeam)
                 {
-                    tgq = new(characters, WriteLine)
+                    tgq = new(WriteLine)
                     {
                         GameplayEquilibriumConstant = OshimaGameModuleConstant.GameplayEquilibriumConstant
                     };
@@ -138,12 +139,17 @@ namespace Milimoe.FunGame.Testing.Desktop.GameMapTesting
                             {
                                 c.Promotion = 300;
                             }
+                            team1 = team;
                         }
                         else
                         {
                             team.Members.ForEach(c => c.Promotion = 400);
+                            team2 = team;
                         }
                     }
+
+                    // 初始化角色
+                    _gamingQueue.InitCharacters(characters);
                 }
                 else
                 {
@@ -153,6 +159,7 @@ namespace Milimoe.FunGame.Testing.Desktop.GameMapTesting
                     };
                     _gamingQueue = mgq;
                 }
+                if (team1 != null && team2 != null) await Controller.SetTeamCharacters(team1.Members, team2.Members);
 
                 // 加载地图和绑定事件
                 _gamingQueue.LoadGameMap(GameMap);
@@ -322,6 +329,7 @@ namespace Milimoe.FunGame.Testing.Desktop.GameMapTesting
                     await Controller.UpdateBottomInfoPanel();
                     await Controller.UpdateQueue();
                     await Controller.UpdateCharacterPositionsOnMap();
+                    if (team1 != null && team2 != null) await Controller.SetTeamCharacters(team1.Members, team2.Members);
 
                     if (roundMsg != "")
                     {
@@ -747,6 +755,15 @@ namespace Milimoe.FunGame.Testing.Desktop.GameMapTesting
             if (totalStats.LiveRound != 0) totalStats.DamagePerRound = Calculation.Round2Digits(totalStats.TotalDamage / totalStats.LiveRound);
             if (totalStats.ActionTurn != 0) totalStats.DamagePerTurn = Calculation.Round2Digits(totalStats.TotalDamage / totalStats.ActionTurn);
             if (totalStats.LiveTime != 0) totalStats.DamagePerSecond = Calculation.Round2Digits(totalStats.TotalDamage / totalStats.LiveTime);
+        }
+
+        public List<Team> GetTeams()
+        {
+            if (_gamingQueue is TeamGamingQueue tgq)
+            {
+                return [.. tgq.Teams.Values];
+            }
+            return [];
         }
     }
 }

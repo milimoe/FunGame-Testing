@@ -1,7 +1,9 @@
 ﻿using System.Collections.ObjectModel;
 using System.Collections.Specialized;
+using System.ComponentModel;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Data;
 using System.Windows.Documents;
 using System.Windows.Input;
 using System.Windows.Media;
@@ -151,6 +153,8 @@ namespace Milimoe.FunGame.Testing.Desktop.GameMapTesting
 
         // 用于 UI 绑定的 ViewModel 集合
         public ObservableCollection<CharacterQueueItemViewModel> CharacterQueueDisplayItems { get; } = [];
+        public ObservableCollection<CharacterViewModel> TeammateCharacters { get; set; } = [];
+        public ObservableCollection<CharacterViewModel> EnemyCharacters { get; set; } = [];
 
         // 技能组
         public CharacterSkillsAndItemsViewModel CharacterSkillsAndItems { get; set; } = new();
@@ -340,7 +344,7 @@ namespace Milimoe.FunGame.Testing.Desktop.GameMapTesting
                 return;
             }
 
-            int maxLines = 300;
+            int maxLines = 150;
 
             // 获取 FlowDocument
             FlowDocument doc = DebugLogRichTextBox.Document;
@@ -423,7 +427,7 @@ namespace Milimoe.FunGame.Testing.Desktop.GameMapTesting
 
                 Canvas.SetLeft(rect, grid.X * CurrentGameMap.Size);
                 Canvas.SetTop(rect, grid.Y * CurrentGameMap.Size);
-                Panel.SetZIndex(rect, 0); // 确保格子在底部
+                Panel.SetZIndex(rect, 5); // 确保格子在底部，但留出一些空间。
 
                 rect.MouseLeftButtonDown += Grid_MouseLeftButtonDown;
 
@@ -438,6 +442,22 @@ namespace Milimoe.FunGame.Testing.Desktop.GameMapTesting
 
             GameMapCanvas.Width = maxCanvasWidth;
             GameMapCanvas.Height = maxCanvasHeight;
+
+            if (_controller.TeamMode && PlayerCharacter != null)
+            {
+                List<Team> teams = _controller.GetTeams();
+                foreach (Team team in teams)
+                {
+                    if (team.IsOnThisTeam(PlayerCharacter))
+                    {
+                        TeammateTextBlock.Text = team.Name;
+                    }
+                    else
+                    {
+                        EnemyTextBlock.Text = team.Name;
+                    }
+                }
+            }
         }
 
         /// <summary>
@@ -519,6 +539,14 @@ namespace Milimoe.FunGame.Testing.Desktop.GameMapTesting
                     characterBorder.Background = Brushes.Gray;
                 }
                 characterBorder.Child = characterText;
+                characterBorder.BorderBrush = character.Promotion switch
+                {
+                    200 => Brushes.BurlyWood,
+                    300 => Brushes.SkyBlue,
+                    400 => Brushes.Orchid,
+                    _ => Brushes.Salmon
+                };
+                characterBorder.BorderThickness = new Thickness(2);
 
                 // 设置位置
                 Canvas.SetLeft(characterBorder, grid.X * CurrentGameMap.Size + offset);
@@ -533,24 +561,25 @@ namespace Milimoe.FunGame.Testing.Desktop.GameMapTesting
                 _uiElementToCharacter.Add(characterBorder, character);
             }
 
-            // 清除所有角色的高亮
-            foreach (Character character in _characterToUiElement.Keys)
-            {
-                Border border = _characterToUiElement[character];
-                border.BorderBrush = character.Promotion switch
-                {
-                    200 => Brushes.BurlyWood,
-                    300 => Brushes.SkyBlue,
-                    400 => Brushes.Orchid,
-                    _ => Brushes.Salmon
-                };
-                border.BorderThickness = new Thickness(2);
-            }
-
             // 如果处于目标选择模式，重新应用高亮
             if (_isSelectingTargets)
             {
                 UpdateCharacterHighlights();
+            }
+
+            if (_controller.TeamMode && PlayerCharacter != null)
+            {
+                List<Team> teams = _controller.GetTeams();
+                if (teams.Count > 0)
+                {
+                    PointsTextBlock.Visibility = Visibility.Visible;
+                    PointsTextBlock.Text = $"{string.Join(" : ", teams.OrderBy(t => t.IsOnThisTeam(PlayerCharacter) ? 0 : 1).Select(t => $"{t.Name} ({t.Score})"))}";
+                }
+            }
+            else
+            {
+                PointsTextBlock.Visibility = Visibility.Visible;
+                PointsTextBlock.Text = $"剩余 {CharacterQueueDisplayItems.Count} 人";
             }
         }
 
@@ -829,14 +858,10 @@ namespace Milimoe.FunGame.Testing.Desktop.GameMapTesting
             }
 
             // 清空所有统计文本块
-            StatsRatingKillsAssistsDeathsTextBlock.Text = "";
-            StatsLiveTimeRoundTurnTextBlock.Text = "";
-            StatsControlHealShieldTextBlock.Text = "";
-            StatsTotalDamageTextBlock.Text = "";
-            StatsTotalTakenDamageTextBlock.Text = "";
-            StatsTrueDamageTextBlock.Text = "";
-            StatsDamagePerSecondTurnTextBlock.Text = "";
-            StatsTrueDamageTextBlock.Visibility = Visibility.Collapsed; // 默认隐藏真实伤害行
+            StatsTextBlock1.Text = "";
+            StatsTextBlock2.Text = "";
+            StatsTextBlock3.Text = "";
+            StatsTextBlock4.Text = "";
 
             // 尝试将传入的 CharacterStatistics 对象转换为 dynamic 类型，以便访问其属性
             Dictionary<Character, CharacterStatistics> dict = CharacterStatistics;
@@ -845,46 +870,19 @@ namespace Milimoe.FunGame.Testing.Desktop.GameMapTesting
                 CharacterStatistics? stats = dict.Where(kv => kv.Key == CurrentCharacter).Select(kv => kv.Value).FirstOrDefault();
                 if (stats != null)
                 {
-                    // 第一行：技术得分 / 击杀数 / 助攻数 / 死亡数
-                    StatsRatingKillsAssistsDeathsTextBlock.Text = $"技术得分：{FunGameService.CalculateRating(stats):0.0#} / 击杀数：{stats.Kills} / 助攻数：{stats.Assists} / 死亡数：{stats.Deaths}";
-
-                    // 第二行：存活时长 / 存活回合数 / 行动回合数
-                    StatsLiveTimeRoundTurnTextBlock.Text = $"存活时长：{stats.LiveTime:0.##} / 存活回合数：{stats.LiveRound} / 行动回合数：{stats.ActionTurn}";
-
-                    // 第三行：控制时长 / 总计治疗 / 护盾抵消
-                    StatsControlHealShieldTextBlock.Text = $"控制时长：{stats.ControlTime:0.##} / 总计治疗：{stats.TotalHeal:0.##} / 护盾抵消：{stats.TotalShield:0.##}";
-
-                    // 第四行：总计伤害 / 总计物理伤害 / 总计魔法伤害
-                    StatsTotalDamageTextBlock.Text = $"总计伤害：{stats.TotalDamage:0.##} / 总计物理伤害：{stats.TotalPhysicalDamage:0.##} / 总计魔法伤害：{stats.TotalMagicDamage:0.##}";
-
-                    // 第五行：总承受伤害 / 总承受物理伤害 / 总承受魔法伤害
-                    StatsTotalTakenDamageTextBlock.Text = $"总承受伤害：{stats.TotalTakenDamage:0.##} / 总承受物理伤害：{stats.TotalTakenPhysicalDamage:0.##} / 总承受魔法伤害：{stats.TotalTakenMagicDamage:0.##}";
-
-                    // 第六行：总计真实伤害 / 总承受真实伤害 (如果存在真实伤害则显示)
-                    if (stats.TotalTrueDamage > 0 || stats.TotalTakenTrueDamage > 0)
-                    {
-                        StatsTrueDamageTextBlock.Text = $"总计真实伤害：{stats.TotalTrueDamage:0.##} / 总承受真实伤害：{stats.TotalTakenTrueDamage:0.##}";
-                        StatsTrueDamageTextBlock.Visibility = Visibility.Visible;
-                    }
-                    else
-                    {
-                        StatsTrueDamageTextBlock.Visibility = Visibility.Collapsed;
-                    }
-
-                    // 第七行：每秒伤害 / 每回合伤害
-                    StatsDamagePerSecondTurnTextBlock.Text = $"每秒伤害：{stats.DamagePerSecond:0.##} / 每回合伤害：{stats.DamagePerTurn:0.##}";
+                    StatsTextBlock1.Text = $"击杀数：{stats.Kills} / 助攻数：{stats.Assists} / 死亡数：{stats.Deaths} / 每秒伤害：{stats.DamagePerSecond:0.##} / 每回合伤害：{stats.DamagePerTurn:0.##}";
+                    StatsTextBlock2.Text = $"存活时长：{stats.LiveTime:0.##} / 存活回合数：{stats.LiveRound} / 行动回合数：{stats.ActionTurn} / 控制时长：{stats.ControlTime:0.##} / 总计治疗：{stats.TotalHeal:0.##} / 护盾抵消：{stats.TotalShield:0.##}";
+                    StatsTextBlock3.Text = $"总计伤害：{stats.TotalDamage:0.##} / 总计物理伤害：{stats.TotalPhysicalDamage:0.##} / 总计魔法伤害：{stats.TotalMagicDamage:0.##} / 总计真实伤害：{stats.TotalTrueDamage:0.##}";
+                    StatsTextBlock4.Text = $"总承受伤害：{stats.TotalTakenDamage:0.##} / 总承受物理伤害：{stats.TotalTakenPhysicalDamage:0.##} / 总承受魔法伤害：{stats.TotalTakenMagicDamage:0.##} / 总承受真实伤害：{stats.TotalTakenTrueDamage:0.##}";
                 }
             }
             else
             {
                 // 当没有统计数据时，显示默认文本
-                StatsRatingKillsAssistsDeathsTextBlock.Text = "技术得分: - / 击杀数: - / 助攻数: -";
-                StatsLiveTimeRoundTurnTextBlock.Text = "存活时长: - / 存活回合数: - / 行动回合数: -";
-                StatsControlHealShieldTextBlock.Text = "控制时长: - / 总计治疗: - / 护盾抵消: -";
-                StatsTotalDamageTextBlock.Text = "总计伤害: - / 总计物理伤害: - / 总计魔法伤害: -";
-                StatsTotalTakenDamageTextBlock.Text = "总承受伤害: - / 总承受物理伤害: - / 总承受魔法伤害: -";
-                StatsTrueDamageTextBlock.Text = "总计真实伤害: - / 总承受真实伤害: -";
-                StatsDamagePerSecondTurnTextBlock.Text = "每秒伤害: - / 每回合伤害: -";
+                StatsTextBlock1.Text = "击杀数：- / 助攻数：- / 死亡数：- / 每秒伤害：- / 每回合伤害：-";
+                StatsTextBlock2.Text = "存活时长：- / 存活回合数：- / 行动回合数：- / 控制时长：- / 总计治疗：- / 护盾抵消：-";
+                StatsTextBlock3.Text = "总计伤害：- / 总计物理伤害：- / 总计魔法伤害：- / 总计真实伤害：-";
+                StatsTextBlock4.Text = "总承受伤害：- / 总承受物理伤害：- / 总承受魔法伤害：- / 总承受真实伤害：-";
             }
         }
 
@@ -946,16 +944,56 @@ namespace Milimoe.FunGame.Testing.Desktop.GameMapTesting
         }
 
         /// <summary>
+        /// 处理角色列表项的点击事件。模拟地图上点击角色的行为。
+        /// </summary>
+        private async void CharacterSummary_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
+        {
+            // 确保点击的是一个 Border 且其 Tag 绑定了 CharacterViewModel
+            if (sender is Border border && border.Tag is CharacterViewModel vm)
+            {
+                Character clickedCharacter = vm.Character; // 从 ViewModel 中获取实际的 Character 对象
+
+                if (_isSelectingTargets)
+                {
+                    await HandleTargetSelectionClick(clickedCharacter);
+                }
+                else if (CurrentGameMap != null && CurrentGameMap.Characters.TryGetValue(clickedCharacter, out Grid? characterGrid))
+                {
+                    ClearGridHighlights();
+
+                    if (_gridIdToUiElement.TryGetValue(characterGrid.Id, out Rectangle? gridRect))
+                    {
+                        gridRect.Stroke = Brushes.Red;
+                        gridRect.StrokeThickness = 2;
+                    }
+
+                    UpdateGridInfoPanel(characterGrid);
+
+                    await AppendDebugLog($"选中角色: {clickedCharacter.ToStringWithLevel()} (通过侧边面板点击)");
+                }
+                else
+                {
+                    await AppendDebugLog($"错误: 无法找到角色 {clickedCharacter.NickName} 所在的格子。");
+                    // 此时可以隐藏格子信息面板
+                    GridInfoPanel.Visibility = Visibility.Collapsed;
+                }
+
+                // 标记事件已处理，防止冒泡到下方的 Grid_MouseLeftButtonDown 或 GameMapCanvas_MouseLeftButtonDown
+                e.Handled = true;
+            }
+        }
+
+        /// <summary>
         /// 处理角色图标点击事件：选中角色并高亮其所在格子，或进行目标选择。
         /// </summary>
-        private void CharacterIcon_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
+        private async void CharacterIcon_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
         {
             if (sender is Border clickedBorder && _uiElementToCharacter.TryGetValue(clickedBorder, out Character? character))
             {
                 if (_isSelectingTargets)
                 {
                     // 如果处于目标选择模式，则处理目标选择逻辑
-                    HandleTargetSelectionClick(character);
+                    await HandleTargetSelectionClick(character);
                 }
                 else
                 {
@@ -974,7 +1012,7 @@ namespace Milimoe.FunGame.Testing.Desktop.GameMapTesting
                         }
                         UpdateGridInfoPanel(grid);
                     }
-                    _ = AppendDebugLog($"选中角色: {character.ToStringWithLevel()} (通过点击图标)");
+                    await AppendDebugLog($"选中角色: {character.ToStringWithLevel()} (通过点击图标)");
                 }
                 e.Handled = true; // 阻止事件冒泡到下方的Grid_MouseLeftButtonDown 或 GameMapCanvas_MouseLeftButtonDown
             }
@@ -1570,12 +1608,12 @@ namespace Milimoe.FunGame.Testing.Desktop.GameMapTesting
         /// 处理在目标选择模式下点击角色图标的逻辑。
         /// </summary>
         /// <param name="clickedCharacter">被点击的角色。</param>
-        private void HandleTargetSelectionClick(Character clickedCharacter)
+        private async Task HandleTargetSelectionClick(Character clickedCharacter)
         {
             // 检查是否是潜在目标
             if (_potentialTargetsForSelection == null || !_potentialTargetsForSelection.Contains(clickedCharacter))
             {
-                _ = AppendDebugLog($"无法选择 {clickedCharacter.NickName}：不是潜在目标。");
+                await AppendDebugLog($"无法选择 {clickedCharacter.NickName}：不是潜在目标。");
                 return;
             }
 
@@ -1600,7 +1638,7 @@ namespace Milimoe.FunGame.Testing.Desktop.GameMapTesting
 
             if (!isValidTarget)
             {
-                _ = AppendDebugLog($"无法选择 {clickedCharacter.NickName}：不符合目标选择规则。");
+                await AppendDebugLog($"无法选择 {clickedCharacter.NickName}：不符合目标选择规则。");
                 return;
             }
 
@@ -1612,7 +1650,7 @@ namespace Milimoe.FunGame.Testing.Desktop.GameMapTesting
                 }
                 else
                 {
-                    _ = AppendDebugLog($"已达到最大目标数量 ({_maxTargetsForSelection})。");
+                    await AppendDebugLog($"已达到最大目标数量 ({_maxTargetsForSelection})。");
                 }
             }
             UpdateCharacterHighlights(); // 更新地图上的高亮显示
@@ -1623,26 +1661,31 @@ namespace Milimoe.FunGame.Testing.Desktop.GameMapTesting
         /// </summary>
         private void UpdateCharacterHighlights()
         {
-            // 高亮潜在目标（黄色边框）
-            if (_potentialTargetsForSelection != null)
+            foreach (Character character in _characterToUiElement.Keys)
             {
-                foreach (Character potentialTarget in _potentialTargetsForSelection)
-                {
-                    if (_characterToUiElement.TryGetValue(potentialTarget, out Border? border))
-                    {
-                        border.BorderBrush = Brushes.Yellow;
-                        border.BorderThickness = new Thickness(4);
-                    }
-                }
-            }
+                Border border = _characterToUiElement[character];
 
-            // 高亮当前已选目标（红色边框）
-            foreach (Character selectedTarget in SelectedTargets)
-            {
-                if (_characterToUiElement.TryGetValue(selectedTarget, out Border? border))
+                // 恢复默认
+                border.BorderBrush = character.Promotion switch
                 {
+                    200 => Brushes.BurlyWood,
+                    300 => Brushes.SkyBlue,
+                    400 => Brushes.Orchid,
+                    _ => Brushes.Salmon
+                };
+                border.BorderThickness = new Thickness(2);
+
+                if (SelectedTargets.Contains(character))
+                {
+                    // 高亮当前已选目标（红色边框）
                     border.BorderBrush = Brushes.Red; // 已选目标颜色
                     border.BorderThickness = new Thickness(6);
+                }
+                else if (_potentialTargetsForSelection.Contains(character))
+                {
+                    // 高亮潜在目标（黄色边框）
+                    border.BorderBrush = Brushes.Yellow;
+                    border.BorderThickness = new Thickness(4);
                 }
             }
         }

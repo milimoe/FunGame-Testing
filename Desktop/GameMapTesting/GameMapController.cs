@@ -1,5 +1,4 @@
-﻿using System.Threading.Tasks;
-using Milimoe.FunGame.Core.Entity;
+﻿using Milimoe.FunGame.Core.Entity;
 using Milimoe.FunGame.Core.Interface.Entity;
 using Milimoe.FunGame.Core.Library.Common.Addon;
 using Milimoe.FunGame.Core.Library.Constant;
@@ -10,6 +9,8 @@ namespace Milimoe.FunGame.Testing.Desktop.GameMapTesting
     {
         public GameMapViewer UI => ui;
         private GameMapTesting? _game;
+
+        public bool TeamMode => _game?.TeamMode ?? false;
 
         // 输入请求器实例
         private readonly UserInputRequester<long> _characterSelectionRequester = new();
@@ -25,6 +26,28 @@ namespace Milimoe.FunGame.Testing.Desktop.GameMapTesting
         {
             _game = new(this);
             await _game.StartGame(false, true);
+        }
+
+        public List<Team> GetTeams()
+        {
+            return _game?.GetTeams() ?? [];
+        }
+
+        public async Task SetTeamCharacters(IEnumerable<Character> teammates, IEnumerable<Character> enemies)
+        {
+            await UI.InvokeAsync(() =>
+            {
+                UI.TeammateCharacters.Clear();
+                foreach (Character character in teammates)
+                {
+                    UI.TeammateCharacters.Add(new CharacterViewModel(character));
+                }
+                UI.EnemyCharacters.Clear();
+                foreach (Character character in enemies)
+                {
+                    UI.EnemyCharacters.Add(new CharacterViewModel(character));
+                }
+            });
         }
 
         public async Task SetPreCastSuperSkill(Character character, Skill skill)

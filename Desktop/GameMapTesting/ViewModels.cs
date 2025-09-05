@@ -110,4 +110,24 @@ namespace Milimoe.FunGame.Testing.Desktop.GameMapTesting
         public Character Character { get; set; } = character;
         public double ATDelay { get; set; } = atDelay;
     }
+
+    public class CharacterViewModel(Character character) : INotifyPropertyChanged
+    {
+        public Character Character
+        {
+            get => _character;
+            set
+            {
+                _character = value;
+                OnPropertyChanged();
+            }
+        }
+        private Character _character = character;
+
+        public event PropertyChangedEventHandler? PropertyChanged;
+        protected virtual void OnPropertyChanged([CallerMemberName] string? propertyName = null)
+        {
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+        }
+    }
 }

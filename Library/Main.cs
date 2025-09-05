@@ -30,11 +30,11 @@ FunGameService.InitFunGame();
 FunGameSimulation.InitFunGameSimulation();
 FunGameController controller = new(new Logger<FunGameController>(new LoggerFactory()));
 
-HorseTest.HorseTest1();
+//HorseTest.HorseTest1();
 
-StoreTest.StoreTest1();
+//StoreTest.StoreTest1();
 
-await CharacterTest.CharacterTest2();
+//await CharacterTest.CharacterTest2();
 
 //ActivityTest.Test2();
 
@@ -50,14 +50,14 @@ await CharacterTest.CharacterTest2();
 //    m.Level = 1;
 //    Console.WriteLine(m.GetInfo());
 //}
-foreach (Character c in FunGameConstant.Characters)
-{
-    Character character = c.Copy();
-    character.Level = 1;
-    character.Recovery();
-    FunGameService.AddCharacterSkills(character, 1, 6, 6);
-    Console.WriteLine(character.GetInfo());
-}
+//foreach (Character c in FunGameConstant.Characters)
+//{
+//    Character character = c.Copy();
+//    character.Level = 1;
+//    character.Recovery();
+//    FunGameService.AddCharacterSkills(character, 1, 6, 6);
+//    Console.WriteLine(character.GetInfo());
+//}
 //foreach (Skill s in FunGameConstant.Skills)
 //{
 //    s.Level = 6;
@@ -74,15 +74,15 @@ Console.ReadKey();
 //Console.WriteLine(rounds.Count);
 //Console.ReadKey();
 //rounds.Clear();
-while (true)
-{
-    await FunGameBO5.StartBO5();
-    ConsoleKeyInfo key = Console.ReadKey();
-    if (key.Key == ConsoleKey.Escape)
-    {
-        break;
-    }
-}
+//while (true)
+//{
+//    await FunGameBO5.StartBO5();
+//    ConsoleKeyInfo key = Console.ReadKey();
+//    if (key.Key == ConsoleKey.Escape)
+//    {
+//        break;
+//    }
+//}
 
 //await FunGameTesting.StartGame(true, false);
 //Console.ReadKey();
