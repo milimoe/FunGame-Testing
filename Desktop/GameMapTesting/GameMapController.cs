@@ -91,12 +91,13 @@ namespace Milimoe.FunGame.Testing.Desktop.GameMapTesting
 
         public async Task<List<Character>> RequestTargetSelection(Character character, ISkill skill, List<Character> enemys, List<Character> teammates)
         {
-            await WriteLine($"请为 {character.NickName} 选择目标 (最多 {skill.CanSelectTargetCount} 个)。");
+            List<Character> selectable = skill.GetSelectableTargets(character, enemys, teammates);
+            await WriteLine($"请为 {character.NickName} 选择目标 (最多 {skill.RealCanSelectTargetCount(enemys, teammates)} 个)。");
             List<Character> targetIds = await _targetSelectionRequester.RequestInput(
-                async (callback) => await UI.InvokeAsync(() => UI.ShowTargetSelectionUI(character, skill, enemys, teammates, callback))
+                async (callback) => await UI.InvokeAsync(() => UI.ShowTargetSelectionUI(character, skill, selectable, enemys, teammates, callback))
             ) ?? [];
             if (targetIds == null) return [];
-            return [.. enemys.Union(teammates).Union([character]).Where(targetIds.Contains)];
+            return [.. selectable.Where(targetIds.Contains)];
         }
 
         public async Task<Skill?> RequestSkillSelection(Character character, List<Skill> availableSkills)
@@ -130,7 +131,7 @@ namespace Milimoe.FunGame.Testing.Desktop.GameMapTesting
             await WriteLine(message);
             // 调用 _continuePromptRequester 的 RequestInput 方法，它会等待回调被触发
             await _continuePromptRequester.RequestInput(
-                async (callback) => await UI.InvokeAsync(() => UI.StartCountdownForContinue(countdownSeconds, callback))
+                async (callback) => await UI.InvokeAsync(async () => await UI.StartCountdownForContinue(countdownSeconds, callback))
             );
         }
 

@@ -1,20 +1,17 @@
 ﻿using System.Collections.ObjectModel;
 using System.Collections.Specialized;
-using System.ComponentModel;
+using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Data;
 using System.Windows.Documents;
 using System.Windows.Input;
 using System.Windows.Media;
-using System.Windows.Threading;
 using Milimoe.FunGame.Core.Api.Utility;
 using Milimoe.FunGame.Core.Entity;
 using Milimoe.FunGame.Core.Interface.Entity;
 using Milimoe.FunGame.Core.Library.Common.Addon;
 using Milimoe.FunGame.Core.Library.Constant;
 using Milimoe.FunGame.Core.Model;
-using Oshima.FunGame.OshimaServers.Service;
 using static Milimoe.FunGame.Core.Library.Constant.General;
 using Brush = System.Windows.Media.Brush;
 using Brushes = System.Windows.Media.Brushes;
@@ -50,7 +47,6 @@ namespace Milimoe.FunGame.Testing.Desktop.GameMapTesting
         public ObservableCollection<Character> SelectedTargets { get; set; } = [];
 
         // 新增：倒计时相关的字段
-        private readonly DispatcherTimer _countdownTimer;
         private int _remainingCountdownSeconds;
         private Action<bool>? _currentContinueCallback;
 
@@ -84,12 +80,6 @@ namespace Milimoe.FunGame.Testing.Desktop.GameMapTesting
             CharacterQueueItems = [];
             _selectionPredictCharacter.Character.Promotion = 1800;
             this.DataContext = this; // 将UserControl自身设置为DataContext，以便ItemsControl可以绑定到CharacterQueueItems和SelectedTargets属性
-
-            _countdownTimer = new()
-            {
-                Interval = TimeSpan.FromSeconds(1) // 每秒触发一次
-            };
-            _countdownTimer.Tick += CountdownTimer_Tick; // 绑定事件处理器
 
             // 初始化 SelectedTargetsItemsControl 的 ItemsSource
             SelectedTargetsItemsControl.ItemsSource = SelectedTargets;
@@ -1557,14 +1547,15 @@ namespace Milimoe.FunGame.Testing.Desktop.GameMapTesting
         /// </summary>
         /// <param name="character">发起行动的角色。</param>
         /// <param name="skill">请求选择目标的技能/普攻。</param>
+        /// <param name="selectable">所有可选择的目标列表。</param>
         /// <param name="enemys">所有可选敌方目标列表。</param>
         /// <param name="teammates">所有可选友方目标列表。</param>
         /// <param name="callback">选择完成后调用的回调函数。</param>
-        public void ShowTargetSelectionUI(Character character, ISkill skill, List<Character> enemys, List<Character> teammates, Action<List<Character>> callback)
+        public void ShowTargetSelectionUI(Character character, ISkill skill, List<Character> selectable, List<Character> enemys, List<Character> teammates, Action<List<Character>> callback)
         {
             _resolveTargetSelection = callback;
             _actingCharacterForTargetSelection = character;
-            _potentialTargetsForSelection = skill.GetSelectableTargets(character, enemys, teammates);
+            _potentialTargetsForSelection = selectable;
             _maxTargetsForSelection = skill.CanSelectTargetCount;
             _canSelectAllTeammates = skill.SelectAllTeammates;
             _canSelectAllEnemies = skill.SelectAllEnemies;
@@ -1574,7 +1565,7 @@ namespace Milimoe.FunGame.Testing.Desktop.GameMapTesting
             _isSelectingTargets = true; // 进入目标选择模式
 
             SelectedTargets.Clear(); // 清空之前的选择
-            TargetSelectionTitle.Text = $"选择 {character.NickName} 的目标 (最多 {skill.CanSelectTargetCount} 个)";
+            TargetSelectionTitle.Text = $"选择 {character.NickName} 的目标 (最多 {skill.RealCanSelectTargetCount(enemys, teammates)} 个)";
             TargetSelectionOverlay.Visibility = Visibility.Visible;
             if (_canSelectAllTeammates)
             {
@@ -1766,25 +1757,21 @@ namespace Milimoe.FunGame.Testing.Desktop.GameMapTesting
             _resolveContinuePrompt = null;
         }
 
-        private void CountdownTimer_Tick(object? sender, EventArgs e)
+        private async Task StartCountdownTimer()
         {
-            _remainingCountdownSeconds--;
-
-            if (_remainingCountdownSeconds > 0)
+            while (_remainingCountdownSeconds > 0)
             {
                 // 更新倒计时文本
                 CountdownTextBlock.Text = $"{_remainingCountdownSeconds} 秒后继续...";
+                await Task.Delay(1000);
+                _remainingCountdownSeconds--;
             }
-            else
-            {
-                // 倒计时结束
-                _countdownTimer.Stop(); // 停止计时器
-                CountdownTextBlock.Visibility = Visibility.Collapsed; // 隐藏倒计时文本
+            // 倒计时结束
+            CountdownTextBlock.Visibility = Visibility.Collapsed;
 
-                // 触发继续回调
-                _currentContinueCallback?.Invoke(true);
-                _currentContinueCallback = null; // 清除回调，防止重复触发
-            }
+            // 触发继续回调
+            _currentContinueCallback?.Invoke(true);
+            _currentContinueCallback = null;
         }
 
         /// <summary>
@@ -1792,7 +1779,7 @@ namespace Milimoe.FunGame.Testing.Desktop.GameMapTesting
         /// </summary>
         /// <param name="seconds">倒计时秒数。</param>
         /// <param name="callback">倒计时结束后调用的回调函数。</param>
-        public void StartCountdownForContinue(int seconds, Action<bool> callback)
+        public async Task StartCountdownForContinue(int seconds, Action<bool> callback)
         {
             _remainingCountdownSeconds = seconds;
             _currentContinueCallback = callback;
@@ -1802,7 +1789,7 @@ namespace Milimoe.FunGame.Testing.Desktop.GameMapTesting
             CountdownTextBlock.Visibility = Visibility.Visible;
 
             // 启动计时器
-            _countdownTimer.Start();
+            await InvokeAsync(StartCountdownTimer);
         }
 
         /// <summary>
