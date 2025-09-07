@@ -46,16 +46,20 @@ namespace Milimoe.FunGame.Testing.Desktop.GameMapTesting
         // 新增：用于目标选择UI的ObservableCollection
         public ObservableCollection<Character> SelectedTargets { get; set; } = [];
 
+        // 新增：用于移动目标选择UI的ObservableCollection
+        public ObservableCollection<Grid> SelectedTargetGrid { get; set; } = [];
+
         // 新增：倒计时相关的字段
         private int _remainingCountdownSeconds;
         private Action<bool>? _currentContinueCallback;
 
         // 回调Action，用于将UI选择结果传递给Controller
-        private Action<long>? _resolveCharacterSelection;
+        private Action<Character?>? _resolveCharacterSelection;
+        private Action<Grid?>? _resolveTargetGridSelection;
         private Action<CharacterActionType>? _resolveActionType;
         private Action<List<Character>>? _resolveTargetSelection;
-        private Action<long>? _resolveSkillSelection;
-        private Action<long>? _resolveItemSelection;
+        private Action<Skill?>? _resolveSkillSelection;
+        private Action<Item?>? _resolveItemSelection;
         private Action<bool>? _resolveContinuePrompt;
 
         // 目标选择的内部状态
@@ -65,6 +69,10 @@ namespace Milimoe.FunGame.Testing.Desktop.GameMapTesting
         private bool _canSelectAllTeammates, _canSelectAllEnemies, _canSelectSelf, _canSelectEnemy, _canSelectTeammate;
         private bool _isSelectingTargets = false; // 标记当前是否处于目标选择模式
         private readonly CharacterQueueItem _selectionPredictCharacter = new(Factory.GetCharacter(), 0); // 选择时进行下轮预测（用于行动顺序表显示）
+        private Grid? _actingCharacterCurrentGridForTargetSelection;
+        private bool _isSelectingTargetGrid = false; // 标记当前是否处于格子选择模式
+        private List<Grid> _potentialTargetGridForSelection = [];
+        private Brush DefaultGridBrush { get; } = ToWpfBrush(System.Drawing.Color.Gray); 
 
         // 新增：用于跟踪当前高亮的技能和物品图标
         private Border? _highlightedSkillIcon;
@@ -900,13 +908,13 @@ namespace Milimoe.FunGame.Testing.Desktop.GameMapTesting
         /// <summary>
         /// 处理格子点击事件：更新格子信息面板并高亮选中格子，并设置当前角色
         /// </summary>
-        private void Grid_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
+        private async void Grid_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
         {
             if (sender is Rectangle clickedRect && _uiElementToGrid.TryGetValue(clickedRect, out Grid? grid))
             {
                 // 如果处于目标选择模式，点击格子目前不进行任何操作（因为目标是角色）
                 if (_isSelectingTargets) return;
-
+                
                 // 移除所有格子的旧高亮效果
                 ClearGridHighlights();
                 // 高亮当前选中的格子
@@ -915,6 +923,15 @@ namespace Milimoe.FunGame.Testing.Desktop.GameMapTesting
 
                 // 更新格子信息面板
                 UpdateGridInfoPanel(grid);
+
+                await AppendDebugLog($"选中格子: ID={grid.Id}, 坐标=({grid.X},{grid.Y},{grid.Z})");
+
+                if (_isSelectingTargetGrid)
+                {
+                    await HandleTargetGridSelectionClick(grid);
+                    e.Handled = true;
+                    return;
+                }
 
                 // --- 设置 CurrentCharacter 属性 ---
                 // 如果格子上有角色，则默认选中第一个角色。
@@ -928,7 +945,6 @@ namespace Milimoe.FunGame.Testing.Desktop.GameMapTesting
                     this.CurrentCharacter = this.PlayerCharacter;
                 }
 
-                _ = AppendDebugLog($"选中格子: ID={grid.Id}, 坐标=({grid.X},{grid.Y},{grid.Z})");
                 e.Handled = true; // 标记事件已处理，防止冒泡到Canvas
             }
         }
@@ -950,6 +966,11 @@ namespace Milimoe.FunGame.Testing.Desktop.GameMapTesting
                 else if (CurrentGameMap != null && CurrentGameMap.Characters.TryGetValue(clickedCharacter, out Grid? characterGrid))
                 {
                     ClearGridHighlights();
+
+                    if (_isSelectingTargetGrid)
+                    {
+                        await HandleTargetGridSelectionClick(characterGrid);
+                    }
 
                     if (_gridIdToUiElement.TryGetValue(characterGrid.Id, out Rectangle? gridRect))
                     {
@@ -987,9 +1008,6 @@ namespace Milimoe.FunGame.Testing.Desktop.GameMapTesting
                 }
                 else
                 {
-                    // 否则，正常选中角色并更新UI
-                    this.CurrentCharacter = character; // 设置当前选中角色
-
                     // 找到角色所在的格子
                     if (CurrentGameMap != null && CurrentGameMap.Characters.TryGetValue(character, out Grid? grid))
                     {
@@ -1001,7 +1019,16 @@ namespace Milimoe.FunGame.Testing.Desktop.GameMapTesting
                             gridRect.StrokeThickness = 2;   // 更粗的边框
                         }
                         UpdateGridInfoPanel(grid);
+                        if (_isSelectingTargetGrid)
+                        {
+                            await HandleTargetGridSelectionClick(grid);
+                            return;
+                        }
                     }
+
+                    // 正常选中角色并更新UI
+                    this.CurrentCharacter = character; // 设置当前选中角色
+
                     await AppendDebugLog($"选中角色: {character.ToStringWithLevel()} (通过点击图标)");
                 }
                 e.Handled = true; // 阻止事件冒泡到下方的Grid_MouseLeftButtonDown 或 GameMapCanvas_MouseLeftButtonDown
@@ -1014,7 +1041,7 @@ namespace Milimoe.FunGame.Testing.Desktop.GameMapTesting
         private void GameMapCanvas_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
         {
             // 如果处于目标选择模式，不响应空白区域点击
-            if (_isSelectingTargets) return;
+            if (_isSelectingTargets || _isSelectingTargetGrid) return;
 
             // 只有当点击事件的原始源是Canvas本身时才处理，这意味着没有点击到任何子元素（如格子或角色图标）
             if (e.OriginalSource == GameMapCanvas)
@@ -1345,7 +1372,7 @@ namespace Milimoe.FunGame.Testing.Desktop.GameMapTesting
         /// </summary>
         /// <param name="availableCharacters">可供选择的角色列表。</param>
         /// <param name="callback">选择完成后调用的回调函数。</param>
-        public void ShowCharacterSelectionPrompt(List<Character> availableCharacters, Action<long> callback)
+        public void ShowCharacterSelectionPrompt(List<Character> availableCharacters, Action<Character?> callback)
         {
             _resolveCharacterSelection = callback;
             CharacterSelectionItemsControl.ItemsSource = availableCharacters;
@@ -1360,7 +1387,7 @@ namespace Milimoe.FunGame.Testing.Desktop.GameMapTesting
         {
             if (sender is Border border && border.Tag is Character character)
             {
-                _resolveCharacterSelection?.Invoke(character.Id);
+                _resolveCharacterSelection?.Invoke(character);
             }
         }
 
@@ -1426,7 +1453,7 @@ namespace Milimoe.FunGame.Testing.Desktop.GameMapTesting
         /// </summary>
         /// <param name="character">可供选择的技能列表。</param>
         /// <param name="callback">选择完成后调用的回调函数。</param>
-        public void ShowSkillSelectionUI(Character character, Action<long> callback)
+        public void ShowSkillSelectionUI(Character character, Action<Skill?> callback)
         {
             _resolveSkillSelection = callback;
             SkillItemSelectionTitle.Text = "请选择技能";
@@ -1441,7 +1468,7 @@ namespace Milimoe.FunGame.Testing.Desktop.GameMapTesting
         /// </summary>
         /// <param name="character">可供选择的物品列表。</param>
         /// <param name="callback">选择完成后调用的回调函数。</param>
-        public void ShowItemSelectionUI(Character character, Action<long> callback)
+        public void ShowItemSelectionUI(Character character, Action<Item?> callback)
         {
             _resolveItemSelection = callback;
             SkillItemSelectionTitle.Text = "请选择物品";
@@ -1460,11 +1487,11 @@ namespace Milimoe.FunGame.Testing.Desktop.GameMapTesting
             {
                 if (border.Tag is Skill skill)
                 {
-                    _resolveSkillSelection?.Invoke(skill.Id);
+                    _resolveSkillSelection?.Invoke(skill);
                 }
                 else if (border.Tag is Item item)
                 {
-                    _resolveItemSelection?.Invoke(item.Id);
+                    _resolveItemSelection?.Invoke(item);
                 }
             }
         }
@@ -1512,12 +1539,12 @@ namespace Milimoe.FunGame.Testing.Desktop.GameMapTesting
             if (SkillItemDescription.Text == "技能详情")
             {
                 SkillItemDescription.Text = "";
-                _resolveSkillSelection?.Invoke(-1);
+                _resolveSkillSelection?.Invoke(null);
             }
             else if (SkillItemDescription.Text == "物品详情")
             {
                 SkillItemDescription.Text = "";
-                _resolveItemSelection?.Invoke(-1);
+                _resolveItemSelection?.Invoke(null);
             }
             CharacterQueueItems.Remove(_selectionPredictCharacter);
         }
@@ -1596,6 +1623,28 @@ namespace Milimoe.FunGame.Testing.Desktop.GameMapTesting
         }
 
         /// <summary>
+        /// 显示移动目标选择UI。
+        /// </summary>
+        /// <param name="character"></param>
+        /// <param name="currentGrid"></param>
+        /// <param name="selectable"></param>
+        /// <param name="callback"></param>
+        public void ShowTargetGridSelectionUI(Character character, Grid currentGrid, List<Grid> selectable, Action<Grid?> callback)
+        {
+            _resolveTargetGridSelection = callback;
+            _actingCharacterForTargetSelection = character;
+            _actingCharacterCurrentGridForTargetSelection = currentGrid;
+            _potentialTargetGridForSelection = selectable;
+            _isSelectingTargetGrid = true;
+
+            SelectedTargetGrid.Clear(); // 清空之前的选择
+            TargetGridSelectionOverlay.Visibility = Visibility.Visible;
+
+            // 更新地图上格子的高亮，以显示潜在目标和已选目标
+            UpdateGridHighlights();
+        }
+
+        /// <summary>
         /// 处理在目标选择模式下点击角色图标的逻辑。
         /// </summary>
         /// <param name="clickedCharacter">被点击的角色。</param>
@@ -1648,6 +1697,33 @@ namespace Milimoe.FunGame.Testing.Desktop.GameMapTesting
         }
 
         /// <summary>
+        /// 处理在移动目标选择模式下点击角色图标的逻辑。
+        /// </summary>
+        /// <param name="clickedGrid">被点击的格子。</param>
+        private async Task HandleTargetGridSelectionClick(Grid clickedGrid)
+        {
+            // 检查是否是潜在目标
+            if (_potentialTargetGridForSelection == null || !_potentialTargetGridForSelection.Contains(clickedGrid))
+            {
+                await AppendDebugLog($"无法选择 {clickedGrid}：不是潜在目标。");
+                return;
+            }
+
+            if (!SelectedTargetGrid.Remove(clickedGrid))
+            {
+                if (SelectedTargetGrid.Count < 1)
+                {
+                    SelectedTargetGrid.Add(clickedGrid);
+                }
+                else
+                {
+                    await AppendDebugLog($"已选择过目标。");
+                }
+            }
+            UpdateGridHighlights(); // 更新地图上的高亮显示
+        }
+
+        /// <summary>
         /// 更新地图上角色的高亮显示，区分潜在目标和已选目标。
         /// </summary>
         private void UpdateCharacterHighlights()
@@ -1677,6 +1753,30 @@ namespace Milimoe.FunGame.Testing.Desktop.GameMapTesting
                     // 高亮潜在目标（黄色边框）
                     border.BorderBrush = Brushes.Yellow;
                     border.BorderThickness = new Thickness(4);
+                }
+            }
+        }
+
+        /// <summary>
+        /// 更新地图上格子的高亮显示，区分潜在目标和已选目标。
+        /// </summary>
+        private void UpdateGridHighlights()
+        {
+            foreach (Rectangle rectangle in _uiElementToGrid.Keys)
+            {
+                Grid grid = _uiElementToGrid[rectangle];
+
+                if (SelectedTargetGrid.Contains(grid))
+                {
+                    rectangle.Fill = Brushes.Red; // 已选目标颜色
+                }
+                else if (_potentialTargetGridForSelection.Contains(grid))
+                {
+                    rectangle.Fill = Brushes.Yellow;
+                }
+                else
+                {
+                    rectangle.Fill = DefaultGridBrush;
                 }
             }
         }
@@ -1715,6 +1815,22 @@ namespace Milimoe.FunGame.Testing.Desktop.GameMapTesting
         }
 
         /// <summary>
+        /// 确认目标格子选择的点击事件。
+        /// </summary>
+        private void ConfirmTargetGrid_Click(object sender, RoutedEventArgs e)
+        {
+            _resolveTargetGridSelection?.Invoke(SelectedTargetGrid.FirstOrDefault());
+        }
+
+        /// <summary>
+        /// 取消目标格子选择的点击事件。
+        /// </summary>
+        private void CancelTargetGridSelection_Click(object sender, RoutedEventArgs e)
+        {
+            _resolveTargetGridSelection?.Invoke(null); // 返回空表示取消
+        }
+
+        /// <summary>
         /// 隐藏目标选择UI。
         /// </summary>
         public void HideTargetSelectionUI()
@@ -1726,6 +1842,20 @@ namespace Milimoe.FunGame.Testing.Desktop.GameMapTesting
             _potentialTargetsForSelection = [];
             _resolveTargetSelection = null;
             UpdateCharacterHighlights(); // 清除所有高亮
+        }
+
+        /// <summary>
+        /// 隐藏移动目标选择UI。
+        /// </summary>
+        public void HideTargetGridSelectionUI()
+        {
+            TargetGridSelectionOverlay.Visibility = Visibility.Collapsed;
+            SelectedTargetGrid.Clear();
+            _isSelectingTargetGrid = false;
+            _actingCharacterCurrentGridForTargetSelection = null;
+            _potentialTargetGridForSelection = [];
+            _resolveTargetGridSelection = null;
+            UpdateGridHighlights();
         }
 
         /// <summary>

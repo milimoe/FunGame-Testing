@@ -59,11 +59,16 @@ namespace Milimoe.FunGame.Testing.Desktop.GameMapTesting
                     c.Level = clevel;
                     c.NormalAttack.Level = mlevel;
                     FunGameService.AddCharacterSkills(c, 1, slevel, slevel);
-                    Skill 疾风步 = new 疾风步(c)
+                    Skill skill = new 疾风步(c)
                     {
                         Level = slevel
                     };
-                    c.Skills.Add(疾风步);
+                    c.Skills.Add(skill);
+                    Skill passive = new 征服者(c)
+                    {
+                        Level = 1
+                    };
+                    c.Skills.Add(passive);
                     characters.Add(c);
                 }
 
@@ -75,11 +80,11 @@ namespace Milimoe.FunGame.Testing.Desktop.GameMapTesting
 
                 // 询问玩家需要选择哪个角色 (通过UI界面选择)
                 Character? player = null;
-                long selectedPlayerId = await Controller.RequestCharacterSelection(characters); // 异步等待UI选择
-                await Controller.ResolveCharacterSelection(selectedPlayerId);
-                if (selectedPlayerId != -1)
+                Character? selectedPlayer = await Controller.RequestCharacterSelection(characters); // 异步等待UI选择
+                await Controller.ResolveCharacterSelection(selectedPlayer);
+                if (selectedPlayer != null)
                 {
-                    player = characters.FirstOrDefault(c => c.Id == selectedPlayerId);
+                    player = characters.FirstOrDefault(c => c == selectedPlayer);
                     if (player != null)
                     {
                         await Controller.WriteLine($"选择了 [ {player} ]！");
@@ -303,6 +308,13 @@ namespace Milimoe.FunGame.Testing.Desktop.GameMapTesting
                         await Controller.WriteLine($"=== 回合 {i++} ===");
                         await Controller.WriteLine("现在是 [ " + characterToAct + " ] 的回合！");
 
+                        // 获取该角色当前位置
+                        if (_gamingQueue.Map != null)
+                        {
+                            Grid? currentGrid = _gamingQueue.Map.GetCharacterCurrentGrid(characterToAct);
+                            if (currentGrid != null) _gamingQueue.CustomData["currentGrid"] = currentGrid;
+                        }
+
                         bool isGameEnd = await _gamingQueue.ProcessTurnAsync(characterToAct);
 
                         if (isGameEnd)
@@ -472,17 +484,32 @@ namespace Milimoe.FunGame.Testing.Desktop.GameMapTesting
 
         private async Task<Grid> GamingQueue_SelectTargetGrid(GamingQueue queue, Character character, List<Character> enemys, List<Character> teammates, GameMap map)
         {
-            // 目前，格子选择未直接绑定到UI按钮。
-            // 如果“移动”动作被完全实现，这里需要一个UI提示来选择目标格子。
-            // 为简化，目前返回一个空Grid。
-            await Task.CompletedTask; // 模拟异步操作
-            return Grid.Empty;
+            if (!IsPlayer_OnlyTest(queue, character) || _gamingQueue is null || _gamingQueue.Map is null) return Grid.Empty;
+
+            Grid current =  Grid.Empty;
+            if (_gamingQueue.CustomData.TryGetValue("currentGrid", out object? currentGrid) && currentGrid is Grid grid)
+            {
+                current = grid;
+            }
+            if (current == Grid.Empty)
+            {
+                return current;
+            }
+
+            // 通过UI请求目标选择
+            Grid? selectedTargetGrid = await Controller.RequestTargetGridSelection(
+                character,
+                current,
+                _gamingQueue.Map.GetGridsByRange(current, character.MOV)
+            );
+            await Controller.ResolveTargetGridSelection(selectedTargetGrid);
+
+            return selectedTargetGrid ?? Grid.Empty;
         }
 
         private async Task GamingQueue_CharacterMove(GamingQueue queue, Character actor, Grid grid)
         {
             await Controller.UpdateCharacterPositionsOnMap();
-            await Task.CompletedTask;
         }
 
         private async Task GamingQueue_QueueUpdated(GamingQueue queue, List<Character> characters, Character character, double hardnessTime, QueueUpdatedReason reason, string msg)
@@ -521,7 +548,7 @@ namespace Milimoe.FunGame.Testing.Desktop.GameMapTesting
 
             // 通过UI请求物品选择
             Item? selectedItem = await Controller.RequestItemSelection(character, items);
-            await Controller.ResolveItemSelection(selectedItem?.Id ?? 0);
+            await Controller.ResolveItemSelection(selectedItem);
             return selectedItem;
         }
 
@@ -552,7 +579,7 @@ namespace Milimoe.FunGame.Testing.Desktop.GameMapTesting
 
             // 通过UI请求技能选择
             Skill? selectedSkill = await Controller.RequestSkillSelection(character, skills);
-            await Controller.ResolveSkillSelection(selectedSkill?.Id ?? 0);
+            await Controller.ResolveSkillSelection(selectedSkill);
             return selectedSkill;
         }
 
