@@ -1,4 +1,5 @@
-﻿using System.Collections.ObjectModel;
+﻿using System.Buffers.Text;
+using System.Collections.ObjectModel;
 using System.Collections.Specialized;
 using System.Threading.Tasks;
 using System.Windows;
@@ -12,6 +13,7 @@ using Milimoe.FunGame.Core.Interface.Entity;
 using Milimoe.FunGame.Core.Library.Common.Addon;
 using Milimoe.FunGame.Core.Library.Constant;
 using Milimoe.FunGame.Core.Model;
+using Oshima.FunGame.OshimaModules.Effects.OpenEffects;
 using static Milimoe.FunGame.Core.Library.Constant.General;
 using Brush = System.Windows.Media.Brush;
 using Brushes = System.Windows.Media.Brushes;
@@ -499,7 +501,7 @@ namespace Milimoe.FunGame.Testing.Desktop.GameMapTesting
                 Border characterBorder = new()
                 {
                     Style = (Style)this.FindResource("CharacterIconStyle"),
-                    ToolTip = character.GetInfo(),
+                    ToolTip = character.GetInfo(showMapRelated: true),
                     IsHitTestVisible = true // 确保角色图标可以被点击
                 };
 
@@ -709,7 +711,7 @@ namespace Milimoe.FunGame.Testing.Desktop.GameMapTesting
                         TextBlock effectText = new()
                         {
                             Style = (Style)this.FindResource("StatusIconTextStyle"),
-                            Text = effect.GetType().Name.Length > 0 ? effect.GetType().Name[0].ToString().ToUpper() : "?"
+                            Text = effect.Name.Length > 0 ? effect.Name[0].ToString() : "?"
                         };
                         effectBorder.Child = effectText;
                         effectBorder.Tag = effect; // 存储Effect对象，以便点击时获取其描述
@@ -724,6 +726,16 @@ namespace Milimoe.FunGame.Testing.Desktop.GameMapTesting
 
                 // --- 更新其他角色属性 ---
                 bool showGrowth = false; // 假设不显示成长值
+
+                double exHP = character.ExHP + character.ExHP2 + character.ExHP3;
+                List<string> shield = [];
+                if (character.Shield.TotalPhysical > 0) shield.Add($"物理：{character.Shield.TotalPhysical:0.##}");
+                if (character.Shield.TotalMagical > 0) shield.Add($"魔法：{character.Shield.TotalMagical:0.##}");
+                if (character.Shield.TotalMix > 0) shield.Add($"混合：{character.Shield.TotalMix:0.##}");
+                HpTextBlock.Text = $"生命值：{character.HP:0.##} / {character.MaxHP:0.##}" + (exHP != 0 ? $" [{character.BaseHP:0.##} {(exHP >= 0 ? "+" : "-")} {Math.Abs(exHP):0.##}]" : "") + (shield.Count > 0 ? $"（{string.Join("，", shield)}）" : "");
+                
+                double exMP = character.ExMP + character.ExMP2 + character.ExMP3;
+                MpTextBlock.Text = $"魔法值：{character.MP:0.##} / {character.MaxMP:0.##}" + (exMP != 0 ? $" [{character.BaseMP:0.##} {(exMP >= 0 ? "+" : "-")} {Math.Abs(exMP):0.##}]" : "");
 
                 double exATK = character.ExATK + character.ExATK2 + character.ExATK3;
                 AttackTextBlock.Text = $"攻击力：{character.ATK:0.##}" + (exATK != 0 ? $" [{character.BaseATK:0.##} {(exATK >= 0 ? "+" : "-")} {Math.Abs(exATK):0.##}]" : "");
@@ -759,6 +771,8 @@ namespace Milimoe.FunGame.Testing.Desktop.GameMapTesting
                 AccelCoeffTextBlock.Text = $"加速系数：{character.AccelerationCoefficient * 100:0.##}%";
                 PhysPenTextBlock.Text = $"物理穿透：{character.PhysicalPenetration * 100:0.##}%";
                 MagicPenTextBlock.Text = $"魔法穿透：{character.MagicalPenetration * 100:0.##}%";
+                MovTextBlock.Text = $"移动距离：{character.MOV}";
+                AtrTextBlock.Text = $"攻击距离：{character.ATR}";
             }
             else
             {
@@ -903,6 +917,12 @@ namespace Milimoe.FunGame.Testing.Desktop.GameMapTesting
             GridCharactersInfoItemsControl.ItemsSource = grid.Characters;
 
             GridInfoPanel.Visibility = Visibility.Visible; // 显示格子信息面板
+
+            if (grid.Characters.Count > 0)
+            {
+                _potentialTargetGridForSelection = CurrentGameMap.GetGridsByRange(grid, grid.Characters.First().MOV, true);
+                UpdateGridHighlights();
+            }
         }
 
         /// <summary>
@@ -1060,8 +1080,10 @@ namespace Milimoe.FunGame.Testing.Desktop.GameMapTesting
         /// </summary>
         private void CloseGridInfoButton_Click(object sender, RoutedEventArgs e)
         {
+            _potentialTargetGridForSelection = [];
             GridInfoPanel.Visibility = Visibility.Collapsed;
             ClearGridHighlights(); // 关闭时清除格子高亮
+            UpdateGridHighlights();
             // 关闭格子信息面板时，如果CurrentCharacter不是PlayerCharacter，可以考虑将其设置回PlayerCharacter
             if (CurrentCharacter != PlayerCharacter)
             {
@@ -1152,7 +1174,7 @@ namespace Milimoe.FunGame.Testing.Desktop.GameMapTesting
                 clickedBorder.BorderThickness = new Thickness(1.5);
 
                 SetRichTextBoxText(DescriptionRichTextBox, effect.ToString());
-                _ = AppendDebugLog($"查看状态: {effect.GetType().Name}");
+                _ = AppendDebugLog($"查看状态: {effect.Name}");
             }
         }
 
@@ -1399,7 +1421,7 @@ namespace Milimoe.FunGame.Testing.Desktop.GameMapTesting
             // Tag 现在是 Character 对象
             if (sender is Border border && border.Tag is Character hoveredCharacter)
             {
-                string details = hoveredCharacter.GetInfo();
+                string details = hoveredCharacter.GetInfo(showMapRelated: true);
                 SetRichTextBoxText(CharacterDetailsRichTextBox, details);
             }
         }
@@ -1577,12 +1599,14 @@ namespace Milimoe.FunGame.Testing.Desktop.GameMapTesting
         /// <param name="selectable">所有可选择的目标列表。</param>
         /// <param name="enemys">所有可选敌方目标列表。</param>
         /// <param name="teammates">所有可选友方目标列表。</param>
+        /// <param name="range">所有可选友方目标列表。</param>
         /// <param name="callback">选择完成后调用的回调函数。</param>
-        public void ShowTargetSelectionUI(Character character, ISkill skill, List<Character> selectable, List<Character> enemys, List<Character> teammates, Action<List<Character>> callback)
+        public void ShowTargetSelectionUI(Character character, ISkill skill, List<Character> selectable, List<Character> enemys, List<Character> teammates, List<Grid> range, Action<List<Character>> callback)
         {
             _resolveTargetSelection = callback;
             _actingCharacterForTargetSelection = character;
             _potentialTargetsForSelection = selectable;
+            _potentialTargetGridForSelection = range;
             _maxTargetsForSelection = skill.CanSelectTargetCount;
             _canSelectAllTeammates = skill.SelectAllTeammates;
             _canSelectAllEnemies = skill.SelectAllEnemies;
@@ -1620,6 +1644,8 @@ namespace Milimoe.FunGame.Testing.Desktop.GameMapTesting
 
             // 更新地图上角色的高亮，以显示潜在目标和已选目标
             UpdateCharacterHighlights();
+            // 更新地图上格子的高亮
+            UpdateGridHighlights();
         }
 
         /// <summary>
@@ -1796,6 +1822,22 @@ namespace Milimoe.FunGame.Testing.Desktop.GameMapTesting
                 }
             }
         }
+        
+        /// <summary>
+        /// 从已选目标列表中移除一个格子。
+        /// </summary>
+        private void RemoveTargetGrid_Click(object sender, RoutedEventArgs e)
+        {
+            if (sender is Button button && button.Tag is long gid)
+            {
+                Grid? gridToRemove = SelectedTargetGrid.FirstOrDefault(g => g.Id == gid);
+                if (gridToRemove != null)
+                {
+                    SelectedTargetGrid.Remove(gridToRemove);
+                    UpdateGridHighlights();
+                }
+            }
+        }
 
         /// <summary>
         /// 确认目标选择的点击事件。
@@ -1841,7 +1883,9 @@ namespace Milimoe.FunGame.Testing.Desktop.GameMapTesting
             _actingCharacterForTargetSelection = null;
             _potentialTargetsForSelection = [];
             _resolveTargetSelection = null;
+            _potentialTargetGridForSelection = [];
             UpdateCharacterHighlights(); // 清除所有高亮
+            UpdateGridHighlights();
         }
 
         /// <summary>
@@ -1856,6 +1900,7 @@ namespace Milimoe.FunGame.Testing.Desktop.GameMapTesting
             _potentialTargetGridForSelection = [];
             _resolveTargetGridSelection = null;
             UpdateGridHighlights();
+            CloseGridInfoButton_Click(new(), new());
         }
 
         /// <summary>

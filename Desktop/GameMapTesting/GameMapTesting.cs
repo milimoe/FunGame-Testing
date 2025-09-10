@@ -64,11 +64,13 @@ namespace Milimoe.FunGame.Testing.Desktop.GameMapTesting
                         Level = slevel
                     };
                     c.Skills.Add(skill);
-                    Skill passive = new 征服者(c)
+                    foreach (Skill skillLoop in FunGameConstant.CommonPassiveSkills)
                     {
-                        Level = 1
-                    };
-                    c.Skills.Add(passive);
+                        Skill passive = skillLoop.Copy();
+                        passive.Character = c;
+                        passive.Level = 1;
+                        c.Skills.Add(passive);
+                    }
                     characters.Add(c);
                 }
 
@@ -176,6 +178,7 @@ namespace Milimoe.FunGame.Testing.Desktop.GameMapTesting
                     List<Grid> grids = [.. map.Grids.Values];
                     foreach (Character character in characters)
                     {
+                        character.NormalAttack.GamingQueue = _gamingQueue;
                         Grid grid = Grid.Empty;
                         do
                         {
@@ -482,7 +485,7 @@ namespace Milimoe.FunGame.Testing.Desktop.GameMapTesting
             }
         }
 
-        private async Task<Grid> GamingQueue_SelectTargetGrid(GamingQueue queue, Character character, List<Character> enemys, List<Character> teammates, GameMap map)
+        private async Task<Grid> GamingQueue_SelectTargetGrid(GamingQueue queue, Character character, List<Character> enemys, List<Character> teammates, GameMap map, List<Grid> moveRange)
         {
             if (!IsPlayer_OnlyTest(queue, character) || _gamingQueue is null || _gamingQueue.Map is null) return Grid.Empty;
 
@@ -526,7 +529,7 @@ namespace Milimoe.FunGame.Testing.Desktop.GameMapTesting
             return true;
         }
 
-        private async Task<List<Character>> GamingQueue_SelectNormalAttackTargets(GamingQueue queue, Character character, NormalAttack attack, List<Character> enemys, List<Character> teammates)
+        private async Task<List<Character>> GamingQueue_SelectNormalAttackTargets(GamingQueue queue, Character character, NormalAttack attack, List<Character> enemys, List<Character> teammates, List<Grid> attackRange)
         {
             if (!IsPlayer_OnlyTest(queue, character)) return [];
 
@@ -535,7 +538,8 @@ namespace Milimoe.FunGame.Testing.Desktop.GameMapTesting
                 character,
                 attack,
                 enemys,
-                teammates
+                teammates,
+                attackRange
             );
             await Controller.ResolveTargetSelection(selectedTargets);
 
@@ -552,7 +556,7 @@ namespace Milimoe.FunGame.Testing.Desktop.GameMapTesting
             return selectedItem;
         }
 
-        private async Task<List<Character>> GamingQueue_SelectSkillTargets(GamingQueue queue, Character caster, Skill skill, List<Character> enemys, List<Character> teammates)
+        private async Task<List<Character>> GamingQueue_SelectSkillTargets(GamingQueue queue, Character caster, Skill skill, List<Character> enemys, List<Character> teammates, List<Grid> castRange)
         {
             if (!IsPlayer_OnlyTest(queue, caster)) return [];
 
@@ -566,7 +570,8 @@ namespace Milimoe.FunGame.Testing.Desktop.GameMapTesting
                 caster,
                 skill,
                 enemys,
-                teammates
+                teammates,
+                castRange
             );
             await Controller.ResolveTargetSelection(selectedTargets);
 
@@ -670,7 +675,8 @@ namespace Milimoe.FunGame.Testing.Desktop.GameMapTesting
                 if (b != null) drops.Add(b);
                 if (c != null) drops.Add(c);
                 if (d != null) drops.Add(d);
-                Item? magicCardPack = FunGameService.GenerateMagicCardPack(3, (QualityType)mQuality);
+                mQuality = 2;
+                Item? magicCardPack = FunGameService.GenerateMagicCardPack(8, (QualityType)mQuality);
                 if (magicCardPack != null)
                 {
                     foreach (Skill magic in magicCardPack.Skills.Magics)

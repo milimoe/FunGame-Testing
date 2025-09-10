@@ -1,6 +1,7 @@
 ﻿using System.Text;
 using Milimoe.FunGame.Core.Api.Utility;
 using Milimoe.FunGame.Core.Entity;
+using Milimoe.FunGame.Core.Library.Common.Addon;
 using Milimoe.FunGame.Core.Library.Constant;
 using Milimoe.FunGame.Core.Model;
 using Oshima.Core.Constant;
@@ -65,6 +66,12 @@ namespace Milimoe.FunGame.Testing.Tests
                         Level = slevel
                     };
                     c.Skills.Add(疾风步);
+                    foreach (Skill skillLoop in FunGameConstant.CommonPassiveSkills)
+                    {
+                        Skill passive = skillLoop.Copy();
+                        passive.Level = 1;
+                        c.Skills.Add(passive);
+                    }
                     characters.Add(c);
                 }
 
@@ -423,7 +430,7 @@ namespace Milimoe.FunGame.Testing.Tests
             return true;
         }
 
-        private static async Task<List<Character>> GamingQueue_SelectNormalAttackTargets(GamingQueue queue, Character character, NormalAttack attack, List<Character> enemys, List<Character> teammates)
+        private static async Task<List<Character>> GamingQueue_SelectNormalAttackTargets(GamingQueue queue, Character character, NormalAttack attack, List<Character> enemys, List<Character> teammates, List<Grid> attackRange)
         {
             List<Character> characters = [];
             if (IsPlayer_OnlyTest(queue, character))
@@ -525,7 +532,7 @@ namespace Milimoe.FunGame.Testing.Tests
             return item;
         }
 
-        private static async Task<List<Character>> GamingQueue_SelectSkillTargets(GamingQueue queue, Character caster, Skill skill, List<Character> enemys, List<Character> teammates)
+        private static async Task<List<Character>> GamingQueue_SelectSkillTargets(GamingQueue queue, Character caster, Skill skill, List<Character> enemys, List<Character> teammates, List<Grid> castRange)
         {
             List<Character> characters = [];
             if (IsPlayer_OnlyTest(queue, caster))

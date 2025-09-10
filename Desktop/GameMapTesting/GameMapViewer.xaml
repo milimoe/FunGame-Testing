@@ -575,7 +575,7 @@
                                                     </StackPanel>
 
                                                     <!-- 移除按钮 -->
-                                                    <Button Grid.Column="1" Content="X" Margin="5,0,0,0" Tag="{Binding Id}" Click="RemoveTarget_Click"
+                                                    <Button Grid.Column="1" Content="X" Margin="5,0,0,0" Tag="{Binding Id}" Click="RemoveTargetGrid_Click"
                                                         Style="{StaticResource {x:Static ToolBar.ButtonStyleKey}}" VerticalAlignment="Center"/>
                                                 </Grid>
                                             </Border>
@@ -796,26 +796,32 @@
                                         <RowDefinition Height="Auto"/>
                                         <RowDefinition Height="Auto"/>
                                         <RowDefinition Height="Auto"/>
+                                        <RowDefinition Height="Auto"/>
+                                        <RowDefinition Height="Auto"/>
                                     </Grid.RowDefinitions>
-
-                                    <TextBlock Grid.Row="0" Grid.Column="0" x:Name="AttackTextBlock" Style="{StaticResource CharacterAttributeTextStyle}" Text="攻击力:"/>
-                                    <TextBlock Grid.Row="0" Grid.Column="1" x:Name="PhysicalDefTextBlock" Style="{StaticResource CharacterAttributeTextStyle}" Text="物理护甲:"/>
-                                    <TextBlock Grid.Row="1" Grid.Column="0" x:Name="MagicResTextBlock" Style="{StaticResource CharacterAttributeTextStyle}" Text="魔法抗性:"/>
-                                    <TextBlock Grid.Row="1" Grid.Column="1" x:Name="SpeedTextBlock" Style="{StaticResource CharacterAttributeTextStyle}" Text="行动速度:"/>
-                                    <TextBlock Grid.Row="2" Grid.Column="0" x:Name="PrimaryAttrTextBlock" Style="{StaticResource CharacterAttributeTextStyle}" Text="核心属性:"/>
-                                    <TextBlock Grid.Row="2" Grid.Column="1" x:Name="StrengthTextBlock" Style="{StaticResource CharacterAttributeTextStyle}" Text="力量:"/>
-                                    <TextBlock Grid.Row="3" Grid.Column="0" x:Name="AgilityTextBlock" Style="{StaticResource CharacterAttributeTextStyle}" Text="敏捷:"/>
-                                    <TextBlock Grid.Row="3" Grid.Column="1" x:Name="IntellectTextBlock" Style="{StaticResource CharacterAttributeTextStyle}" Text="智力:"/>
-                                    <TextBlock Grid.Row="4" Grid.Column="0" x:Name="HpRegenTextBlock" Style="{StaticResource CharacterAttributeTextStyle}" Text="生命回复:"/>
-                                    <TextBlock Grid.Row="4" Grid.Column="1" x:Name="MpRegenTextBlock" Style="{StaticResource CharacterAttributeTextStyle}" Text="魔法回复:"/>
-                                    <TextBlock Grid.Row="5" Grid.Column="0" x:Name="CritRateTextBlock" Style="{StaticResource CharacterAttributeTextStyle}" Text="暴击率:"/>
-                                    <TextBlock Grid.Row="5" Grid.Column="1" x:Name="CritDmgTextBlock" Style="{StaticResource CharacterAttributeTextStyle}" Text="暴击伤害:"/>
-                                    <TextBlock Grid.Row="6" Grid.Column="0" x:Name="EvadeRateTextBlock" Style="{StaticResource CharacterAttributeTextStyle}" Text="闪避率:"/>
-                                    <TextBlock Grid.Row="6" Grid.Column="1" x:Name="LifestealTextBlock" Style="{StaticResource CharacterAttributeTextStyle}" Text="生命偷取:"/>
-                                    <TextBlock Grid.Row="7" Grid.Column="0" x:Name="CdrTextBlock" Style="{StaticResource CharacterAttributeTextStyle}" Text="冷却缩减:"/>
-                                    <TextBlock Grid.Row="7" Grid.Column="1" x:Name="AccelCoeffTextBlock" Style="{StaticResource CharacterAttributeTextStyle}" Text="加速系数:"/>
-                                    <TextBlock Grid.Row="8" Grid.Column="0" x:Name="PhysPenTextBlock" Style="{StaticResource CharacterAttributeTextStyle}" Text="物理穿透:"/>
-                                    <TextBlock Grid.Row="8" Grid.Column="1" x:Name="MagicPenTextBlock" Style="{StaticResource CharacterAttributeTextStyle}" Text="魔法穿透:"/>
+                                    
+                                    <TextBlock Grid.Row="0" Grid.Column="0" x:Name="HpTextBlock" Style="{StaticResource CharacterAttributeTextStyle}" Text="生命值："/>
+                                    <TextBlock Grid.Row="0" Grid.Column="1" x:Name="MpTextBlock" Style="{StaticResource CharacterAttributeTextStyle}" Text="魔法值："/>
+                                    <TextBlock Grid.Row="1" Grid.Column="0" x:Name="AttackTextBlock" Style="{StaticResource CharacterAttributeTextStyle}" Text="攻击力："/>
+                                    <TextBlock Grid.Row="1" Grid.Column="1" x:Name="PhysicalDefTextBlock" Style="{StaticResource CharacterAttributeTextStyle}" Text="物理护甲："/>
+                                    <TextBlock Grid.Row="2" Grid.Column="0" x:Name="MagicResTextBlock" Style="{StaticResource CharacterAttributeTextStyle}" Text="魔法抗性："/>
+                                    <TextBlock Grid.Row="2" Grid.Column="1" x:Name="SpeedTextBlock" Style="{StaticResource CharacterAttributeTextStyle}" Text="行动速度："/>
+                                    <TextBlock Grid.Row="3" Grid.Column="0" x:Name="PrimaryAttrTextBlock" Style="{StaticResource CharacterAttributeTextStyle}" Text="核心属性："/>
+                                    <TextBlock Grid.Row="3" Grid.Column="1" x:Name="StrengthTextBlock" Style="{StaticResource CharacterAttributeTextStyle}" Text="力量："/>
+                                    <TextBlock Grid.Row="4" Grid.Column="0" x:Name="AgilityTextBlock" Style="{StaticResource CharacterAttributeTextStyle}" Text="敏捷："/>
+                                    <TextBlock Grid.Row="4" Grid.Column="1" x:Name="IntellectTextBlock" Style="{StaticResource CharacterAttributeTextStyle}" Text="智力："/>
+                                    <TextBlock Grid.Row="5" Grid.Column="0" x:Name="HpRegenTextBlock" Style="{StaticResource CharacterAttributeTextStyle}" Text="生命回复："/>
+                                    <TextBlock Grid.Row="5" Grid.Column="1" x:Name="MpRegenTextBlock" Style="{StaticResource CharacterAttributeTextStyle}" Text="魔法回复："/>
+                                    <TextBlock Grid.Row="6" Grid.Column="0" x:Name="CritRateTextBlock" Style="{StaticResource CharacterAttributeTextStyle}" Text="暴击率："/>
+                                    <TextBlock Grid.Row="6" Grid.Column="1" x:Name="CritDmgTextBlock" Style="{StaticResource CharacterAttributeTextStyle}" Text="暴击伤害："/>
+                                    <TextBlock Grid.Row="7" Grid.Column="0" x:Name="EvadeRateTextBlock" Style="{StaticResource CharacterAttributeTextStyle}" Text="闪避率："/>
+                                    <TextBlock Grid.Row="7" Grid.Column="1" x:Name="LifestealTextBlock" Style="{StaticResource CharacterAttributeTextStyle}" Text="生命偷取："/>
+                                    <TextBlock Grid.Row="8" Grid.Column="0" x:Name="CdrTextBlock" Style="{StaticResource CharacterAttributeTextStyle}" Text="冷却缩减："/>
+                                    <TextBlock Grid.Row="8" Grid.Column="1" x:Name="AccelCoeffTextBlock" Style="{StaticResource CharacterAttributeTextStyle}" Text="加速系数："/>
+                                    <TextBlock Grid.Row="9" Grid.Column="0" x:Name="PhysPenTextBlock" Style="{StaticResource CharacterAttributeTextStyle}" Text="物理穿透："/>
+                                    <TextBlock Grid.Row="9" Grid.Column="1" x:Name="MagicPenTextBlock" Style="{StaticResource CharacterAttributeTextStyle}" Text="魔法穿透："/>
+                                    <TextBlock Grid.Row="10" Grid.Column="0" x:Name="MovTextBlock" Style="{StaticResource CharacterAttributeTextStyle}" Text="移动距离："/>
+                                    <TextBlock Grid.Row="10" Grid.Column="1" x:Name="AtrTextBlock" Style="{StaticResource CharacterAttributeTextStyle}" Text="攻击距离："/>
                                 </Grid>
                             </Border>
                         </StackPanel>
