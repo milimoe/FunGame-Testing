@@ -1616,7 +1616,7 @@ namespace Milimoe.FunGame.Testing.Desktop.GameMapTesting
             _isSelectingTargets = true; // 进入目标选择模式
 
             SelectedTargets.Clear(); // 清空之前的选择
-            TargetSelectionTitle.Text = $"选择 {character.NickName} 的目标 (最多 {skill.RealCanSelectTargetCount(enemys, teammates)} 个)";
+            TargetSelectionTitle.Text = $"选择 {skill.Name} 的目标 (最多 {skill.RealCanSelectTargetCount(enemys, teammates)} 个)";
             TargetSelectionOverlay.Visibility = Visibility.Visible;
             if (_canSelectAllTeammates)
             {
