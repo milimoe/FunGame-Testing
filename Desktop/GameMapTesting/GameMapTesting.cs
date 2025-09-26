@@ -170,23 +170,43 @@ namespace Milimoe.FunGame.Testing.Desktop.GameMapTesting
 
                 // 加载地图和绑定事件
                 _gamingQueue.LoadGameMap(GameMap);
+                _gamingQueue.UseQueueProtected = false;
                 if (_gamingQueue.Map != null)
                 {
                     GameMap map = _gamingQueue.Map;
-                    // 随机放置角色
                     HashSet<Grid> allocated = [];
-                    List<Grid> grids = [.. map.Grids.Values];
-                    foreach (Character character in characters)
+                    List<Grid> allGrids = [.. map.Grids.Values];
+                    if (isTeam && tgq != null && team1 != null && team2 != null)
                     {
-                        character.NormalAttack.GamingQueue = _gamingQueue;
-                        Grid grid = Grid.Empty;
-                        do
+                        // 团队模式放置角色
+                        List<Character> team1Members = [.. team1.Members];
+                        List<Character> team2Members = [.. team2.Members];
+
+                        // 获取地图尺寸
+                        int mapLength = map.Length;
+                        int mapWidth = map.Width;
+
+                        // 放置队伍一在左下角区域
+                        PlaceTeamInCorner(map, team1Members, allocated, startX: 0, endX: mapLength / 4, startY: mapWidth * 3 / 4, endY: mapWidth - 1);
+
+                        // 放置队伍二在右上角区域
+                        PlaceTeamInCorner(map, team2Members, allocated, startX: mapLength * 3 / 4, endX: mapLength - 1, startY: 0, endY: mapWidth / 4);
+                    }
+                    else
+                    {
+                        // 非团队模式，随机放置角色
+                        foreach (Character character in characters)
                         {
-                            grid = grids[Random.Shared.Next(grids.Count)];
+                            character.NormalAttack.GamingQueue = _gamingQueue;
+                            Grid grid = Grid.Empty;
+                            do
+                            {
+                                grid = allGrids[Random.Shared.Next(allGrids.Count)];
+                            }
+                            while (allocated.Contains(grid));
+                            allocated.Add(grid);
+                            map.SetCharacterCurrentGrid(character, grid);
                         }
-                        while (allocated.Contains(grid));
-                        allocated.Add(grid);
-                        map.SetCharacterCurrentGrid(character, grid);
                     }
                     await Controller.SetGameMap(map);
                     _gamingQueue.SelectTargetGrid += GamingQueue_SelectTargetGrid;
@@ -797,6 +817,121 @@ namespace Milimoe.FunGame.Testing.Desktop.GameMapTesting
                 return [.. tgq.Teams.Values];
             }
             return [];
+        }
+
+        private void PlaceTeamInCorner(GameMap map, List<Character> teamMembers, HashSet<Grid> allocated, int startX, int endX, int startY, int endY)
+        {
+            // 确保坐标有效
+            startX = Math.Clamp(startX, 0, map.Length - 1);
+            endX = Math.Clamp(endX, 0, map.Length - 1);
+            startY = Math.Clamp(startY, 0, map.Width - 1);
+            endY = Math.Clamp(endY, 0, map.Width - 1);
+
+            // 计算可用空间
+            int availableWidth = endX - startX + 1;
+            int availableHeight = endY - startY + 1;
+
+            // 计算每行最多角色数（保持至少2格间距）
+            int maxPerRow = Math.Min(availableWidth, Math.Max(1, availableWidth / 3));
+
+            // 计算起始位置
+            int currentX = startX;
+            int currentY = endY; // 从底部开始放置
+
+            foreach (Character character in teamMembers)
+            {
+                character.NormalAttack.GamingQueue = _gamingQueue;
+                Grid? grid = null;
+                int attempts = 0;
+
+                // 尝试在指定区域找到合适位置
+                do
+                {
+                    // 获取网格
+                    grid = map[currentX, currentY, 0];
+
+                    // 如果网格无效或已被占用，尝试下一个位置
+                    if (grid == null || allocated.Contains(grid))
+                    {
+                        // 移动到下一个位置
+                        currentX++;
+
+                        // 换行处理
+                        if (currentX > endX || currentX - startX >= maxPerRow)
+                        {
+                            currentX = startX;
+                            currentY--; // 向上移动一行
+
+                            // 如果超出区域，回到底部
+                            if (currentY < startY)
+                            {
+                                currentY = endY;
+                            }
+                        }
+                    }
+
+                    attempts++;
+
+                    // 如果尝试次数过多，使用随机位置
+                    if (attempts > teamMembers.Count * 2)
+                    {
+                        grid = GetRandomGridInArea(map, allocated, startX, endX, startY, endY);
+                        break;
+                    }
+                }
+                while (grid == null || allocated.Contains(grid));
+
+                // 放置角色
+                if (grid != null)
+                {
+                    allocated.Add(grid);
+                    map.SetCharacterCurrentGrid(character, grid);
+
+                    // 移动到下一个位置（保持间距）
+                    currentX += 2; // 水平间距2格
+
+                    // 换行处理
+                    if (currentX > endX || currentX - startX >= maxPerRow)
+                    {
+                        currentX = startX;
+                        currentY -= 2; // 垂直间距2格
+
+                        // 如果超出区域，回到底部
+                        if (currentY < startY)
+                        {
+                            currentY = endY;
+                        }
+                    }
+                }
+                else
+                {
+                    // 回退到随机放置
+                    Grid randomGrid = map.Grids.Values.FirstOrDefault(g => !allocated.Contains(g)) ?? Grid.Empty;
+                    allocated.Add(randomGrid);
+                    map.SetCharacterCurrentGrid(character, randomGrid);
+                }
+            }
+        }
+
+        private static Grid? GetRandomGridInArea(GameMap map, HashSet<Grid> allocated, int startX, int endX, int startY, int endY)
+        {
+            List<Grid> availableGrids = [];
+
+            for (int x = startX; x <= endX; x++)
+            {
+                for (int y = startY; y <= endY; y++)
+                {
+                    Grid? grid = map[x, y, 0];
+                    if (grid != null && !allocated.Contains(grid))
+                    {
+                        availableGrids.Add(grid);
+                    }
+                }
+            }
+
+            return availableGrids.Count > 0 ?
+                availableGrids[Random.Shared.Next(availableGrids.Count)] :
+                null;
         }
     }
 }
