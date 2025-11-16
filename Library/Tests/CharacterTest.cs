@@ -232,6 +232,13 @@ namespace Milimoe.FunGame.Testing.Tests
                     Console.WriteLine($"第 {times} 次探索，秘境：技能升级材料秘境，难度：{CharacterSet.GetRarityTypeName((RarityType)(difficulty - 1))}，消耗 {difficulty * 4} 探索许可，累计已使用 {approval} 探索许可。");
                     Console.WriteLine(await FunGameService.FightInstance(instanceType, difficulty, user, squad));
                 }
+                else if (instanceType == InstanceType.MagicCard)
+                {
+                    int difficulty = Random.Shared.Next(1, 6);
+                    approval += difficulty * 4;
+                    Console.WriteLine($"第 {times} 次探索，秘境：魔法卡秘境，难度：{CharacterSet.GetRarityTypeName((RarityType)(difficulty - 1))}，消耗 {difficulty * 4} 探索许可，累计已使用 {approval} 探索许可。");
+                    Console.WriteLine(await FunGameService.FightInstance(instanceType, difficulty, user, squad));
+                }
                 Console.WriteLine($"账户金币：{user.Inventory.Credits}，钻石：{user.Inventory.Materials}.");
                 ConsoleKey key = Console.ReadKey().Key;
                 if (key == ConsoleKey.Escape)
@@ -315,6 +322,11 @@ namespace Milimoe.FunGame.Testing.Tests
                 {
                     instanceType = InstanceType.SkillLevelUp;
                     Console.WriteLine("已切换至技能升级材料秘境模式。");
+                }
+                else if (key == ConsoleKey.G)
+                {
+                    instanceType = InstanceType.MagicCard;
+                    Console.WriteLine("已切换至魔法卡秘境模式。");
                 }
             }
         }
