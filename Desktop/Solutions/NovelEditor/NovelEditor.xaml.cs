@@ -197,7 +197,7 @@ namespace Milimoe.FunGame.Testing.Desktop.Solutions.NovelEditor
                     NodeListBox.ItemsSource = _config.Values;
                     NodeListBox.Items.Refresh();
                     Title = Title.Replace("*", "").Trim();
-                    if (NovelConfig.ExistsFile("NovelEditor", _config.FileName))
+                    if (NovelConfig.FileExists("NovelEditor", _config.FileName))
                     {
                         MessageBox.Show("这是一个在配置文件中已存在相同文件名的文件，建议保存时使用另存为功能。", "提示");
                     }
@@ -224,7 +224,7 @@ namespace Milimoe.FunGame.Testing.Desktop.Solutions.NovelEditor
                 string name = inputDialog.ResponseText;
                 if (name.Trim() != "")
                 {
-                    if (NovelConfig.ExistsFile("NovelEditor", name))
+                    if (NovelConfig.FileExists("NovelEditor", name))
                     {
                         if (MessageBox.Show("文件已经存在，是否覆盖？", "提示", MessageBoxButton.YesNo) == MessageBoxResult.No)
                         {

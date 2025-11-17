@@ -37,7 +37,7 @@ namespace Milimoe.FunGame.Testing.Desktop.GameMapTesting
 
         protected override void AfterTimeElapsed(ref double timeToReduce)
         {
-            
+
         }
     }
 }

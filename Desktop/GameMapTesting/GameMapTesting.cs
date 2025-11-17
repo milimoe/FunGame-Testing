@@ -455,7 +455,7 @@ namespace Milimoe.FunGame.Testing.Desktop.GameMapTesting
                     }
 
                     CharacterStatistics? totalStats = isTeam ?
-                        TeamCharacterStatistics.Where(kv => kv.Key.GetName() == character.GetName()).Select(kv => kv.Value).FirstOrDefault() : 
+                        TeamCharacterStatistics.Where(kv => kv.Key.GetName() == character.GetName()).Select(kv => kv.Value).FirstOrDefault() :
                         CharacterStatistics.Where(kv => kv.Key.GetName() == character.GetName()).Select(kv => kv.Value).FirstOrDefault();
                     if (totalStats != null)
                     {
@@ -509,7 +509,7 @@ namespace Milimoe.FunGame.Testing.Desktop.GameMapTesting
         {
             if (!IsPlayer_OnlyTest(queue, character) || _gamingQueue is null || _gamingQueue.Map is null) return Grid.Empty;
 
-            Grid current =  Grid.Empty;
+            Grid current = Grid.Empty;
             if (_gamingQueue.CustomData.TryGetValue("currentGrid", out object? currentGrid) && currentGrid is Grid grid)
             {
                 current = grid;

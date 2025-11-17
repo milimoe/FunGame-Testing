@@ -21,7 +21,7 @@ namespace Milimoe.FunGame.Testing.Desktop.Solutions
             ItemManager = im;
             FileName = "Module.ini";
             ModuleName = "EntityEditor";
-            if (INIHelper.ExistINIFile(FileName))
+            if (INIHelper.INIFileExists(FileName))
             {
                 ModuleName = INIHelper.ReadINI("ModuleName", "Module", FileName);
                 string character = INIHelper.ReadINI("ModuleName", "Character", FileName);

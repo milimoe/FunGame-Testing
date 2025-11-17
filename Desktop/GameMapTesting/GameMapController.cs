@@ -186,7 +186,7 @@ namespace Milimoe.FunGame.Testing.Desktop.GameMapTesting
             _continuePromptRequester.ResolveInput(true); // 任何值都可以，只要完成Task
             await UI.InvokeAsync(() => UI.HideContinuePrompt());
         }
-        
+
         public async Task ResolveCountDownContinuePrompt()
         {
             _continuePromptRequester.ResolveInput(true);
@@ -207,12 +207,12 @@ namespace Milimoe.FunGame.Testing.Desktop.GameMapTesting
         {
             await UI.InvokeAsync(UI.UpdateBottomInfoPanel);
         }
-        
+
         public async Task UpdateQueue()
         {
             await UI.InvokeAsync(UI.UpdateLeftQueuePanelGrid);
         }
-        
+
         public async Task UpdateCharacterPositionsOnMap()
         {
             await UI.InvokeAsync(UI.UpdateCharacterPositionsOnMap);
@@ -233,7 +233,7 @@ namespace Milimoe.FunGame.Testing.Desktop.GameMapTesting
                 UI.CurrentGameMap = map;
             });
         }
-        
+
         public async Task SetCurrentRound(int round)
         {
             await UI.InvokeAsync(() =>
@@ -241,7 +241,7 @@ namespace Milimoe.FunGame.Testing.Desktop.GameMapTesting
                 UI.CurrentRound = round;
             });
         }
-        
+
         public async Task SetTurnRewards(Dictionary<int, List<Skill>> rewards)
         {
             await UI.InvokeAsync(() =>
@@ -257,7 +257,7 @@ namespace Milimoe.FunGame.Testing.Desktop.GameMapTesting
                 UI.PlayerCharacter = character;
             });
         }
-        
+
         public async Task SetCurrentCharacter(Character character)
         {
             await UI.InvokeAsync(() =>
@@ -274,11 +274,11 @@ namespace Milimoe.FunGame.Testing.Desktop.GameMapTesting
             });
         }
     }
-    
+
     /// <summary>
-     /// 辅助类，用于管理异步的用户输入请求。
-     /// </summary>
-     /// <typeparam name="T">期望的用户输入类型。</typeparam>
+    /// 辅助类，用于管理异步的用户输入请求。
+    /// </summary>
+    /// <typeparam name="T">期望的用户输入类型。</typeparam>
     public class UserInputRequester<T>
     {
         private TaskCompletionSource<T?>? _tcs;

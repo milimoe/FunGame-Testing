@@ -1,7 +1,5 @@
-﻿using System.Buffers.Text;
-using System.Collections.ObjectModel;
+﻿using System.Collections.ObjectModel;
 using System.Collections.Specialized;
-using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Documents;
@@ -13,7 +11,6 @@ using Milimoe.FunGame.Core.Interface.Entity;
 using Milimoe.FunGame.Core.Library.Common.Addon;
 using Milimoe.FunGame.Core.Library.Constant;
 using Milimoe.FunGame.Core.Model;
-using Oshima.FunGame.OshimaModules.Effects.OpenEffects;
 using static Milimoe.FunGame.Core.Library.Constant.General;
 using Brush = System.Windows.Media.Brush;
 using Brushes = System.Windows.Media.Brushes;
@@ -74,7 +71,7 @@ namespace Milimoe.FunGame.Testing.Desktop.GameMapTesting
         private Grid? _actingCharacterCurrentGridForTargetSelection;
         private bool _isSelectingTargetGrid = false; // 标记当前是否处于格子选择模式
         private List<Grid> _potentialTargetGridForSelection = [];
-        private Brush DefaultGridBrush { get; } = ToWpfBrush(System.Drawing.Color.Gray); 
+        private Brush DefaultGridBrush { get; } = ToWpfBrush(System.Drawing.Color.Gray);
 
         // 新增：用于跟踪当前高亮的技能和物品图标
         private Border? _highlightedSkillIcon;
@@ -733,7 +730,7 @@ namespace Milimoe.FunGame.Testing.Desktop.GameMapTesting
                 if (character.Shield.TotalMagical > 0) shield.Add($"魔法：{character.Shield.TotalMagical:0.##}");
                 if (character.Shield.TotalMix > 0) shield.Add($"混合：{character.Shield.TotalMix:0.##}");
                 HpTextBlock.Text = $"生命值：{character.HP:0.##} / {character.MaxHP:0.##}" + (exHP != 0 ? $" [{character.BaseHP:0.##} {(exHP >= 0 ? "+" : "-")} {Math.Abs(exHP):0.##}]" : "") + (shield.Count > 0 ? $"（{string.Join("，", shield)}）" : "");
-                
+
                 double exMP = character.ExMP + character.ExMP2 + character.ExMP3;
                 MpTextBlock.Text = $"魔法值：{character.MP:0.##} / {character.MaxMP:0.##}" + (exMP != 0 ? $" [{character.BaseMP:0.##} {(exMP >= 0 ? "+" : "-")} {Math.Abs(exMP):0.##}]" : "");
 
@@ -934,7 +931,7 @@ namespace Milimoe.FunGame.Testing.Desktop.GameMapTesting
             {
                 // 如果处于目标选择模式，点击格子目前不进行任何操作（因为目标是角色）
                 if (_isSelectingTargets) return;
-                
+
                 // 移除所有格子的旧高亮效果
                 ClearGridHighlights();
                 // 高亮当前选中的格子
@@ -1822,7 +1819,7 @@ namespace Milimoe.FunGame.Testing.Desktop.GameMapTesting
                 }
             }
         }
-        
+
         /// <summary>
         /// 从已选目标列表中移除一个格子。
         /// </summary>

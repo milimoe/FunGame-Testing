@@ -20,7 +20,7 @@ namespace Milimoe.FunGame.Testing.Desktop.GameMapTesting
             }
         }
         private List<ISkill> _skills = [];
-        
+
         public List<Item> Items
         {
             get => _items;
