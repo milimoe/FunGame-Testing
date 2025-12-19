@@ -255,7 +255,7 @@ namespace Milimoe.FunGame.Testing.Tests
                 if (HTTPClient != null)
                 {
                     await HTTPClient.Send(SocketMessageType.Disconnect);
-                    Close_WebSocket();
+                    CloseWebSocket();
                 }
             });
         }
