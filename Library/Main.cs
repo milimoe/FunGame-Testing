@@ -1,6 +1,9 @@
 using Microsoft.Extensions.Logging;
 using Milimoe.FunGame.Core.Api.Utility;
+using Milimoe.FunGame.Core.Entity;
+using Milimoe.FunGame.Testing.Tests;
 using Oshima.FunGame.OshimaModules;
+using Oshima.FunGame.OshimaModules.Models;
 using Oshima.FunGame.OshimaServers.Service;
 using Oshima.FunGame.WebAPI.Controllers;
 
@@ -29,9 +32,14 @@ FunGameController controller = new(new Logger<FunGameController>(new LoggerFacto
 
 //await CharacterTest.CharacterTest2();
 
-//ActivityTest.Test2();
+ActivityTest.Test3();
 
 //await ActivityTest.Test();
+
+foreach (Item i in FunGameConstant.Equipment)
+{
+    Console.WriteLine(i.ToString(true, false));
+}
 
 //foreach (Skill s in FunGameConstant.Skills)
 //{
