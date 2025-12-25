@@ -268,33 +268,16 @@ namespace Milimoe.FunGame.Testing.Tests
 
         public static void Test3()
         {
-            Activity activity = new(1, "糖糖一周年纪念活动", new DateTime(2025, 12, 25, 4, 0, 0), new DateTime(2026, 1, 4, 3, 59, 59))
+            Activity activity = new(7, "糖糖一周年纪念活动", new DateTime(2025, 12, 25, 4, 0, 0), new DateTime(2026, 1, 4, 3, 59, 59))
             {
                 Description = "在活动期间，累计消耗 360 个探索许可即可领取【一周年纪念礼包】，打开后获得金币、钻石奖励以及【一周年纪念套装】（包含武器粉糖雾蝶 * 1，防具糖之誓约 * 1，鞋子蜜步流心 * 1，饰品回忆糖纸 * 1，饰品蜂糖蜜酿 * 1）！自2024年12月进入上线前的测试阶段起，糖糖已经陪我们走过了第一个年头，放眼未来，糖糖将为我们带来更多快乐。"
             };
-            Quest quest1 = new()
-            {
-                Id = 1,
-                Name = "糖糖一周年纪念",
-                Description = "消耗 360 个探索许可（即参与探索玩法、秘境挑战）。",
-                NeedyExploreItemName = "探索许可",
-                CreditsAward = 10000,
-                Awards = [
-                    new 一周年纪念礼包()
-                ],
-                AwardsCount = new() {
-                    { "一周年纪念礼包", 1 }
-                },
-                QuestType = QuestType.Progressive,
-                MaxProgress = 360
-            };
-            activity.Quests.Add(quest1);
             Console.WriteLine(FunGameService.AddEvent(activity));
             Console.WriteLine(FunGameService.GetEventCenter(null));
             Console.WriteLine();
             Console.WriteLine(FunGameService.GetEvents(null));
             Console.WriteLine();
-            Console.WriteLine(FunGameService.GetEvent(null, 1));
+            Console.WriteLine(FunGameService.GetEvent(null, 7));
         }
     }
 }
