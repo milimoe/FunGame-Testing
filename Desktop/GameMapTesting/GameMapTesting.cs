@@ -649,7 +649,7 @@ namespace Milimoe.FunGame.Testing.Desktop.GameMapTesting
 
         private static bool IsRoundHasPlayer_OnlyTest(GamingQueue queue, Character current)
         {
-            return queue.CustomData.TryGetValue("player", out object? value) && value is Character player && (player == current || (current.CharacterState != CharacterState.Casting && queue.LastRound.Targets.Any(c => c == player)));
+            return queue.CustomData.TryGetValue("player", out object? value) && value is Character player && (player == current || (current.CharacterState != CharacterState.Casting && queue.LastRound.Targets.Values.SelectMany(c => c).Any(c => c == player)));
         }
 
         public async Task SetPreCastSuperSkill(Character character, Skill skill)
