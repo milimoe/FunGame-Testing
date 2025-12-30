@@ -397,7 +397,7 @@ namespace Milimoe.FunGame.Testing.Tests
             }
         }
 
-        private static async Task GamingQueue_QueueUpdated(GamingQueue queue, List<Character> characters, Character character, double hardnessTime, QueueUpdatedReason reason, string msg)
+        private static async Task GamingQueue_QueueUpdated(GamingQueue queue, List<Character> characters, Character character, DecisionPoints dp, double hardnessTime, QueueUpdatedReason reason, string msg)
         {
             if (IsPlayer_OnlyTest(queue, character))
             {
@@ -418,7 +418,7 @@ namespace Milimoe.FunGame.Testing.Tests
             await Task.CompletedTask;
         }
 
-        private static async Task<bool> GamingQueue_TurnStart(GamingQueue queue, Character character, List<Character> enemys, List<Character> teammates, List<Skill> skills, List<Item> items)
+        private static async Task<bool> GamingQueue_TurnStart(GamingQueue queue, Character character, DecisionPoints dp, List<Character> enemys, List<Character> teammates, List<Skill> skills, List<Item> items)
         {
             if (IsPlayer_OnlyTest(queue, character))
             {
@@ -634,7 +634,7 @@ namespace Milimoe.FunGame.Testing.Tests
             return skill;
         }
 
-        private static async Task GamingQueue_TurnEnd(GamingQueue queue, Character character)
+        private static async Task GamingQueue_TurnEnd(GamingQueue queue, Character character, DecisionPoints dp)
         {
             if (IsRoundHasPlayer_OnlyTest(queue, character))
             {
@@ -645,7 +645,7 @@ namespace Milimoe.FunGame.Testing.Tests
             await Task.CompletedTask;
         }
 
-        private static async Task<CharacterActionType> GamingQueue_DecideAction(GamingQueue queue, Character character, List<Character> enemys, List<Character> teammates, List<Skill> skills, List<Item> items)
+        private static async Task<CharacterActionType> GamingQueue_DecideAction(GamingQueue queue, Character character, DecisionPoints dp, List<Character> enemys, List<Character> teammates, List<Skill> skills, List<Item> items)
         {
             CharacterActionType type = CharacterActionType.None;
             if (IsPlayer_OnlyTest(queue, character))

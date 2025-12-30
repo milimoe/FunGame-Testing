@@ -2,6 +2,7 @@
 using Milimoe.FunGame.Core.Interface.Entity;
 using Milimoe.FunGame.Core.Library.Common.Addon;
 using Milimoe.FunGame.Core.Library.Constant;
+using Milimoe.FunGame.Core.Model;
 
 namespace Milimoe.FunGame.Testing.Desktop.GameMapTesting
 {
@@ -203,14 +204,14 @@ namespace Milimoe.FunGame.Testing.Desktop.GameMapTesting
             return false;
         }
 
-        public async Task UpdateBottomInfoPanel()
+        public async Task UpdateBottomInfoPanel(DecisionPoints dp)
         {
-            await UI.InvokeAsync(UI.UpdateBottomInfoPanel);
+            await UI.InvokeAsync(async () => await UI.UpdateBottomInfoPanel(dp));
         }
 
-        public async Task UpdateQueue()
+        public async Task UpdateQueue(DecisionPoints dp)
         {
-            await UI.InvokeAsync(UI.UpdateLeftQueuePanelGrid);
+            await UI.InvokeAsync(async () => await UI.UpdateLeftQueuePanelGrid(dp));
         }
 
         public async Task UpdateCharacterPositionsOnMap()

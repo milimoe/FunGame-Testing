@@ -1,5 +1,6 @@
 ﻿using System.Collections.ObjectModel;
 using System.Collections.Specialized;
+using System.Runtime.Intrinsics.Arm;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Documents;
@@ -47,6 +48,8 @@ namespace Milimoe.FunGame.Testing.Desktop.GameMapTesting
 
         // 新增：用于移动目标选择UI的ObservableCollection
         public ObservableCollection<Grid> SelectedTargetGrid { get; set; } = [];
+
+        public DecisionPoints DP { get; set; } = new();
 
         // 新增：倒计时相关的字段
         private int _remainingCountdownSeconds;
@@ -301,7 +304,7 @@ namespace Milimoe.FunGame.Testing.Desktop.GameMapTesting
         private static void OnCurrentCharacterChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
         {
             GameMapViewer viewer = (GameMapViewer)d;
-            _ = viewer.UpdateBottomInfoPanel();
+            _ = viewer.UpdateBottomInfoPanel(viewer.DP);
             _ = viewer.UpdateCharacterStatisticsPanel(); // 角色改变时也更新统计面板
             // 角色改变时，清除装备/状态/技能/物品描述和高亮
             viewer.ResetDescriptionAndHighlights(); // 使用新的重置方法
@@ -311,7 +314,7 @@ namespace Milimoe.FunGame.Testing.Desktop.GameMapTesting
         private static void OnCharacterQueueDataChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
         {
             GameMapViewer viewer = (GameMapViewer)d;
-            _ = viewer.UpdateLeftQueuePanelGrid();
+            _ = viewer.UpdateLeftQueuePanelGrid(viewer.DP);
         }
 
         // 新增：当CharacterStatistics属性改变时，更新数据统计面板
@@ -583,15 +586,16 @@ namespace Milimoe.FunGame.Testing.Desktop.GameMapTesting
         /// <summary>
         /// 更新左侧动态队列面板，显示角色及其AT Delay。
         /// </summary>
-        public async Task UpdateLeftQueuePanelGrid()
+        public async Task UpdateLeftQueuePanelGrid(DecisionPoints dp)
         {
             // 确保在UI线程上执行
             if (!this.Dispatcher.CheckAccess())
             {
-                await this.Dispatcher.InvokeAsync(async () => await UpdateLeftQueuePanelGrid());
+                await this.Dispatcher.InvokeAsync(async () => await UpdateLeftQueuePanelGrid(dp));
                 return;
             }
 
+            DP = dp;
             CharacterQueueItems.Clear(); // 清除现有项
 
             if (CharacterQueueData != null)
@@ -612,14 +616,16 @@ namespace Milimoe.FunGame.Testing.Desktop.GameMapTesting
         /// <summary>
         /// 更新底部信息面板显示当前角色的详细信息、装备和状态。
         /// </summary>
-        public async Task UpdateBottomInfoPanel()
+        public async Task UpdateBottomInfoPanel(DecisionPoints dp)
         {
             // 确保在UI线程上执行
             if (!this.Dispatcher.CheckAccess())
             {
-                await this.Dispatcher.InvokeAsync(async () => await UpdateBottomInfoPanel());
+                await this.Dispatcher.InvokeAsync(async () => await UpdateBottomInfoPanel(dp));
                 return;
             }
+
+            DP = dp;
 
             // 每次更新面板时，清除所有描述和高亮
             ResetDescriptionAndHighlights(true);
@@ -1352,7 +1358,7 @@ namespace Milimoe.FunGame.Testing.Desktop.GameMapTesting
                     );
                     if (result == MessageBoxResult.Yes)
                     {
-                        _resolveActionType.Invoke(GamingQueue.GetActionType(0.33, 0.33, 0.34));
+                        _resolveActionType.Invoke(GamingQueue.GetActionType(DP, 0.33, 0.33, 0.34));
                     }
                     else
                     {

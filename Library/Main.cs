@@ -90,13 +90,13 @@ Console.ReadKey();
 
 while (true)
 {
-    await FunGameSimulation.StartSimulationGame(true, true, true, true, useStore: false);
+    await FunGameSimulation.StartSimulationGame(true, false, true, false, useStore: false);
     ConsoleKeyInfo key = Console.ReadKey();
     if (key.Key == ConsoleKey.Escape)
     {
         break;
     }
-    await FunGameSimulation.StartSimulationGame(true, false, false, true);
+    await FunGameSimulation.StartSimulationGame(true, false, false, false);
     key = Console.ReadKey();
     if (key.Key == ConsoleKey.Escape)
     {

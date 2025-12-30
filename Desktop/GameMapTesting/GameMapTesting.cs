@@ -59,11 +59,13 @@ namespace Milimoe.FunGame.Testing.Desktop.GameMapTesting
                     c.Level = clevel;
                     c.NormalAttack.Level = mlevel;
                     FunGameService.AddCharacterSkills(c, 1, slevel, slevel);
-                    Skill skill = new 疾风步(c)
+                    foreach (Skill skillLoop in FunGameConstant.Skills)
                     {
-                        Level = slevel
-                    };
-                    c.Skills.Add(skill);
+                        Skill skill = skillLoop.Copy();
+                        skill.Character = c;
+                        skill.Level = slevel;
+                        c.Skills.Add(skill);
+                    }
                     foreach (Skill skillLoop in FunGameConstant.CommonPassiveSkills)
                     {
                         Skill passive = skillLoop.Copy();
@@ -167,6 +169,9 @@ namespace Milimoe.FunGame.Testing.Desktop.GameMapTesting
                     _gamingQueue = mgq;
                 }
                 if (team1 != null && team2 != null) await Controller.SetTeamCharacters(team1.Members, team2.Members);
+
+                // 启用调试模式
+                _gamingQueue.IsDebug = true;
 
                 // 加载地图和绑定事件
                 _gamingQueue.LoadGameMap(GameMap);
@@ -321,7 +326,8 @@ namespace Milimoe.FunGame.Testing.Desktop.GameMapTesting
 
                     // 检查是否有角色可以行动
                     Character? characterToAct = await _gamingQueue.NextCharacterAsync();
-                    await Controller.UpdateQueue();
+                    DecisionPoints dp = GetDP(_gamingQueue);
+                    await Controller.UpdateQueue(dp);
                     await Controller.UpdateCharacterPositionsOnMap();
 
                     // 处理回合
@@ -361,8 +367,9 @@ namespace Milimoe.FunGame.Testing.Desktop.GameMapTesting
                     double timeLapse = await _gamingQueue.TimeLapse();
                     totalTime += timeLapse;
                     nextDropItemTime -= timeLapse;
-                    await Controller.UpdateBottomInfoPanel();
-                    await Controller.UpdateQueue();
+                    dp = GetDP(_gamingQueue);
+                    await Controller.UpdateBottomInfoPanel(dp);
+                    await Controller.UpdateQueue(dp);
                     await Controller.UpdateCharacterPositionsOnMap();
                     if (team1 != null && team2 != null) await Controller.SetTeamCharacters(team1.Members, team2.Members);
 
@@ -530,22 +537,22 @@ namespace Milimoe.FunGame.Testing.Desktop.GameMapTesting
             return selectedTargetGrid ?? Grid.Empty;
         }
 
-        private async Task GamingQueue_CharacterMove(GamingQueue queue, Character actor, Grid grid)
+        private async Task GamingQueue_CharacterMove(GamingQueue queue, Character actor, DecisionPoints dp, Grid grid)
         {
             await Controller.UpdateCharacterPositionsOnMap();
         }
 
-        private async Task GamingQueue_QueueUpdated(GamingQueue queue, List<Character> characters, Character character, double hardnessTime, QueueUpdatedReason reason, string msg)
+        private async Task GamingQueue_QueueUpdated(GamingQueue queue, List<Character> characters, Character character, DecisionPoints dp, double hardnessTime, QueueUpdatedReason reason, string msg)
         {
             if (reason != QueueUpdatedReason.Action)
             {
-                await Controller.UpdateQueue();
+                await Controller.UpdateQueue(dp);
             }
         }
 
-        private async Task<bool> GamingQueue_TurnStart(GamingQueue queue, Character character, List<Character> enemys, List<Character> teammates, List<Skill> skills, List<Item> items)
+        private async Task<bool> GamingQueue_TurnStart(GamingQueue queue, Character character, DecisionPoints dp, List<Character> enemys, List<Character> teammates, List<Skill> skills, List<Item> items)
         {
-            await Controller.UpdateBottomInfoPanel();
+            await Controller.UpdateBottomInfoPanel(dp);
             return true;
         }
 
@@ -608,11 +615,11 @@ namespace Milimoe.FunGame.Testing.Desktop.GameMapTesting
             return selectedSkill;
         }
 
-        private async Task GamingQueue_TurnEnd(GamingQueue queue, Character character)
+        private async Task GamingQueue_TurnEnd(GamingQueue queue, Character character, DecisionPoints dp)
         {
             double ht = queue.HardnessTime[character];
             await Controller.SetPredictCharacter(character.NickName, ht);
-            await Controller.UpdateBottomInfoPanel();
+            await Controller.UpdateBottomInfoPanel(dp);
             if (!_fastMode)
             {
                 if (IsRoundHasPlayer_OnlyTest(queue, character))
@@ -630,16 +637,32 @@ namespace Milimoe.FunGame.Testing.Desktop.GameMapTesting
             else await Task.Delay(100);
         }
 
-        private async Task<CharacterActionType> GamingQueue_DecideAction(GamingQueue queue, Character character, List<Character> enemys, List<Character> teammates, List<Skill> skills, List<Item> items)
+        private async Task<CharacterActionType> GamingQueue_DecideAction(GamingQueue queue, Character character, DecisionPoints dp , List<Character> enemys, List<Character> teammates, List<Skill> skills, List<Item> items)
         {
             if (IsPlayer_OnlyTest(queue, character))
             {
                 // 通过UI按钮请求行动类型
+                await Controller.UpdateCharacterPositionsOnMap();
                 CharacterActionType actionType = await Controller.RequestActionType(character, items);
                 await Controller.ResolveActionType(actionType);
                 return actionType;
             }
             return CharacterActionType.None; // 非玩家角色，由AI处理，或默认None
+        }
+
+        private static DecisionPoints GetDP(GamingQueue queue)
+        {
+            if (queue.CustomData.TryGetValue("player", out object? value) && value is Character player)
+            {
+                if (queue.CharacterDecisionPoints.TryGetValue(player, out DecisionPoints? dp) && dp != null)
+                {
+                    return dp;
+                }
+                dp = new();
+                queue.CharacterDecisionPoints[player] = dp;
+                return dp;
+            }
+            return new();
         }
 
         private static bool IsPlayer_OnlyTest(GamingQueue queue, Character current)
