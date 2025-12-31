@@ -1610,7 +1610,7 @@ namespace Milimoe.FunGame.Testing.Desktop.GameMapTesting
             _actingCharacterForTargetSelection = character;
             _potentialTargetsForSelection = selectable;
             _potentialTargetGridForSelection = range;
-            _maxTargetsForSelection = skill.CanSelectTargetCount;
+            _maxTargetsForSelection = skill.RealCanSelectTargetCount(enemys, teammates);
             _canSelectAllTeammates = skill.SelectAllTeammates;
             _canSelectAllEnemies = skill.SelectAllEnemies;
             _canSelectSelf = skill.CanSelectSelf;
@@ -1619,10 +1619,11 @@ namespace Milimoe.FunGame.Testing.Desktop.GameMapTesting
             _isSelectingTargets = true; // 进入目标选择模式
 
             SelectedTargets.Clear(); // 清空之前的选择
-            TargetSelectionTitle.Text = $"选择 {skill.Name} 的目标 (最多 {skill.RealCanSelectTargetCount(enemys, teammates)} 个)";
+            TargetSelectionTitle.Text = $"选择 {skill.Name} 的目标 (最多 {_maxTargetsForSelection} 个)";
             TargetSelectionOverlay.Visibility = Visibility.Visible;
             if (_canSelectAllTeammates)
             {
+                SelectedTargets.Add(character);
                 foreach (Character teammate in teammates)
                 {
                     SelectedTargets.Add(teammate);

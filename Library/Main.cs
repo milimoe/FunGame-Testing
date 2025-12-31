@@ -36,16 +36,16 @@ ActivityTest.Test3();
 
 //await ActivityTest.Test();
 
-foreach (Item i in FunGameConstant.Equipment)
-{
-    Console.WriteLine(i.ToString(true, false));
-}
-
-//foreach (Skill s in FunGameConstant.Skills)
+//foreach (Item i in FunGameConstant.Equipment)
 //{
-//    s.Level = 1;
-//    Console.WriteLine(s.GetInfo());
+//    Console.WriteLine(i.ToString(true, false));
 //}
+
+foreach (Skill s in FunGameConstant.Skills)
+{
+    s.Level = 6;
+    Console.WriteLine(s.GetInfo());
+}
 //foreach (Skill m in FunGameConstant.Magics)
 //{
 //    m.Level = 1;
