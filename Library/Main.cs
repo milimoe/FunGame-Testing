@@ -1,7 +1,8 @@
 using Microsoft.Extensions.Logging;
 using Milimoe.FunGame.Core.Api.Utility;
 using Milimoe.FunGame.Core.Entity;
-using Milimoe.FunGame.Testing.Tests;
+using Milimoe.FunGame.Core.Model;
+using Oshima.FunGame.OshimaMaps;
 using Oshima.FunGame.OshimaModules;
 using Oshima.FunGame.OshimaModules.Models;
 using Oshima.FunGame.OshimaServers.Service;
@@ -32,9 +33,12 @@ FunGameController controller = new(new Logger<FunGameController>(new LoggerFacto
 
 //await CharacterTest.CharacterTest2();
 
-ActivityTest.Test3();
+//ActivityTest.Test3();
 
 //await ActivityTest.Test();
+
+GamingQueue queue = new();
+queue.LoadGameMap(new FastAutoMap());
 
 //foreach (Item i in FunGameConstant.Equipment)
 //{
@@ -43,6 +47,7 @@ ActivityTest.Test3();
 
 foreach (Skill s in FunGameConstant.Skills)
 {
+    s.GamingQueue = queue;
     s.Level = 6;
     Console.WriteLine(s.GetInfo());
 }
@@ -90,13 +95,13 @@ Console.ReadKey();
 
 while (true)
 {
-    await FunGameSimulation.StartSimulationGame(true, false, true, false, useStore: false);
+    await FunGameSimulation.StartSimulationGame(true, false, true, false, useStore: false, hasMap: true);
     ConsoleKeyInfo key = Console.ReadKey();
     if (key.Key == ConsoleKey.Escape)
     {
         break;
     }
-    await FunGameSimulation.StartSimulationGame(true, false, false, false);
+    await FunGameSimulation.StartSimulationGame(true, false, false, false, hasMap: true);
     key = Console.ReadKey();
     if (key.Key == ConsoleKey.Escape)
     {
