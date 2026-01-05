@@ -37,15 +37,15 @@ namespace Milimoe.FunGame.Testing.Tests
             skill.GamingQueue = queue;
             skill.Character = teammate;
             skill.Level += 6;
-            skill.OnSkillCasted(queue, teammate, [character]);
-            skill.OnSkillCasted(queue, teammate, [character]);
+            await skill.OnSkillCasted(queue, teammate, [character], []);
+            await skill.OnSkillCasted(queue, teammate, [character], []);
             Character enemy = new CustomCharacter(1, "敌人");
             Console.ReadKey();
             enemy.SetLevel(60);
             skill = new 混沌烙印(enemy);
             skill.GamingQueue = queue;
             skill.Level += 8;
-            skill.OnSkillCasted(queue, enemy, [teammate]);
+            await skill.OnSkillCasted(queue, enemy, [teammate], []);
             queue.CharacterStatistics[teammate] = new CharacterStatistics();
             queue.AddCharacter(teammate, 10);
             await queue.TimeLapse();
@@ -53,7 +53,7 @@ namespace Milimoe.FunGame.Testing.Tests
             skill = new 虚弱领域(enemy);
             skill.GamingQueue = queue;
             skill.Level += 8;
-            skill.OnSkillCasted(queue, enemy, [character]);
+            await skill.OnSkillCasted(queue, enemy, [character], []);
             character.UnEquip(EquipSlotType.Armor);
             Console.WriteLine(character.GetInfo());
             Console.ReadKey();

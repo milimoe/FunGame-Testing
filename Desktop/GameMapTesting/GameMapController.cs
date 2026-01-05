@@ -18,6 +18,7 @@ namespace Milimoe.FunGame.Testing.Desktop.GameMapTesting
         private readonly UserInputRequester<Grid> _targetGridSelectionRequester = new();
         private readonly UserInputRequester<CharacterActionType> _actionTypeRequester = new();
         private readonly UserInputRequester<List<Character>> _targetSelectionRequester = new();
+        private readonly UserInputRequester<List<Grid>> _targetGridsSelectionRequester = new();
         private readonly UserInputRequester<Skill> _skillSelectionRequester = new();
         private readonly UserInputRequester<Item> _itemSelectionRequester = new();
         private readonly UserInputRequester<bool> _continuePromptRequester = new(); // 用于“按任意键继续”提示
@@ -109,6 +110,14 @@ namespace Milimoe.FunGame.Testing.Desktop.GameMapTesting
             return [.. targets.Where(selectable.Contains)];
         }
 
+        public async Task<List<Grid>> RequestTargetGridsSelection(Character character, Skill skill, List<Character> enemys, List<Character> teammates, Grid currentGrid, List<Grid> range)
+        {
+            await WriteLine($"请选择作用目标范围。");
+            return await _targetGridsSelectionRequester.RequestInput(
+                async (callback) => await UI.InvokeAsync(() => UI.ShowTargetGridsSelectionUI(character, skill, enemys, teammates, currentGrid, range, callback))
+            ) ?? [];
+        }
+
         public async Task<Skill?> RequestSkillSelection(Character character, List<Skill> availableSkills)
         {
             await WriteLine($"请为 {character.NickName} 选择一个技能。");
@@ -168,6 +177,12 @@ namespace Milimoe.FunGame.Testing.Desktop.GameMapTesting
         {
             _targetGridSelectionRequester.ResolveInput(grid);
             await UI.InvokeAsync(() => UI.HideTargetGridSelectionUI());
+        }
+
+        public async Task ResolveTargetGridsSelection(List<Grid> grids)
+        {
+            _targetGridsSelectionRequester.ResolveInput(grids);
+            await UI.InvokeAsync(() => UI.HideTargetGridsSelectionUI());
         }
 
         public async Task ResolveSkillSelection(Skill? skill)

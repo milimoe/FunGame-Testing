@@ -1,6 +1,5 @@
 ﻿using System.Collections.ObjectModel;
 using System.Collections.Specialized;
-using System.Runtime.Intrinsics.Arm;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Documents;
@@ -20,6 +19,7 @@ using Grid = Milimoe.FunGame.Core.Library.Common.Addon.Grid;
 using MessageBox = System.Windows.MessageBox;
 using MouseEventArgs = System.Windows.Input.MouseEventArgs;
 using Panel = System.Windows.Controls.Panel;
+using Point = System.Windows.Point;
 using Rectangle = System.Windows.Shapes.Rectangle;
 using RichTextBox = System.Windows.Controls.RichTextBox;
 using UserControl = System.Windows.Controls.UserControl;
@@ -49,6 +49,9 @@ namespace Milimoe.FunGame.Testing.Desktop.GameMapTesting
         // 新增：用于移动目标选择UI的ObservableCollection
         public ObservableCollection<Grid> SelectedTargetGrid { get; set; } = [];
 
+        // 新增：用于非指向性目标选择UI的ObservableCollection
+        public ObservableCollection<Grid> SelectedTargetGrids { get; set; } = [];
+
         public DecisionPoints DP { get; set; } = new();
 
         // 新增：倒计时相关的字段
@@ -58,6 +61,7 @@ namespace Milimoe.FunGame.Testing.Desktop.GameMapTesting
         // 回调Action，用于将UI选择结果传递给Controller
         private Action<Character?>? _resolveCharacterSelection;
         private Action<Grid?>? _resolveTargetGridSelection;
+        private Action<List<Grid>>? _resolveTargetGridsSelection;
         private Action<CharacterActionType>? _resolveActionType;
         private Action<List<Character>>? _resolveTargetSelection;
         private Action<Skill?>? _resolveSkillSelection;
@@ -79,6 +83,14 @@ namespace Milimoe.FunGame.Testing.Desktop.GameMapTesting
         // 新增：用于跟踪当前高亮的技能和物品图标
         private Border? _highlightedSkillIcon;
         private Border? _highlightedItemIcon;
+
+        // 新增：用于非指向性技能的鼠标移动高亮
+        private List<Grid> _mouseHoverHighlightedGrids = [];
+        private Skill? _currentNonDirectionalSkill = null;
+        private Grid? _hoveredGrid = null;
+
+        // 新增：非指向性技能选择的相关状态
+        private bool _isSelectingNonDirectionalGrids = false;
 
         // 模式
         private bool _isAutoMode = false;
@@ -935,6 +947,22 @@ namespace Milimoe.FunGame.Testing.Desktop.GameMapTesting
         {
             if (sender is Rectangle clickedRect && _uiElementToGrid.TryGetValue(clickedRect, out Grid? grid))
             {
+                // 如果处于非指向性技能目标选择模式
+                if (_isSelectingNonDirectionalGrids)
+                {
+                    await HandleNonDirectionalGridSelectionClick(grid);
+                    e.Handled = true;
+                    return;
+                }
+
+                // 如果处于普通目标格子选择模式
+                if (_isSelectingTargetGrid)
+                {
+                    await HandleTargetGridSelectionClick(grid);
+                    e.Handled = true;
+                    return;
+                }
+
                 // 如果处于目标选择模式，点击格子目前不进行任何操作（因为目标是角色）
                 if (_isSelectingTargets) return;
 
@@ -1024,7 +1052,23 @@ namespace Milimoe.FunGame.Testing.Desktop.GameMapTesting
         {
             if (sender is Border clickedBorder && _uiElementToCharacter.TryGetValue(clickedBorder, out Character? character))
             {
-                if (_isSelectingTargets)
+                if (_isSelectingNonDirectionalGrids)
+                {
+                    // 找到角色所在的格子
+                    if (CurrentGameMap != null && CurrentGameMap.Characters.TryGetValue(character, out Grid? characterGrid))
+                    {
+                        // 尝试选择角色所在的格子
+                        await HandleNonDirectionalGridSelectionClick(characterGrid);
+                    }
+                }
+                else if (_isSelectingTargetGrid)
+                {
+                    if (CurrentGameMap != null && CurrentGameMap.Characters.TryGetValue(character, out Grid? characterGrid))
+                    {
+                        await HandleTargetGridSelectionClick(characterGrid);
+                    }
+                }
+                else if (_isSelectingTargets)
                 {
                     // 如果处于目标选择模式，则处理目标选择逻辑
                     await HandleTargetSelectionClick(character);
@@ -1675,6 +1719,213 @@ namespace Milimoe.FunGame.Testing.Desktop.GameMapTesting
         }
 
         /// <summary>
+        /// 显示非指向性目标选择UI。
+        /// </summary>
+        /// <param name="character"></param>
+        /// <param name="skill"></param>
+        /// <param name="currentGrid"></param>
+        /// <param name="selectable"></param>
+        /// <param name="callback"></param>
+        public void ShowTargetGridsSelectionUI(Character character, Skill skill, List<Character> enemys, List<Character> teammates, Grid currentGrid, List<Grid> selectable, Action<List<Grid>> callback)
+        {
+            _resolveTargetGridsSelection = callback;
+            _actingCharacterForTargetSelection = character;
+            _actingCharacterCurrentGridForTargetSelection = currentGrid;
+            _potentialTargetGridForSelection = selectable;
+            _isSelectingTargetGrid = true;
+            _isSelectingNonDirectionalGrids = true;
+            _currentNonDirectionalSkill = skill;
+
+            SelectedTargetGrids.Clear(); // 清空之前的选择
+            TargetGridsSelectionOverlay.Visibility = Visibility.Visible;
+
+            // 更新标题，显示技能范围信息
+            string rangeType = GetSkillRangeTypeDisplayName(skill.SkillRangeType);
+            string rangeInfo = skill.CanSelectTargetRange == 0 ? "单格" : $"{rangeType} {skill.CanSelectTargetRange}格";
+            TargetGridsSelectionTitle.Text = $"选择 {skill.Name} 的目标区域 ({rangeInfo})";
+
+            // 为Canvas添加鼠标移动事件
+            GameMapCanvas.MouseMove += GameMapCanvas_MouseMoveForNonDirectional;
+            GameMapCanvas.MouseLeave += GameMapCanvas_MouseLeaveForNonDirectional;
+
+            // 更新地图上格子的高亮，以显示潜在目标和已选目标
+            UpdateGridHighlights();
+        }
+
+        /// <summary>
+        /// 非指向性技能选择时的鼠标移动事件
+        /// </summary>
+        private void GameMapCanvas_MouseMoveForNonDirectional(object sender, MouseEventArgs e)
+        {
+            if (!_isSelectingNonDirectionalGrids || _currentNonDirectionalSkill == null)
+                return;
+
+            // 获取鼠标位置对应的格子
+            Point mousePos = e.GetPosition(GameMapCanvas);
+            Grid? hoveredGrid = GetGridAtPosition(mousePos);
+
+            if (hoveredGrid == null || hoveredGrid == _hoveredGrid)
+                return;
+
+            _hoveredGrid = hoveredGrid;
+
+            // 清除之前的鼠标悬停高亮
+            ClearMouseHoverHighlights();
+
+            // 如果鼠标悬停的格子在可选范围内
+            if (_potentialTargetGridForSelection.Contains(hoveredGrid))
+            {
+                // 计算技能影响范围
+                _mouseHoverHighlightedGrids = _currentNonDirectionalSkill.SelectNonDirectionalTargets(
+                    _actingCharacterForTargetSelection!, hoveredGrid, _currentNonDirectionalSkill.SelectIncludeCharacterGrid);
+
+                // 应用悬停高亮
+                foreach (Grid grid in _mouseHoverHighlightedGrids)
+                {
+                    if (_gridIdToUiElement.TryGetValue(grid.Id, out Rectangle? rect))
+                    {
+                        // 如果这个格子已经被选中，跳过（保持选中高亮）
+                        if (!_currentNonDirectionalSkill.SelectIncludeCharacterGrid && grid.Characters.Count > 0)
+                        {
+                            rect.Fill = Brushes.DarkGray;
+                        }
+                        else if (!SelectedTargetGrids.Contains(grid))
+                        {
+                            rect.Fill = Brushes.LightBlue; // 悬停高亮颜色
+                        }
+                    }
+                }
+            }
+        }
+
+        /// <summary>
+        /// 鼠标离开Canvas时清除悬停高亮
+        /// </summary>
+        private void GameMapCanvas_MouseLeaveForNonDirectional(object sender, MouseEventArgs e)
+        {
+            ClearMouseHoverHighlights();
+            _hoveredGrid = null;
+        }
+
+        /// <summary>
+        /// 根据位置获取格子
+        /// </summary>
+        private Grid? GetGridAtPosition(Point position)
+        {
+            if (CurrentGameMap == null)
+                return null;
+
+            int gridX = (int)(position.X / CurrentGameMap.Size);
+            int gridY = (int)(position.Y / CurrentGameMap.Size);
+
+            // 查找对应的格子
+            foreach (Grid grid in _uiElementToGrid.Values)
+            {
+                if (grid.X == gridX && grid.Y == gridY && grid.Z == 0)
+                    return grid;
+            }
+
+            return null;
+        }
+
+        /// <summary>
+        /// 清除鼠标悬停高亮
+        /// </summary>
+        private void ClearMouseHoverHighlights()
+        {
+            foreach (Grid grid in _mouseHoverHighlightedGrids)
+            {
+                if (_gridIdToUiElement.TryGetValue(grid.Id, out Rectangle? rect))
+                {
+                    if (SelectedTargetGrid.Contains(grid))
+                    {
+                        rect.Fill = Brushes.Red;
+                    }
+                    else if (SelectedTargetGrids.Contains(grid))
+                    {
+                        rect.Fill = Brushes.Red;
+                    }
+                    else if (!(_currentNonDirectionalSkill?.SelectIncludeCharacterGrid ?? true) && grid.Characters.Count > 0)
+                    {
+                        rect.Fill = Brushes.DarkGray;
+                    }
+                    else if (_potentialTargetGridForSelection.Contains(grid))
+                    {
+                        rect.Fill = Brushes.Yellow;
+                    }
+                    else
+                    {
+                        rect.Fill = DefaultGridBrush;
+                    }
+                }
+            }
+            _mouseHoverHighlightedGrids.Clear();
+        }
+
+        /// <summary>
+        /// 获取技能范围类型的显示名称
+        /// </summary>
+        private static string GetSkillRangeTypeDisplayName(SkillRangeType rangeType)
+        {
+            return rangeType switch
+            {
+                SkillRangeType.Diamond => "菱形",
+                SkillRangeType.Circle => "圆形",
+                SkillRangeType.Square => "方形",
+                SkillRangeType.Line => "直线",
+                SkillRangeType.LinePass => "穿透直线",
+                SkillRangeType.Sector => "扇形",
+                _ => "菱形"
+            };
+        }
+
+        /// <summary>
+        /// 处理非指向性技能格子选择的点击逻辑
+        /// </summary>
+        private async Task HandleNonDirectionalGridSelectionClick(Grid clickedGrid)
+        {
+            if (_currentNonDirectionalSkill == null)
+                return;
+
+            // 检查是否是潜在目标
+            if (!_potentialTargetGridForSelection.Contains(clickedGrid))
+            {
+                await AppendDebugLog($"无法选择 {clickedGrid}：不在技能施放范围内。");
+                return;
+            }
+
+
+            if (!_currentNonDirectionalSkill.SelectIncludeCharacterGrid && clickedGrid.Characters.Count > 0)
+            {
+                await AppendDebugLog($"无法选择 {clickedGrid}：此技能不能选择有角色的格子。");
+                return;
+            }
+
+            // 清除之前的选择
+            SelectedTargetGrids.Clear();
+            ClearMouseHoverHighlights();
+
+            // 计算技能影响范围
+            List<Grid> affectedGrids = _currentNonDirectionalSkill.SelectNonDirectionalTargets(
+                _actingCharacterForTargetSelection!, clickedGrid, _currentNonDirectionalSkill.SelectIncludeCharacterGrid);
+
+            // 添加新选择
+            affectedGrids.ForEach(ag => SelectedTargetGrids.Add(ag));
+
+            // 移除可能存在的重复项
+            SelectedTargetGrids = [.. SelectedTargetGrids.Distinct()];
+
+            await AppendDebugLog($"选择了技能中心点: 坐标({clickedGrid.X}, {clickedGrid.Y})，影响{SelectedTargetGrids.Count}个格子");
+
+            // 更新地图上的高亮显示
+            UpdateGridHighlights();
+
+            // 清除鼠标悬停高亮
+            _mouseHoverHighlightedGrids.Clear();
+            _hoveredGrid = null;
+        }
+
+        /// <summary>
         /// 处理在目标选择模式下点击角色图标的逻辑。
         /// </summary>
         /// <param name="clickedCharacter">被点击的角色。</param>
@@ -1798,7 +2049,19 @@ namespace Milimoe.FunGame.Testing.Desktop.GameMapTesting
 
                 if (SelectedTargetGrid.Contains(grid))
                 {
+                    rectangle.Fill = Brushes.Red;
+                }
+                else if (SelectedTargetGrids.Contains(grid))
+                {
                     rectangle.Fill = Brushes.Red; // 已选目标颜色
+                }
+                else if (_mouseHoverHighlightedGrids.Contains(grid))
+                {
+                    rectangle.Fill = Brushes.LightBlue; // 鼠标悬停高亮
+                }
+                else if (!(_currentNonDirectionalSkill?.SelectIncludeCharacterGrid ?? true) && grid.Characters.Count > 0)
+                {
+                    rectangle.Fill = Brushes.DarkGray;
                 }
                 else if (_potentialTargetGridForSelection.Contains(grid))
                 {
@@ -1844,6 +2107,15 @@ namespace Milimoe.FunGame.Testing.Desktop.GameMapTesting
         }
 
         /// <summary>
+        /// 移除所有已选的格子。
+        /// </summary>
+        private void RemoveTargetGrids_Click(object sender, RoutedEventArgs e)
+        {
+            SelectedTargetGrids.Clear();
+            UpdateGridHighlights();
+        }
+
+        /// <summary>
         /// 确认目标选择的点击事件。
         /// </summary>
         private void ConfirmTargets_Click(object sender, RoutedEventArgs e)
@@ -1877,6 +2149,22 @@ namespace Milimoe.FunGame.Testing.Desktop.GameMapTesting
         }
 
         /// <summary>
+        /// 确认非指向性目标格子选择的点击事件。
+        /// </summary>
+        private void ConfirmTargetGrids_Click(object sender, RoutedEventArgs e)
+        {
+            _resolveTargetGridsSelection?.Invoke([.. SelectedTargetGrids]);
+        }
+
+        /// <summary>
+        /// 取消非指向性目标格子选择的点击事件。
+        /// </summary>
+        private void CancelTargetGridsSelection_Click(object sender, RoutedEventArgs e)
+        {
+            _resolveTargetGridsSelection?.Invoke([]); // 返回空表示取消
+        }
+
+        /// <summary>
         /// 隐藏目标选择UI。
         /// </summary>
         public void HideTargetSelectionUI()
@@ -1903,6 +2191,28 @@ namespace Milimoe.FunGame.Testing.Desktop.GameMapTesting
             _actingCharacterCurrentGridForTargetSelection = null;
             _potentialTargetGridForSelection = [];
             _resolveTargetGridSelection = null;
+            UpdateGridHighlights();
+            CloseGridInfoButton_Click(new(), new());
+        }
+
+        /// <summary>
+        /// 隐藏非指向性目标选择UI。
+        /// </summary>
+        public void HideTargetGridsSelectionUI()
+        {
+            TargetGridsSelectionOverlay.Visibility = Visibility.Collapsed;
+            SelectedTargetGrids.Clear();
+            _isSelectingTargetGrid = false;
+            _isSelectingNonDirectionalGrids = false;
+            _currentNonDirectionalSkill = null;
+            _actingCharacterCurrentGridForTargetSelection = null;
+            _potentialTargetGridForSelection = [];
+            _resolveTargetGridsSelection = null;
+            // 移除鼠标事件
+            GameMapCanvas.MouseMove -= GameMapCanvas_MouseMoveForNonDirectional;
+            GameMapCanvas.MouseLeave -= GameMapCanvas_MouseLeaveForNonDirectional;
+            // 清除所有高亮
+            ClearMouseHoverHighlights();
             UpdateGridHighlights();
             CloseGridInfoButton_Click(new(), new());
         }

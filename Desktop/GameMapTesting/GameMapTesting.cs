@@ -1,6 +1,7 @@
 ﻿using System.Text;
 using Milimoe.FunGame.Core.Api.Utility;
 using Milimoe.FunGame.Core.Entity;
+using Milimoe.FunGame.Core.Interface.Entity;
 using Milimoe.FunGame.Core.Library.Common.Addon;
 using Milimoe.FunGame.Core.Library.Constant;
 using Milimoe.FunGame.Core.Model;
@@ -226,6 +227,7 @@ namespace Milimoe.FunGame.Testing.Desktop.GameMapTesting
                 _gamingQueue.SelectNormalAttackTargets += GamingQueue_SelectNormalAttackTargets;
                 _gamingQueue.SelectSkill += GamingQueue_SelectSkill;
                 _gamingQueue.SelectSkillTargets += GamingQueue_SelectSkillTargets;
+                _gamingQueue.SelectNonDirectionalSkillTargets += GamingQueue_SelectNonDirectionalSkillTargets;
                 _gamingQueue.SelectItem += GamingQueue_SelectItem;
                 _gamingQueue.QueueUpdated += GamingQueue_QueueUpdated;
                 _gamingQueue.TurnEnd += GamingQueue_TurnEnd;
@@ -601,6 +603,39 @@ namespace Milimoe.FunGame.Testing.Desktop.GameMapTesting
                 castRange
             );
             await Controller.ResolveTargetSelection(selectedTargets);
+
+            return selectedTargets ?? []; // 如果取消，返回空列表
+        }
+
+        private async Task<List<Grid>> GamingQueue_SelectNonDirectionalSkillTargets(GamingQueue queue, Character caster, Skill skill, List<Character> enemys, List<Character> teammates, List<Grid> castRange)
+        {
+            if (!IsPlayer_OnlyTest(queue, caster) || _gamingQueue is null || _gamingQueue.Map is null) return [];
+
+            List<Character> potentialTargets = [];
+            if (skill.CanSelectEnemy) potentialTargets.AddRange(enemys);
+            if (skill.CanSelectTeammate) potentialTargets.AddRange(teammates);
+            if (skill.CanSelectSelf) potentialTargets.Add(caster);
+
+            Grid current = Grid.Empty;
+            if (_gamingQueue.CustomData.TryGetValue("currentGrid", out object? currentGrid) && currentGrid is Grid grid)
+            {
+                current = grid;
+            }
+            if (current == Grid.Empty)
+            {
+                return [];
+            }
+
+            // 通过UI请求目标选择
+            List<Grid>? selectedTargets = await Controller.RequestTargetGridsSelection(
+                caster,
+                skill,
+                enemys,
+                teammates,
+                current,
+                castRange
+            );
+            await Controller.ResolveTargetGridsSelection(selectedTargets);
 
             return selectedTargets ?? []; // 如果取消，返回空列表
         }
