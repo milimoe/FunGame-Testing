@@ -34,10 +34,5 @@ namespace Milimoe.FunGame.Testing.Desktop.GameMapTesting
 
             return map;
         }
-
-        protected override void AfterTimeElapsed(ref double timeToReduce)
-        {
-
-        }
     }
 }

@@ -60,6 +60,12 @@ namespace Milimoe.FunGame.Testing.Desktop.GameMapTesting
                     c.Level = clevel;
                     c.NormalAttack.Level = mlevel;
                     FunGameService.AddCharacterSkills(c, 1, slevel, slevel);
+                    //Skill test = new 钻石星尘
+                    //{
+                    //    Character = c,
+                    //    Level = 8
+                    //};
+                    //c.Skills.Add(test);
                     foreach (Skill skillLoop in FunGameConstant.Skills)
                     {
                         Skill skill = skillLoop.Copy();
@@ -74,6 +80,7 @@ namespace Milimoe.FunGame.Testing.Desktop.GameMapTesting
                         passive.Level = 1;
                         c.Skills.Add(passive);
                     }
+                    c.EP = 100;
                     characters.Add(c);
                 }
 
@@ -346,7 +353,16 @@ namespace Milimoe.FunGame.Testing.Desktop.GameMapTesting
                             if (currentGrid != null) _gamingQueue.CustomData["currentGrid"] = currentGrid;
                         }
 
-                        bool isGameEnd = await _gamingQueue.ProcessTurnAsync(characterToAct);
+                        bool isGameEnd = false;
+
+                        try
+                        {
+                            isGameEnd = await _gamingQueue.ProcessTurnAsync(characterToAct);
+                        }
+                        catch (Exception e)
+                        {
+                            await Controller.WriteLine(e.ToString());
+                        }
 
                         if (isGameEnd)
                         {
