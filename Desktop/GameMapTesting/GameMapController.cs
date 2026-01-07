@@ -53,11 +53,11 @@ namespace Milimoe.FunGame.Testing.Desktop.GameMapTesting
             });
         }
 
-        public async Task SetPreCastSuperSkill(Character character, Skill skill)
+        public void SetPreCastSuperSkill(Character character, Skill skill)
         {
             if (_game != null)
             {
-                await _game.SetPreCastSuperSkill(character, skill);
+                _game.SetPreCastSuperSkill(character, skill);
             }
         }
 

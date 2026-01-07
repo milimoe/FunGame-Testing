@@ -3,6 +3,7 @@ using Milimoe.FunGame.Core.Api.Utility;
 using Milimoe.FunGame.Core.Entity;
 using Milimoe.FunGame.Core.Interface.Entity;
 using Milimoe.FunGame.Core.Library.Common.Addon;
+using Milimoe.FunGame.Core.Library.Common.Architecture;
 using Milimoe.FunGame.Core.Library.Constant;
 using Milimoe.FunGame.Core.Model;
 using Oshima.Core.Constant;
@@ -60,12 +61,18 @@ namespace Milimoe.FunGame.Testing.Desktop.GameMapTesting
                     c.Level = clevel;
                     c.NormalAttack.Level = mlevel;
                     FunGameService.AddCharacterSkills(c, 1, slevel, slevel);
-                    //Skill test = new 钻石星尘
-                    //{
-                    //    Character = c,
-                    //    Level = 8
-                    //};
-                    //c.Skills.Add(test);
+                    Skill test = new 地狱之门
+                    {
+                        Character = c,
+                        Level = 8
+                    };
+                    c.Skills.Add(test);
+                    Skill test2 = new 岩石之息
+                    {
+                        Character = c,
+                        Level = 8
+                    };
+                    c.Skills.Add(test2);
                     foreach (Skill skillLoop in FunGameConstant.Skills)
                     {
                         Skill skill = skillLoop.Copy();
@@ -222,22 +229,22 @@ namespace Milimoe.FunGame.Testing.Desktop.GameMapTesting
                         }
                     }
                     await Controller.SetGameMap(map);
-                    _gamingQueue.SelectTargetGrid += GamingQueue_SelectTargetGrid;
-                    _gamingQueue.CharacterMove += GamingQueue_CharacterMove;
+                    _gamingQueue.SelectTargetGridEvent += GamingQueue_SelectTargetGrid;
+                    _gamingQueue.CharacterMoveEvent += GamingQueue_CharacterMove;
                 }
 
                 // 绑定事件
                 await Controller.SetQueue(_gamingQueue.HardnessTime);
                 await Controller.SetCharacterStatistics(_gamingQueue.CharacterStatistics);
-                _gamingQueue.TurnStart += GamingQueue_TurnStart;
-                _gamingQueue.DecideAction += GamingQueue_DecideAction;
-                _gamingQueue.SelectNormalAttackTargets += GamingQueue_SelectNormalAttackTargets;
-                _gamingQueue.SelectSkill += GamingQueue_SelectSkill;
-                _gamingQueue.SelectSkillTargets += GamingQueue_SelectSkillTargets;
-                _gamingQueue.SelectNonDirectionalSkillTargets += GamingQueue_SelectNonDirectionalSkillTargets;
-                _gamingQueue.SelectItem += GamingQueue_SelectItem;
-                _gamingQueue.QueueUpdated += GamingQueue_QueueUpdated;
-                _gamingQueue.TurnEnd += GamingQueue_TurnEnd;
+                _gamingQueue.TurnStartEvent += GamingQueue_TurnStart;
+                _gamingQueue.DecideActionEvent += GamingQueue_DecideAction;
+                _gamingQueue.SelectNormalAttackTargetsEvent += GamingQueue_SelectNormalAttackTargets;
+                _gamingQueue.SelectSkillEvent += GamingQueue_SelectSkill;
+                _gamingQueue.SelectSkillTargetsEvent += GamingQueue_SelectSkillTargets;
+                _gamingQueue.SelectNonDirectionalSkillTargetsEvent += GamingQueue_SelectNonDirectionalSkillTargets;
+                _gamingQueue.SelectItemEvent += GamingQueue_SelectItem;
+                _gamingQueue.QueueUpdatedEvent += GamingQueue_QueueUpdated;
+                _gamingQueue.TurnEndEvent += GamingQueue_TurnEnd;
 
                 // 总游戏时长
                 double totalTime = 0;
@@ -322,11 +329,11 @@ namespace Milimoe.FunGame.Testing.Desktop.GameMapTesting
                             foreach (Character c in characters.Where(c => c != winner && c.HP > 0))
                             {
                                 await Controller.WriteLine("[ " + winner + " ] 对 [ " + c + " ] 造成了 99999999999 点真实伤害。");
-                                await _gamingQueue.DeathCalculationAsync(winner, c);
+                                _gamingQueue.DeathCalculation(winner, c);
                             }
                             if (mgq != null)
                             {
-                                await mgq.EndGameInfo(winner);
+                                mgq.EndGameInfo(winner);
                             }
                         }
                         result.Add(Msg);
@@ -334,7 +341,7 @@ namespace Milimoe.FunGame.Testing.Desktop.GameMapTesting
                     }
 
                     // 检查是否有角色可以行动
-                    Character? characterToAct = await _gamingQueue.NextCharacterAsync();
+                    Character? characterToAct = _gamingQueue.NextCharacter();
                     DecisionPoints dp = GetDP(_gamingQueue);
                     await Controller.UpdateQueue(dp);
                     await Controller.UpdateCharacterPositionsOnMap();
@@ -357,7 +364,7 @@ namespace Milimoe.FunGame.Testing.Desktop.GameMapTesting
 
                         try
                         {
-                            isGameEnd = await _gamingQueue.ProcessTurnAsync(characterToAct);
+                            isGameEnd = _gamingQueue.ProcessTurn(characterToAct);
                         }
                         catch (Exception e)
                         {
@@ -382,7 +389,7 @@ namespace Milimoe.FunGame.Testing.Desktop.GameMapTesting
                     }
 
                     // 模拟时间流逝
-                    double timeLapse = await _gamingQueue.TimeLapse();
+                    double timeLapse = _gamingQueue.TimeLapse();
                     totalTime += timeLapse;
                     nextDropItemTime -= timeLapse;
                     dp = GetDP(_gamingQueue);
@@ -530,7 +537,7 @@ namespace Milimoe.FunGame.Testing.Desktop.GameMapTesting
             }
         }
 
-        private async Task<Grid> GamingQueue_SelectTargetGrid(GamingQueue queue, Character character, List<Character> enemys, List<Character> teammates, GameMap map, List<Grid> moveRange)
+        private Grid GamingQueue_SelectTargetGrid(GamingQueue queue, Character character, List<Character> enemys, List<Character> teammates, GameMap map, List<Grid> moveRange)
         {
             if (!IsPlayer_OnlyTest(queue, character) || _gamingQueue is null || _gamingQueue.Map is null) return Grid.Empty;
 
@@ -545,63 +552,63 @@ namespace Milimoe.FunGame.Testing.Desktop.GameMapTesting
             }
 
             // 通过UI请求目标选择
-            Grid? selectedTargetGrid = await Controller.RequestTargetGridSelection(
+            Grid? selectedTargetGrid = SyncAwaiter.WaitResult(Controller.RequestTargetGridSelection(
                 character,
                 current,
                 _gamingQueue.Map.GetGridsByRange(current, character.MOV)
-            );
-            await Controller.ResolveTargetGridSelection(selectedTargetGrid);
+            ));
+            SyncAwaiter.Wait(Controller.ResolveTargetGridSelection(selectedTargetGrid));
 
             return selectedTargetGrid ?? Grid.Empty;
         }
 
-        private async Task GamingQueue_CharacterMove(GamingQueue queue, Character actor, DecisionPoints dp, Grid grid)
+        private void GamingQueue_CharacterMove(GamingQueue queue, Character actor, DecisionPoints dp, Grid grid)
         {
-            await Controller.UpdateCharacterPositionsOnMap();
+            SyncAwaiter.Wait(Controller.UpdateCharacterPositionsOnMap());
         }
 
-        private async Task GamingQueue_QueueUpdated(GamingQueue queue, List<Character> characters, Character character, DecisionPoints dp, double hardnessTime, QueueUpdatedReason reason, string msg)
+        private void GamingQueue_QueueUpdated(GamingQueue queue, List<Character> characters, Character character, DecisionPoints dp, double hardnessTime, QueueUpdatedReason reason, string msg)
         {
             if (reason != QueueUpdatedReason.Action)
             {
-                await Controller.UpdateQueue(dp);
+                SyncAwaiter.Wait(Controller.UpdateQueue(dp));
             }
         }
 
-        private async Task<bool> GamingQueue_TurnStart(GamingQueue queue, Character character, DecisionPoints dp, List<Character> enemys, List<Character> teammates, List<Skill> skills, List<Item> items)
+        private bool GamingQueue_TurnStart(GamingQueue queue, Character character, DecisionPoints dp, List<Character> enemys, List<Character> teammates, List<Skill> skills, List<Item> items)
         {
-            await Controller.UpdateBottomInfoPanel(dp);
+            SyncAwaiter.Wait(Controller.UpdateBottomInfoPanel(dp));
             return true;
         }
 
-        private async Task<List<Character>> GamingQueue_SelectNormalAttackTargets(GamingQueue queue, Character character, NormalAttack attack, List<Character> enemys, List<Character> teammates, List<Grid> attackRange)
+        private List<Character> GamingQueue_SelectNormalAttackTargets(GamingQueue queue, Character character, NormalAttack attack, List<Character> enemys, List<Character> teammates, List<Grid> attackRange)
         {
             if (!IsPlayer_OnlyTest(queue, character)) return [];
 
             // 通过UI请求目标选择
-            List<Character> selectedTargets = await Controller.RequestTargetSelection(
+            List<Character> selectedTargets = SyncAwaiter.WaitResult(Controller.RequestTargetSelection(
                 character,
                 attack,
                 enemys,
                 teammates,
                 attackRange
-            );
-            await Controller.ResolveTargetSelection(selectedTargets);
+            ));
+            SyncAwaiter.Wait(Controller.ResolveTargetSelection(selectedTargets));
 
             return selectedTargets ?? []; // 如果取消，返回空列表
         }
 
-        private async Task<Item?> GamingQueue_SelectItem(GamingQueue queue, Character character, List<Item> items)
+        private Item? GamingQueue_SelectItem(GamingQueue queue, Character character, List<Item> items)
         {
             if (!IsPlayer_OnlyTest(queue, character)) return null;
 
             // 通过UI请求物品选择
-            Item? selectedItem = await Controller.RequestItemSelection(character, items);
-            await Controller.ResolveItemSelection(selectedItem);
+            Item? selectedItem = SyncAwaiter.WaitResult(Controller.RequestItemSelection(character, items));
+            SyncAwaiter.Wait(Controller.ResolveItemSelection(selectedItem));
             return selectedItem;
         }
 
-        private async Task<List<Character>> GamingQueue_SelectSkillTargets(GamingQueue queue, Character caster, Skill skill, List<Character> enemys, List<Character> teammates, List<Grid> castRange)
+        private List<Character> GamingQueue_SelectSkillTargets(GamingQueue queue, Character caster, Skill skill, List<Character> enemys, List<Character> teammates, List<Grid> castRange)
         {
             if (!IsPlayer_OnlyTest(queue, caster)) return [];
 
@@ -611,19 +618,19 @@ namespace Milimoe.FunGame.Testing.Desktop.GameMapTesting
             if (skill.CanSelectSelf) potentialTargets.Add(caster);
 
             // 通过UI请求目标选择
-            List<Character>? selectedTargets = await Controller.RequestTargetSelection(
+            List<Character>? selectedTargets = SyncAwaiter.WaitResult(Controller.RequestTargetSelection(
                 caster,
                 skill,
                 enemys,
                 teammates,
                 castRange
-            );
-            await Controller.ResolveTargetSelection(selectedTargets);
+            ));
+            SyncAwaiter.Wait(Controller.ResolveTargetSelection(selectedTargets));
 
             return selectedTargets ?? []; // 如果取消，返回空列表
         }
 
-        private async Task<List<Grid>> GamingQueue_SelectNonDirectionalSkillTargets(GamingQueue queue, Character caster, Skill skill, List<Character> enemys, List<Character> teammates, List<Grid> castRange)
+        private List<Grid> GamingQueue_SelectNonDirectionalSkillTargets(GamingQueue queue, Character caster, Skill skill, List<Character> enemys, List<Character> teammates, List<Grid> castRange)
         {
             if (!IsPlayer_OnlyTest(queue, caster) || _gamingQueue is null || _gamingQueue.Map is null) return [];
 
@@ -643,59 +650,59 @@ namespace Milimoe.FunGame.Testing.Desktop.GameMapTesting
             }
 
             // 通过UI请求目标选择
-            List<Grid>? selectedTargets = await Controller.RequestTargetGridsSelection(
+            List<Grid>? selectedTargets = SyncAwaiter.WaitResult(Controller.RequestTargetGridsSelection(
                 caster,
                 skill,
                 enemys,
                 teammates,
                 current,
                 castRange
-            );
-            await Controller.ResolveTargetGridsSelection(selectedTargets);
+            ));
+            SyncAwaiter.Wait(Controller.ResolveTargetGridsSelection(selectedTargets));
 
             return selectedTargets ?? []; // 如果取消，返回空列表
         }
 
-        private async Task<Skill?> GamingQueue_SelectSkill(GamingQueue queue, Character character, List<Skill> skills)
+        private Skill? GamingQueue_SelectSkill(GamingQueue queue, Character character, List<Skill> skills)
         {
             if (!IsPlayer_OnlyTest(queue, character)) return null;
 
             // 通过UI请求技能选择
-            Skill? selectedSkill = await Controller.RequestSkillSelection(character, skills);
-            await Controller.ResolveSkillSelection(selectedSkill);
+            Skill? selectedSkill = SyncAwaiter.WaitResult(Controller.RequestSkillSelection(character, skills));
+            SyncAwaiter.Wait(Controller.ResolveSkillSelection(selectedSkill));
             return selectedSkill;
         }
 
-        private async Task GamingQueue_TurnEnd(GamingQueue queue, Character character, DecisionPoints dp)
+        private void GamingQueue_TurnEnd(GamingQueue queue, Character character, DecisionPoints dp)
         {
             double ht = queue.HardnessTime[character];
-            await Controller.SetPredictCharacter(character.NickName, ht);
-            await Controller.UpdateBottomInfoPanel(dp);
+            SyncAwaiter.Wait(Controller.SetPredictCharacter(character.NickName, ht));
+            SyncAwaiter.Wait(Controller.UpdateBottomInfoPanel(dp));
             if (!_fastMode)
             {
                 if (IsRoundHasPlayer_OnlyTest(queue, character))
                 {
                     // 玩家回合结束，等待玩家确认
-                    await Controller.RequestContinuePrompt("你的回合（或与你相关的回合）已结束，请查看本回合日志，然后点击继续. . .");
-                    await Controller.ResolveContinuePrompt();
+                    SyncAwaiter.Wait(Controller.RequestContinuePrompt("你的回合（或与你相关的回合）已结束，请查看本回合日志，然后点击继续. . ."));
+                    SyncAwaiter.Wait(Controller.ResolveContinuePrompt());
                 }
                 else
                 {
-                    await Controller.RequestCountDownContinuePrompt("该角色的回合已结束. . .");
-                    await Controller.ResolveCountDownContinuePrompt();
+                    SyncAwaiter.Wait(Controller.RequestCountDownContinuePrompt("该角色的回合已结束. . ."));
+                    SyncAwaiter.Wait(Controller.ResolveCountDownContinuePrompt());
                 }
             }
-            else await Task.Delay(100);
+            else Thread.Sleep(100);
         }
 
-        private async Task<CharacterActionType> GamingQueue_DecideAction(GamingQueue queue, Character character, DecisionPoints dp , List<Character> enemys, List<Character> teammates, List<Skill> skills, List<Item> items)
+        private CharacterActionType GamingQueue_DecideAction(GamingQueue queue, Character character, DecisionPoints dp , List<Character> enemys, List<Character> teammates, List<Skill> skills, List<Item> items)
         {
             if (IsPlayer_OnlyTest(queue, character))
             {
                 // 通过UI按钮请求行动类型
-                await Controller.UpdateCharacterPositionsOnMap();
-                CharacterActionType actionType = await Controller.RequestActionType(character, items);
-                await Controller.ResolveActionType(actionType);
+                SyncAwaiter.Wait(Controller.UpdateCharacterPositionsOnMap());
+                CharacterActionType actionType = SyncAwaiter.WaitResult(Controller.RequestActionType(character, items));
+                SyncAwaiter.Wait(Controller.ResolveActionType(actionType));
                 return actionType;
             }
             return CharacterActionType.None; // 非玩家角色，由AI处理，或默认None
@@ -726,11 +733,11 @@ namespace Milimoe.FunGame.Testing.Desktop.GameMapTesting
             return queue.CustomData.TryGetValue("player", out object? value) && value is Character player && (player == current || (current.CharacterState != CharacterState.Casting && queue.LastRound.Targets.Values.SelectMany(c => c).Any(c => c == player)));
         }
 
-        public async Task SetPreCastSuperSkill(Character character, Skill skill)
+        public void SetPreCastSuperSkill(Character character, Skill skill)
         {
             if (_gamingQueue is GamingQueue queue)
             {
-                await queue.SetCharacterPreCastSuperSkill(character, skill);
+                queue.SetCharacterPreCastSuperSkill(character, skill);
             }
         }
 

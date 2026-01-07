@@ -356,7 +356,7 @@ namespace Milimoe.FunGame.Testing.Desktop.GameMapTesting
                 return;
             }
 
-            int maxLines = 150;
+            int maxLines = 250;
 
             // 获取 FlowDocument
             FlowDocument doc = DebugLogRichTextBox.Document;
@@ -372,6 +372,9 @@ namespace Milimoe.FunGame.Testing.Desktop.GameMapTesting
                 doc.Blocks.Clear();
             }
 
+            // 获取当前滚动位置
+            double verticalOffsetBefore = DebugLogScrollViewer.VerticalOffset;
+
             // 添加新的段落
             Paragraph newParagraph = new(new Run(message))
             {
@@ -385,9 +388,39 @@ namespace Milimoe.FunGame.Testing.Desktop.GameMapTesting
                 doc.Blocks.Remove(doc.Blocks.FirstBlock);
             }
 
-            // 滚动到底部
-            DebugLogRichTextBox.ScrollToEnd();
-            DebugLogScrollViewer.ScrollToEnd();
+            bool wasAtBottom = verticalOffsetBefore == 0;
+
+            if (wasAtBottom)
+            {
+                // 滚动到底部
+                DebugLogRichTextBox.ScrollToEnd();
+                DebugLogScrollViewer.ScrollToEnd();
+            }
+        }
+
+        /// <summary>
+        /// 判断滚动条是否在最底部
+        /// </summary>
+        private bool IsScrollViewerAtBottom()
+        {
+            // 检查 DebugLogScrollViewer
+            if (DebugLogScrollViewer != null)
+            {
+                // 使用一个小容差值来处理浮点数精度问题
+                const double tolerance = 0.1;
+                double verticalOffset = DebugLogScrollViewer.VerticalOffset;
+                double scrollableHeight = DebugLogScrollViewer.ScrollableHeight;
+
+                // 如果可滚动高度很小或为0，说明内容不足一屏，视为在底部
+                if (scrollableHeight <= 0)
+                    return true;
+
+                // 检查是否已经滚动到底部（容差范围内）
+                return Math.Abs(verticalOffset - scrollableHeight) <= tolerance;
+            }
+
+            // 如果没有找到滚动条，默认返回 true 以保持原有行为
+            return true;
         }
 
         private void CurrentRoundChanged()
@@ -1368,7 +1401,7 @@ namespace Milimoe.FunGame.Testing.Desktop.GameMapTesting
                 Skill? skill = PlayerCharacter.Skills.FirstOrDefault(s => s.IsSuperSkill && s.Enable && s.CurrentCD == 0 && s.RealEPCost <= PlayerCharacter.EP);
                 if (skill != null)
                 {
-                    await _controller.SetPreCastSuperSkill(PlayerCharacter, skill);
+                    _controller.SetPreCastSuperSkill(PlayerCharacter, skill);
                 }
                 else
                 {

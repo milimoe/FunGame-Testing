@@ -21,7 +21,7 @@ namespace Milimoe.FunGame.Testing.Tests
         public static bool PrintOut { get; set; } = false;
         public static string Msg { get; set; } = "";
 
-        public static async Task<List<string>> StartGame(bool printout, bool isWeb = false)
+        public static List<string> StartGame(bool printout, bool isWeb = false)
         {
             PrintOut = printout;
             IsWeb = isWeb;
@@ -80,7 +80,7 @@ namespace Milimoe.FunGame.Testing.Tests
 
                 // 询问玩家需要选择哪个角色
                 Character? player = null;
-                await Task.Run(() =>
+                Task.Run(() =>
                 {
                     while (player is null)
                     {
@@ -110,14 +110,14 @@ namespace Milimoe.FunGame.Testing.Tests
                 if (PrintOut) Console.WriteLine();
 
                 // 绑定事件
-                gamingQueue.TurnStart += GamingQueue_TurnStart;
-                gamingQueue.DecideAction += GamingQueue_DecideAction;
-                gamingQueue.SelectNormalAttackTargets += GamingQueue_SelectNormalAttackTargets;
-                gamingQueue.SelectSkill += GamingQueue_SelectSkill;
-                gamingQueue.SelectSkillTargets += GamingQueue_SelectSkillTargets;
-                gamingQueue.SelectItem += GamingQueue_SelectItem;
-                gamingQueue.QueueUpdated += GamingQueue_QueueUpdated;
-                gamingQueue.TurnEnd += GamingQueue_TurnEnd;
+                gamingQueue.TurnStartEvent += GamingQueue_TurnStart;
+                gamingQueue.DecideActionEvent += GamingQueue_DecideAction;
+                gamingQueue.SelectNormalAttackTargetsEvent += GamingQueue_SelectNormalAttackTargets;
+                gamingQueue.SelectSkillEvent += GamingQueue_SelectSkill;
+                gamingQueue.SelectSkillTargetsEvent += GamingQueue_SelectSkillTargets;
+                gamingQueue.SelectItemEvent += GamingQueue_SelectItem;
+                gamingQueue.QueueUpdatedEvent += GamingQueue_QueueUpdated;
+                gamingQueue.TurnEndEvent += GamingQueue_TurnEnd;
 
                 // 总游戏时长
                 double totalTime = 0;
@@ -208,15 +208,15 @@ namespace Milimoe.FunGame.Testing.Tests
                         foreach (Character c in characters.Where(c => c != winner && c.HP > 0))
                         {
                             WriteLine("[ " + winner + " ] 对 [ " + c + " ] 造成了 99999999999 点真实伤害。");
-                            await gamingQueue.DeathCalculationAsync(winner, c);
+                            gamingQueue.DeathCalculation(winner, c);
                         }
-                        await gamingQueue.EndGameInfo(winner);
+                        gamingQueue.EndGameInfo(winner);
                         result.Add(Msg);
                         break;
                     }
 
                     // 检查是否有角色可以行动
-                    Character? characterToAct = await gamingQueue.NextCharacterAsync();
+                    Character? characterToAct = gamingQueue.NextCharacter();
 
                     // 处理回合
                     if (characterToAct != null)
@@ -224,7 +224,7 @@ namespace Milimoe.FunGame.Testing.Tests
                         WriteLine($"=== Round {i++} ===");
                         WriteLine("现在是 [ " + characterToAct + " ] 的回合！");
 
-                        bool isGameEnd = await gamingQueue.ProcessTurnAsync(characterToAct);
+                        bool isGameEnd = gamingQueue.ProcessTurn(characterToAct);
 
                         if (isGameEnd)
                         {
@@ -244,7 +244,7 @@ namespace Milimoe.FunGame.Testing.Tests
                     }
 
                     // 模拟时间流逝
-                    double timeLapse = await gamingQueue.TimeLapse();
+                    double timeLapse = gamingQueue.TimeLapse();
                     totalTime += timeLapse;
                     nextDropItemTime -= timeLapse;
 
@@ -397,7 +397,7 @@ namespace Milimoe.FunGame.Testing.Tests
             }
         }
 
-        private static async Task GamingQueue_QueueUpdated(GamingQueue queue, List<Character> characters, Character character, DecisionPoints dp, double hardnessTime, QueueUpdatedReason reason, string msg)
+        private static void GamingQueue_QueueUpdated(GamingQueue queue, List<Character> characters, Character character, DecisionPoints dp, double hardnessTime, QueueUpdatedReason reason, string msg)
         {
             if (IsPlayer_OnlyTest(queue, character))
             {
@@ -412,30 +412,28 @@ namespace Milimoe.FunGame.Testing.Tests
                     // QueueUpdatedReason.PreCastSuperSkill 是指角色释放了爆发技
                     // 通知玩家，让玩家知道下一次行动需要选择目标
                     Console.WriteLine($"你的下一回合需要选择爆发技目标，知晓请按任意键继续. . .");
-                    await Console.In.ReadLineAsync();
+                    Console.In.ReadLine();
                 }
             }
-            await Task.CompletedTask;
         }
 
-        private static async Task<bool> GamingQueue_TurnStart(GamingQueue queue, Character character, DecisionPoints dp, List<Character> enemys, List<Character> teammates, List<Skill> skills, List<Item> items)
+        private static bool GamingQueue_TurnStart(GamingQueue queue, Character character, DecisionPoints dp, List<Character> enemys, List<Character> teammates, List<Skill> skills, List<Item> items)
         {
             if (IsPlayer_OnlyTest(queue, character))
             {
                 // 结束 AI 托管
                 queue.SetCharactersToAIControl(cancel: true, character);
-                await Task.CompletedTask;
             }
             // 注意，此事件返回 false 将全程接管此回合。
             return true;
         }
 
-        private static async Task<List<Character>> GamingQueue_SelectNormalAttackTargets(GamingQueue queue, Character character, NormalAttack attack, List<Character> enemys, List<Character> teammates, List<Grid> attackRange)
+        private static List<Character> GamingQueue_SelectNormalAttackTargets(GamingQueue queue, Character character, NormalAttack attack, List<Character> enemys, List<Character> teammates, List<Grid> attackRange)
         {
             List<Character> characters = [];
             if (IsPlayer_OnlyTest(queue, character))
             {
-                await Task.Run(() =>
+                Task.Run(() =>
                 {
                     Console.WriteLine($"你的角色编号：{character.GetIdName()}");
                     Console.WriteLine("【敌对角色列表】" + "\r\n" + string.Join("\r\n", enemys.Select(c => $"{c.GetIdName()}：{c.GetSimpleInBattleInfo(queue.HardnessTime[c])}")));
@@ -500,13 +498,13 @@ namespace Milimoe.FunGame.Testing.Tests
             return characters;
         }
 
-        private static async Task<Item?> GamingQueue_SelectItem(GamingQueue queue, Character character, List<Item> items)
+        private static Item? GamingQueue_SelectItem(GamingQueue queue, Character character, List<Item> items)
         {
             Item? item = null;
             if (IsPlayer_OnlyTest(queue, character))
             {
                 // 询问玩家需要选择哪个物品
-                await Task.Run(() =>
+                Task.Run(() =>
                 {
                     Console.WriteLine(string.Join("\r\n", items.Select(i => $"{i.GetIdName()}：{i}")));
                     while (item is null)
@@ -532,12 +530,12 @@ namespace Milimoe.FunGame.Testing.Tests
             return item;
         }
 
-        private static async Task<List<Character>> GamingQueue_SelectSkillTargets(GamingQueue queue, Character caster, Skill skill, List<Character> enemys, List<Character> teammates, List<Grid> castRange)
+        private static List<Character> GamingQueue_SelectSkillTargets(GamingQueue queue, Character caster, Skill skill, List<Character> enemys, List<Character> teammates, List<Grid> castRange)
         {
             List<Character> characters = [];
             if (IsPlayer_OnlyTest(queue, caster))
             {
-                await Task.Run(() =>
+                Task.Run(() =>
                 {
                     Console.WriteLine($"你的角色编号：{caster.GetIdName()}");
                     Console.WriteLine("【敌对角色列表】" + "\r\n" + string.Join("\r\n", enemys.Select(c => $"{c.GetIdName()}：{c.GetSimpleInBattleInfo(queue.HardnessTime[c])}")));
@@ -602,13 +600,13 @@ namespace Milimoe.FunGame.Testing.Tests
             return characters;
         }
 
-        private static async Task<Skill?> GamingQueue_SelectSkill(GamingQueue queue, Character character, List<Skill> skills)
+        private static Skill? GamingQueue_SelectSkill(GamingQueue queue, Character character, List<Skill> skills)
         {
             Skill? skill = null;
             if (IsPlayer_OnlyTest(queue, character))
             {
                 // 询问玩家需要选择哪个技能
-                await Task.Run(() =>
+                Task.Run(() =>
                 {
                     Console.WriteLine(string.Join("\r\n", skills.Select(s => $"{s.GetIdName()}：{s}")));
                     while (skill is null)
@@ -634,23 +632,22 @@ namespace Milimoe.FunGame.Testing.Tests
             return skill;
         }
 
-        private static async Task GamingQueue_TurnEnd(GamingQueue queue, Character character, DecisionPoints dp)
+        private static void GamingQueue_TurnEnd(GamingQueue queue, Character character, DecisionPoints dp)
         {
             if (IsRoundHasPlayer_OnlyTest(queue, character))
             {
                 // 暂停让玩家查看本回合日志
                 Console.WriteLine("你的回合（或与你相关的回合）已结束，请查看本回合日志，然后按任意键继续. . .");
-                await Console.In.ReadLineAsync();
+                Console.In.ReadLine();
             }
-            await Task.CompletedTask;
         }
 
-        private static async Task<CharacterActionType> GamingQueue_DecideAction(GamingQueue queue, Character character, DecisionPoints dp, List<Character> enemys, List<Character> teammates, List<Skill> skills, List<Item> items)
+        private static CharacterActionType GamingQueue_DecideAction(GamingQueue queue, Character character, DecisionPoints dp, List<Character> enemys, List<Character> teammates, List<Skill> skills, List<Item> items)
         {
             CharacterActionType type = CharacterActionType.None;
             if (IsPlayer_OnlyTest(queue, character))
             {
-                await Task.Run(() =>
+                Task.Run(() =>
                 {
                     Console.WriteLine(character.GetSimpleInfo());
                     while (type == CharacterActionType.None)
