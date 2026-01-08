@@ -44,7 +44,7 @@ namespace Milimoe.FunGame.Testing.Desktop.GameMapTesting
             {
                 List<string> result = [];
                 Msg = "";
-                List<Character> allCharactersInGame = [.. FunGameConstant.Characters];
+                List<Character> allCharactersInGame = [.. FunGameConstant.Characters.OrderBy(o => Random.Shared.Next()).Take(10)];
                 await Controller.WriteLine("--- 游戏开始 ---");
                 TeamGamingQueue? tgq = null;
                 MixGamingQueue? mgq = null;
@@ -55,9 +55,9 @@ namespace Milimoe.FunGame.Testing.Desktop.GameMapTesting
 
                 // 升级和赋能
                 List<Character> characters = [];
-                for (int index = 0; index < FunGameConstant.Characters.Count; index++)
+                for (int index = 0; index < allCharactersInGame.Count; index++)
                 {
-                    Character c = FunGameConstant.Characters[index];
+                    Character c = allCharactersInGame[index];
                     c.Level = clevel;
                     c.NormalAttack.Level = mlevel;
                     FunGameService.AddCharacterSkills(c, 1, slevel, slevel);
@@ -245,6 +245,7 @@ namespace Milimoe.FunGame.Testing.Desktop.GameMapTesting
                 _gamingQueue.SelectItemEvent += GamingQueue_SelectItem;
                 _gamingQueue.QueueUpdatedEvent += GamingQueue_QueueUpdated;
                 _gamingQueue.TurnEndEvent += GamingQueue_TurnEnd;
+                _gamingQueue.CharacterInquiryEvent += GamingQueue_CharacterInquiryEvent;
 
                 // 总游戏时长
                 double totalTime = 0;
@@ -439,7 +440,7 @@ namespace Milimoe.FunGame.Testing.Desktop.GameMapTesting
                     stats.MVPs++;
                     mvpBuilder.AppendLine($"{(tgq != null ? "[ " + tgq.GetTeamFromEliminated(mvp)?.Name + " ] " : "")}[ {mvp.ToStringWithLevel()} ]");
                     mvpBuilder.AppendLine($"技术得分：{stats.Rating:0.0#} / 击杀数：{stats.Kills} / 助攻数：{stats.Assists}{(_gamingQueue.MaxRespawnTimes != 0 ? " / 死亡数：" + stats.Deaths : "")}");
-                    mvpBuilder.AppendLine($"存活时长：{stats.LiveTime:0.##} / 存活回合数：{stats.LiveRound} / 行动回合数：{stats.ActionTurn}");
+                    mvpBuilder.AppendLine($"存活时长：{stats.LiveTime:0.##} / 存活回合数：{stats.LiveRound} / 行动回合数：{stats.ActionTurn} / 总计决策数：{stats.TurnDecisions} / 总计决策点：{stats.UseDecisionPoints}");
                     mvpBuilder.AppendLine($"控制时长：{stats.ControlTime:0.##} / 总计治疗：{stats.TotalHeal:0.##} / 护盾抵消：{stats.TotalShield:0.##}");
                     mvpBuilder.AppendLine($"总计伤害：{stats.TotalDamage:0.##} / 总计物理伤害：{stats.TotalPhysicalDamage:0.##} / 总计魔法伤害：{stats.TotalMagicDamage:0.##}");
                     mvpBuilder.AppendLine($"总承受伤害：{stats.TotalTakenDamage:0.##} / 总承受物理伤害：{stats.TotalTakenPhysicalDamage:0.##} / 总承受魔法伤害：{stats.TotalTakenMagicDamage:0.##}");
@@ -471,7 +472,7 @@ namespace Milimoe.FunGame.Testing.Desktop.GameMapTesting
                     CharacterStatistics stats = _gamingQueue.CharacterStatistics[character];
                     builder.AppendLine($"{(isWeb ? count + ". " : "")}[ {character.ToStringWithLevel()}{(tgq != null ? "（" + tgq.GetTeamFromEliminated(character)?.Name + "）" : "")} ]");
                     builder.AppendLine($"技术得分：{stats.Rating:0.0#} / 击杀数：{stats.Kills} / 助攻数：{stats.Assists}{(_gamingQueue.MaxRespawnTimes != 0 ? " / 死亡数：" + stats.Deaths : "")}");
-                    builder.AppendLine($"存活时长：{stats.LiveTime:0.##} / 存活回合数：{stats.LiveRound} / 行动回合数：{stats.ActionTurn}");
+                    builder.AppendLine($"存活时长：{stats.LiveTime:0.##} / 存活回合数：{stats.LiveRound} / 行动回合数：{stats.ActionTurn} / 总计决策数：{stats.TurnDecisions} / 总计决策点：{stats.UseDecisionPoints}");
                     builder.AppendLine($"控制时长：{stats.ControlTime:0.##} / 总计治疗：{stats.TotalHeal:0.##} / 护盾抵消：{stats.TotalShield:0.##}");
                     builder.AppendLine($"总计伤害：{stats.TotalDamage:0.##} / 总计物理伤害：{stats.TotalPhysicalDamage:0.##} / 总计魔法伤害：{stats.TotalMagicDamage:0.##}");
                     builder.AppendLine($"总承受伤害：{stats.TotalTakenDamage:0.##} / 总承受物理伤害：{stats.TotalTakenPhysicalDamage:0.##} / 总承受魔法伤害：{stats.TotalTakenMagicDamage:0.##}");
@@ -708,6 +709,11 @@ namespace Milimoe.FunGame.Testing.Desktop.GameMapTesting
             return CharacterActionType.None; // 非玩家角色，由AI处理，或默认None
         }
 
+        private Dictionary<string, object> GamingQueue_CharacterInquiryEvent(GamingQueue character, Character actor, DecisionPoints dp, string topic, Dictionary<string, object> args)
+        {
+            return [];
+        }
+
         private static DecisionPoints GetDP(GamingQueue queue)
         {
             if (queue.CustomData.TryGetValue("player", out object? value) && value is Character player)
@@ -866,6 +872,8 @@ namespace Milimoe.FunGame.Testing.Desktop.GameMapTesting
             totalStats.Top3s += stats.Top3s;
             totalStats.Loses += stats.Loses;
             totalStats.MVPs += stats.MVPs;
+            totalStats.UseDecisionPoints += stats.UseDecisionPoints;
+            totalStats.TurnDecisions += stats.TurnDecisions;
             if (totalStats.Plays != 0)
             {
                 totalStats.AvgDamage = Calculation.Round2Digits(totalStats.TotalDamage / totalStats.Plays);
@@ -885,6 +893,8 @@ namespace Milimoe.FunGame.Testing.Desktop.GameMapTesting
                 totalStats.AvgEarnedMoney = totalStats.TotalEarnedMoney / totalStats.Plays;
                 totalStats.Winrate = Calculation.Round4Digits(Convert.ToDouble(totalStats.Wins) / Convert.ToDouble(totalStats.Plays));
                 totalStats.Top3rate = Calculation.Round4Digits(Convert.ToDouble(totalStats.Top3s) / Convert.ToDouble(totalStats.Plays));
+                totalStats.AvgUseDecisionPoints = totalStats.UseDecisionPoints / totalStats.Plays;
+                totalStats.AvgTurnDecisions = totalStats.TurnDecisions / totalStats.Plays;
             }
             if (totalStats.LiveRound != 0) totalStats.DamagePerRound = Calculation.Round2Digits(totalStats.TotalDamage / totalStats.LiveRound);
             if (totalStats.ActionTurn != 0) totalStats.DamagePerTurn = Calculation.Round2Digits(totalStats.TotalDamage / totalStats.ActionTurn);

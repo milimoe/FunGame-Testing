@@ -45,26 +45,27 @@ queue.LoadGameMap(new FastAutoMap());
 //    Console.WriteLine(i.ToString(true, false));
 //}
 
-foreach (Skill s in FunGameConstant.Skills)
-{
-    s.GamingQueue = queue;
-    s.Level = 6;
-    Console.WriteLine(s.GetInfo());
-}
-foreach (Skill m in FunGameConstant.Magics)
-{
-    m.GamingQueue = queue;
-    m.Level = 8;
-    Console.WriteLine(m.GetInfo());
-}
-//foreach (Character c in FunGameConstant.Characters)
+//foreach (Skill s in FunGameConstant.Skills)
 //{
-//    Character character = c.Copy();
-//    character.Level = 1;
-//    character.Recovery();
-//    FunGameService.AddCharacterSkills(character, 1, 6, 6);
-//    Console.WriteLine(character.GetInfo());
+//    s.GamingQueue = queue;
+//    s.Level = 6;
+//    Console.WriteLine(s.GetInfo());
 //}
+//foreach (Skill m in FunGameConstant.Magics)
+//{
+//    m.GamingQueue = queue;
+//    m.Level = 8;
+//    Console.WriteLine(m.GetInfo());
+//}
+foreach (Character c in FunGameConstant.Characters)
+{
+    Character character = c.Copy();
+    character.Level = 60;
+    character.NormalAttack.Level = 8;
+    character.Recovery();
+    FunGameService.AddCharacterSkills(character, 1, 6, 6);
+    Console.WriteLine(character.GetInfo());
+}
 //foreach (Skill s in FunGameConstant.Skills)
 //{
 //    s.Level = 6;
@@ -96,18 +97,20 @@ Console.ReadKey();
 
 while (true)
 {
-    await FunGameSimulation.StartSimulationGame(true, false, true, false, useStore: false, hasMap: true);
-    ConsoleKeyInfo key = Console.ReadKey();
-    if (key.Key == ConsoleKey.Escape)
-    {
-        break;
-    }
-    await FunGameSimulation.StartSimulationGame(true, false, false, false, hasMap: true);
-    key = Console.ReadKey();
-    if (key.Key == ConsoleKey.Escape)
-    {
-        break;
-    }
+    await FunGameSimulation.StartSimulationGame(true, false, true, false, useStore: false, hasMap: false);
+    //ConsoleKeyInfo key = Console.ReadKey();
+    //if (key.Key == ConsoleKey.Escape)
+    //{
+    //    break;
+    //}
+    await Task.Delay(100);
+    await FunGameSimulation.StartSimulationGame(true, false, false, false, hasMap: false);
+    //key = Console.ReadKey();
+    //if (key.Key == ConsoleKey.Escape)
+    //{
+    //    break;
+    //}
+    await Task.Delay(100);
 }
 
 //strings.ForEach(Console.WriteLine);

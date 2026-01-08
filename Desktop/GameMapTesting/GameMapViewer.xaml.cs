@@ -398,31 +398,6 @@ namespace Milimoe.FunGame.Testing.Desktop.GameMapTesting
             }
         }
 
-        /// <summary>
-        /// 判断滚动条是否在最底部
-        /// </summary>
-        private bool IsScrollViewerAtBottom()
-        {
-            // 检查 DebugLogScrollViewer
-            if (DebugLogScrollViewer != null)
-            {
-                // 使用一个小容差值来处理浮点数精度问题
-                const double tolerance = 0.1;
-                double verticalOffset = DebugLogScrollViewer.VerticalOffset;
-                double scrollableHeight = DebugLogScrollViewer.ScrollableHeight;
-
-                // 如果可滚动高度很小或为0，说明内容不足一屏，视为在底部
-                if (scrollableHeight <= 0)
-                    return true;
-
-                // 检查是否已经滚动到底部（容差范围内）
-                return Math.Abs(verticalOffset - scrollableHeight) <= tolerance;
-            }
-
-            // 如果没有找到滚动条，默认返回 true 以保持原有行为
-            return true;
-        }
-
         private void CurrentRoundChanged()
         {
             QueueTitle.Text = $"行动顺序表{(CurrentRound > 0 ? $" - 第 {CurrentRound} 回合" : "")}";
@@ -934,6 +909,7 @@ namespace Milimoe.FunGame.Testing.Desktop.GameMapTesting
                     StatsTextBlock2.Text = $"存活时长：{stats.LiveTime:0.##} / 存活回合数：{stats.LiveRound} / 行动回合数：{stats.ActionTurn} / 控制时长：{stats.ControlTime:0.##} / 总计治疗：{stats.TotalHeal:0.##} / 护盾抵消：{stats.TotalShield:0.##}";
                     StatsTextBlock3.Text = $"总计伤害：{stats.TotalDamage:0.##} / 总计物理伤害：{stats.TotalPhysicalDamage:0.##} / 总计魔法伤害：{stats.TotalMagicDamage:0.##} / 总计真实伤害：{stats.TotalTrueDamage:0.##}";
                     StatsTextBlock4.Text = $"总承受伤害：{stats.TotalTakenDamage:0.##} / 总承受物理伤害：{stats.TotalTakenPhysicalDamage:0.##} / 总承受魔法伤害：{stats.TotalTakenMagicDamage:0.##} / 总承受真实伤害：{stats.TotalTakenTrueDamage:0.##}";
+                    StatsTextBlock4.Text = $"总计决策数：{stats.TurnDecisions} / 使用决策点：{stats.UseDecisionPoints} / 当前决策点：{DP.CurrentDecisionPoints} / {DP.MaxDecisionPoints}";
                 }
             }
             else
@@ -943,6 +919,7 @@ namespace Milimoe.FunGame.Testing.Desktop.GameMapTesting
                 StatsTextBlock2.Text = "存活时长：- / 存活回合数：- / 行动回合数：- / 控制时长：- / 总计治疗：- / 护盾抵消：-";
                 StatsTextBlock3.Text = "总计伤害：- / 总计物理伤害：- / 总计魔法伤害：- / 总计真实伤害：-";
                 StatsTextBlock4.Text = "总承受伤害：- / 总承受物理伤害：- / 总承受魔法伤害：- / 总承受真实伤害：-";
+                StatsTextBlock4.Text = "总计决策数：- / 使用决策点：-";
             }
         }
 
