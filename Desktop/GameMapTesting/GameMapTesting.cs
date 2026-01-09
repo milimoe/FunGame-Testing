@@ -709,9 +709,9 @@ namespace Milimoe.FunGame.Testing.Desktop.GameMapTesting
             return CharacterActionType.None; // 非玩家角色，由AI处理，或默认None
         }
 
-        private Dictionary<string, object> GamingQueue_CharacterInquiryEvent(GamingQueue character, Character actor, DecisionPoints dp, string topic, Dictionary<string, object> args)
+        private InquiryResponse GamingQueue_CharacterInquiryEvent(GamingQueue character, Character actor, DecisionPoints dp, InquiryOptions options)
         {
-            return [];
+            return new(options);
         }
 
         private static DecisionPoints GetDP(GamingQueue queue)

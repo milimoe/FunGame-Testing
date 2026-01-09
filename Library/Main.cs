@@ -1,6 +1,7 @@
 using Microsoft.Extensions.Logging;
 using Milimoe.FunGame.Core.Api.Utility;
 using Milimoe.FunGame.Core.Entity;
+using Milimoe.FunGame.Core.Library.Constant;
 using Milimoe.FunGame.Core.Model;
 using Oshima.FunGame.OshimaMaps;
 using Oshima.FunGame.OshimaModules;
@@ -64,7 +65,12 @@ foreach (Character c in FunGameConstant.Characters)
     character.NormalAttack.Level = 8;
     character.Recovery();
     FunGameService.AddCharacterSkills(character, 1, 6, 6);
-    Console.WriteLine(character.GetInfo());
+    Console.WriteLine($"{character.ToStringWithOutUser()} - {CharacterSet.GetPrimaryAttributeName(character.PrimaryAttribute)}角色");
+    foreach (Skill skill in character.Skills)
+    {
+        Console.WriteLine($"【{SkillSet.GetSkillTypeName(skill.SkillType)}】{skill.Name}\r\n{skill.Description}");
+    }
+    Console.WriteLine();
 }
 //foreach (Skill s in FunGameConstant.Skills)
 //{
@@ -97,20 +103,27 @@ Console.ReadKey();
 
 while (true)
 {
-    await FunGameSimulation.StartSimulationGame(true, false, true, false, useStore: false, hasMap: false);
+    //DateTime start = DateTime.Now;
+    //await FunGameSimulation.StartSimulationGame(true, false, true, false, useStore: false, hasMap: true);
+    //DateTime end = DateTime.Now;
+    //Console.WriteLine("模拟时长" + (end - start).TotalSeconds + "秒");
     //ConsoleKeyInfo key = Console.ReadKey();
     //if (key.Key == ConsoleKey.Escape)
     //{
     //    break;
     //}
-    await Task.Delay(100);
-    await FunGameSimulation.StartSimulationGame(true, false, false, false, hasMap: false);
+    //await Task.Delay(1);
+    //start = DateTime.Now;
+    //await FunGameSimulation.StartSimulationGame(true, false, false, false, hasMap: true);
     //key = Console.ReadKey();
     //if (key.Key == ConsoleKey.Escape)
     //{
     //    break;
     //}
-    await Task.Delay(100);
+    //end = DateTime.Now;
+    //Console.WriteLine("模拟时长" + (end - start).TotalSeconds + "秒");
+    await FunGameSimulation.StartSimulationGame(false, false, true, false, useStore: false, hasMap: false);
+    await FunGameSimulation.StartSimulationGame(false, false, false, false, hasMap: false);
 }
 
 //strings.ForEach(Console.WriteLine);

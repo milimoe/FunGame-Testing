@@ -27,7 +27,7 @@ namespace Milimoe.FunGame.Testing.Tests
             Character teammate = new MagicalGirl();
             Console.ReadKey();
             teammate.SetLevel(60);
-            Skill skill = new 毁灭之势(teammate);
+            Skill skill = new 少女绮想(teammate);
             teammate.Skills.Add(skill);
             skill.GamingQueue = queue;
             skill.Character = teammate;
