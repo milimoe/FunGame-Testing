@@ -104,7 +104,7 @@ Console.ReadKey();
 while (true)
 {
     //DateTime start = DateTime.Now;
-    //await FunGameSimulation.StartSimulationGame(true, false, true, false, useStore: false, hasMap: true);
+    //await FunGameSimulation.StartSimulationGame(true, false, true, false, useStore: false, hasMap: false);
     //DateTime end = DateTime.Now;
     //Console.WriteLine("模拟时长" + (end - start).TotalSeconds + "秒");
     //ConsoleKeyInfo key = Console.ReadKey();
@@ -114,14 +114,14 @@ while (true)
     //}
     //await Task.Delay(1);
     //start = DateTime.Now;
-    //await FunGameSimulation.StartSimulationGame(true, false, false, false, hasMap: true);
+    //await FunGameSimulation.StartSimulationGame(true, false, false, false, hasMap: false);
+    //end = DateTime.Now;
+    //Console.WriteLine("模拟时长" + (end - start).TotalSeconds + "秒");
     //key = Console.ReadKey();
     //if (key.Key == ConsoleKey.Escape)
     //{
     //    break;
     //}
-    //end = DateTime.Now;
-    //Console.WriteLine("模拟时长" + (end - start).TotalSeconds + "秒");
     await FunGameSimulation.StartSimulationGame(false, false, true, false, useStore: false, hasMap: false);
     await FunGameSimulation.StartSimulationGame(false, false, false, false, hasMap: false);
 }

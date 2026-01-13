@@ -246,6 +246,7 @@ namespace Milimoe.FunGame.Testing.Desktop.GameMapTesting
                 _gamingQueue.QueueUpdatedEvent += GamingQueue_QueueUpdated;
                 _gamingQueue.TurnEndEvent += GamingQueue_TurnEnd;
                 _gamingQueue.CharacterInquiryEvent += GamingQueue_CharacterInquiryEvent;
+                _gamingQueue.CharacterActionTakenEvent += GamingQueue_CharacterActionTakenEvent;
 
                 // 总游戏时长
                 double totalTime = 0;
@@ -538,6 +539,11 @@ namespace Milimoe.FunGame.Testing.Desktop.GameMapTesting
             }
         }
 
+        private void GamingQueue_CharacterActionTakenEvent(GamingQueue queue, Character actor, DecisionPoints dp, CharacterActionType type, RoundRecord record)
+        {
+            SyncAwaiter.Wait(Controller.UpdateCharacterPositionsOnMap());
+        }
+
         private Grid GamingQueue_SelectTargetGrid(GamingQueue queue, Character character, List<Character> enemys, List<Character> teammates, GameMap map, List<Grid> moveRange)
         {
             if (!IsPlayer_OnlyTest(queue, character) || _gamingQueue is null || _gamingQueue.Map is null) return Grid.Empty;
@@ -709,8 +715,16 @@ namespace Milimoe.FunGame.Testing.Desktop.GameMapTesting
             return CharacterActionType.None; // 非玩家角色，由AI处理，或默认None
         }
 
-        private InquiryResponse GamingQueue_CharacterInquiryEvent(GamingQueue character, Character actor, DecisionPoints dp, InquiryOptions options)
+        private InquiryResponse GamingQueue_CharacterInquiryEvent(GamingQueue queue, Character character, DecisionPoints dp, InquiryOptions options)
         {
+            if (IsPlayer_OnlyTest(queue, character))
+            {
+                // 通过UI按钮请求行动类型
+                SyncAwaiter.Wait(Controller.UpdateCharacterPositionsOnMap());
+                InquiryResponse? response = SyncAwaiter.WaitResult(Controller.RequestInquiryResponseSelection(options));
+                SyncAwaiter.Wait(Controller.ResolveInquiryResponseSelection(response));
+                return response ?? new(options);
+            }
             return new(options);
         }
 
@@ -731,12 +745,12 @@ namespace Milimoe.FunGame.Testing.Desktop.GameMapTesting
 
         private static bool IsPlayer_OnlyTest(GamingQueue queue, Character current)
         {
-            return queue.CustomData.TryGetValue("player", out object? value) && value is Character player && player == current && !queue.IsCharacterInAIControlling(current);
+            return queue.CustomData.TryGetValue("player", out object? value) && value is Character player && (player == current || current.Master == player) && !queue.IsCharacterInAIControlling(current);
         }
 
         private static bool IsRoundHasPlayer_OnlyTest(GamingQueue queue, Character current)
         {
-            return queue.CustomData.TryGetValue("player", out object? value) && value is Character player && (player == current || (current.CharacterState != CharacterState.Casting && queue.LastRound.Targets.Values.SelectMany(c => c).Any(c => c == player)));
+            return queue.CustomData.TryGetValue("player", out object? value) && value is Character player && (player == current || current.Master == player || (current.CharacterState != CharacterState.Casting && queue.LastRound.Targets.Values.SelectMany(c => c).Any(c => c == player)));
         }
 
         public void SetPreCastSuperSkill(Character character, Skill skill)

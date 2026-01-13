@@ -15,6 +15,7 @@ namespace Milimoe.FunGame.Testing.Desktop.GameMapTesting
 
         // 输入请求器实例
         private readonly UserInputRequester<Character> _characterSelectionRequester = new();
+        private readonly UserInputRequester<InquiryResponse> _inquiryResponseSelectionRequester = new();
         private readonly UserInputRequester<Grid> _targetGridSelectionRequester = new();
         private readonly UserInputRequester<CharacterActionType> _actionTypeRequester = new();
         private readonly UserInputRequester<List<Character>> _targetSelectionRequester = new();
@@ -81,6 +82,14 @@ namespace Milimoe.FunGame.Testing.Desktop.GameMapTesting
             await WriteLine("请选择你想玩的角色。");
             return await _characterSelectionRequester.RequestInput(
                 async (callback) => await UI.InvokeAsync(() => UI.ShowCharacterSelectionPrompt(availableCharacters, callback))
+            );
+        }
+
+        public async Task<InquiryResponse?> RequestInquiryResponseSelection(InquiryOptions options)
+        {
+            await WriteLine("请选择你的反应。");
+            return await _inquiryResponseSelectionRequester.RequestInput(
+                async (callback) => await UI.InvokeAsync(() => UI.ShowInquiryResponseSelectionPrompt(options, callback))
             );
         }
 
@@ -159,6 +168,12 @@ namespace Milimoe.FunGame.Testing.Desktop.GameMapTesting
         {
             _characterSelectionRequester.ResolveInput(character);
             await UI.InvokeAsync(() => UI.HideCharacterSelectionPrompt());
+        }
+
+        public async Task ResolveInquiryResponseSelection(InquiryResponse? response)
+        {
+            _inquiryResponseSelectionRequester.ResolveInput(response);
+            await UI.InvokeAsync(() => UI.HideInquiryResponseSelectionPrompt());
         }
 
         public async Task ResolveActionType(CharacterActionType actionType)

@@ -60,6 +60,7 @@ namespace Milimoe.FunGame.Testing.Desktop.GameMapTesting
 
         // 回调Action，用于将UI选择结果传递给Controller
         private Action<Character?>? _resolveCharacterSelection;
+        private Action<InquiryResponse?>? _resolveInquiryResponseSelection;
         private Action<Grid?>? _resolveTargetGridSelection;
         private Action<List<Grid>>? _resolveTargetGridsSelection;
         private Action<CharacterActionType>? _resolveActionType;
@@ -1460,6 +1461,36 @@ namespace Milimoe.FunGame.Testing.Desktop.GameMapTesting
         }
 
         /// <summary>
+        /// 显示反应选择面板。
+        /// </summary>
+        /// <param name="options">询问内容。</param>
+        /// <param name="callback">选择完成后调用的回调函数。</param>
+        public void ShowInquiryResponseSelectionPrompt(InquiryOptions options, Action<InquiryResponse?> callback)
+        {
+            switch (options.InquiryType)
+            {
+                case InquiryType.Choice:
+                case InquiryType.BinaryChoice:
+                    _resolveInquiryResponseSelection = callback;
+                    InquiryResponseSelectionTitle.Text = options.Description;
+                    List<InquiryResponse> responses = [];
+                    foreach (string key in options.Choices.Keys)
+                    {
+                        responses.Add(new(options.InquiryType, options.Topic)
+                        {
+                            Choices = [key],
+                            TextResult = options.Choices[key]
+                        });
+                    }
+                    InquiryResponseSelectionItemsControl.ItemsSource = responses;
+                    SetRichTextBoxText(InquiryResponseDetailsRichTextBox, "将鼠标悬停在选项上以查看详情。");
+                    InquiryResponseSelectionOverlay.Visibility = Visibility.Visible;
+                    InquiryResponseCancel.Visibility = Visibility.Hidden;
+                    break;
+            }
+        }
+
+        /// <summary>
         /// 角色选择项的点击事件。
         /// </summary>
         private void CharacterSelectionItem_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
@@ -1467,6 +1498,17 @@ namespace Milimoe.FunGame.Testing.Desktop.GameMapTesting
             if (sender is Border border && border.Tag is Character character)
             {
                 _resolveCharacterSelection?.Invoke(character);
+            }
+        }
+
+        /// <summary>
+        /// 反应选择项的点击事件。
+        /// </summary>
+        private void InquiryResponseSelectionItem_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
+        {
+            if (sender is Border border && border.Tag is InquiryResponse response)
+            {
+                _resolveInquiryResponseSelection?.Invoke(response);
             }
         }
 
@@ -1484,6 +1526,18 @@ namespace Milimoe.FunGame.Testing.Desktop.GameMapTesting
         }
 
         /// <summary>
+        /// 反应选择项的鼠标进入事件。
+        /// </summary>
+        private void InquiryResponseSelectionItem_MouseEnter(object sender, MouseEventArgs e)
+        {
+            if (sender is Border border && border.Tag is InquiryResponse response)
+            {
+                string details = response.TextResult;
+                SetRichTextBoxText(InquiryResponseDetailsRichTextBox, details);
+            }
+        }
+
+        /// <summary>
         /// 隐藏角色选择提示面板。
         /// </summary>
         public void HideCharacterSelectionPrompt()
@@ -1492,6 +1546,25 @@ namespace Milimoe.FunGame.Testing.Desktop.GameMapTesting
             CharacterSelectionItemsControl.ItemsSource = null;
             _resolveCharacterSelection = null;
             SetRichTextBoxText(CharacterDetailsRichTextBox, "");
+        }
+
+        /// <summary>
+        /// 隐藏反应选择提示面板。
+        /// </summary>
+        public void HideInquiryResponseSelectionPrompt()
+        {
+            InquiryResponseSelectionOverlay.Visibility = Visibility.Collapsed;
+            InquiryResponseSelectionItemsControl.ItemsSource = null;
+            _resolveInquiryResponseSelection = null;
+            SetRichTextBoxText(InquiryResponseDetailsRichTextBox, "");
+        }
+
+        /// <summary>
+        /// 取消反应选择的点击事件。
+        /// </summary>
+        private void CancelInquiryResponseSelection_Click(object sender, RoutedEventArgs e)
+        {
+            _resolveInquiryResponseSelection?.Invoke(null);
         }
 
         /// <summary>
