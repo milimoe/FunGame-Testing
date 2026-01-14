@@ -122,8 +122,8 @@ while (true)
     //{
     //    break;
     //}
-    await FunGameSimulation.StartSimulationGame(false, false, true, false, useStore: false, hasMap: false);
-    await FunGameSimulation.StartSimulationGame(false, false, false, false, hasMap: false);
+    await FunGameSimulation.StartSimulationGame(true, false, true, false, useStore: false, hasMap: false);
+    //await FunGameSimulation.StartSimulationGame(true, false, false, false, hasMap: false);
 }
 
 //strings.ForEach(Console.WriteLine);
