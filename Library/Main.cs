@@ -103,6 +103,7 @@ Console.ReadKey();
 
 while (true)
 {
+    //FunGameSimulation.IsDebug = true;
     //DateTime start = DateTime.Now;
     //await FunGameSimulation.StartSimulationGame(true, false, true, false, useStore: false, hasMap: false);
     //DateTime end = DateTime.Now;
@@ -122,7 +123,7 @@ while (true)
     //{
     //    break;
     //}
-    await FunGameSimulation.StartSimulationGame(true, false, true, false, useStore: false, hasMap: false);
+    await FunGameSimulation.StartSimulationGame(false, false, true, false, useStore: false, hasMap: false);
     //await FunGameSimulation.StartSimulationGame(true, false, false, false, hasMap: false);
 }
 
