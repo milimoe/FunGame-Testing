@@ -28,6 +28,16 @@ FunGameService.InitFunGame();
 FunGameSimulation.InitFunGameSimulation();
 FunGameController controller = new(new Logger<FunGameController>(new LoggerFactory()));
 
+foreach (Character c in FunGameSimulation.CharacterStatistics.Keys)
+{
+    Console.WriteLine(controller.GetStats((int)c.Id));
+}
+
+foreach (Character c in FunGameSimulation.TeamCharacterStatistics.Keys)
+{
+    Console.WriteLine(controller.GetTeamStats((int)c.Id));
+}
+
 //HorseTest.HorseTest1();
 
 //StoreTest.StoreTest1();
@@ -124,7 +134,7 @@ while (true)
     //    break;
     //}
     await FunGameSimulation.StartSimulationGame(false, false, true, false, useStore: false, hasMap: false);
-    //await FunGameSimulation.StartSimulationGame(true, false, false, false, hasMap: false);
+    await FunGameSimulation.StartSimulationGame(false, false, false, false, hasMap: false);
 }
 
 //strings.ForEach(Console.WriteLine);
@@ -236,9 +246,9 @@ while (true)
             msg = msg.Replace("winrate", "");
             if (int.TryParse(msg, out int value))
             {
-                Console.WriteLine(controller.GetWinrateRank(true));
+                Console.WriteLine(string.Join("\r\n", controller.GetWinrateRank(true)));
             }
-            else Console.WriteLine(controller.GetWinrateRank(false));
+            else Console.WriteLine(string.Join("\r\n", controller.GetWinrateRank(false)));
         }
         else if (msg.StartsWith("csj"))
         {
