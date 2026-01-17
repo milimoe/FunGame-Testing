@@ -28,10 +28,10 @@ FunGameService.InitFunGame();
 FunGameSimulation.InitFunGameSimulation();
 FunGameController controller = new(new Logger<FunGameController>(new LoggerFactory()));
 
-foreach (Character c in FunGameSimulation.CharacterStatistics.Keys)
-{
-    Console.WriteLine(controller.GetStats((int)c.Id));
-}
+//foreach (Character c in FunGameSimulation.CharacterStatistics.Keys)
+//{
+//    Console.WriteLine(controller.GetStats((int)c.Id));
+//}
 
 foreach (Character c in FunGameSimulation.TeamCharacterStatistics.Keys)
 {
@@ -113,28 +113,28 @@ Console.ReadKey();
 
 while (true)
 {
-    //FunGameSimulation.IsDebug = true;
-    //DateTime start = DateTime.Now;
-    //await FunGameSimulation.StartSimulationGame(true, false, true, false, useStore: false, hasMap: false);
-    //DateTime end = DateTime.Now;
-    //Console.WriteLine("模拟时长" + (end - start).TotalSeconds + "秒");
-    //ConsoleKeyInfo key = Console.ReadKey();
-    //if (key.Key == ConsoleKey.Escape)
-    //{
-    //    break;
-    //}
-    //await Task.Delay(1);
-    //start = DateTime.Now;
-    //await FunGameSimulation.StartSimulationGame(true, false, false, false, hasMap: false);
-    //end = DateTime.Now;
-    //Console.WriteLine("模拟时长" + (end - start).TotalSeconds + "秒");
-    //key = Console.ReadKey();
-    //if (key.Key == ConsoleKey.Escape)
-    //{
-    //    break;
-    //}
-    await FunGameSimulation.StartSimulationGame(false, false, true, false, useStore: false, hasMap: false);
-    await FunGameSimulation.StartSimulationGame(false, false, false, false, hasMap: false);
+    FunGameSimulation.IsDebug = true;
+    DateTime start = DateTime.Now;
+    await FunGameSimulation.StartSimulationGame(true, false, true, false, useStore: false, hasMap: false);
+    DateTime end = DateTime.Now;
+    Console.WriteLine("模拟时长" + (end - start).TotalSeconds + "秒");
+    ConsoleKeyInfo key = Console.ReadKey();
+    if (key.Key == ConsoleKey.Escape)
+    {
+        break;
+    }
+    await Task.Delay(1);
+    start = DateTime.Now;
+    await FunGameSimulation.StartSimulationGame(true, false, false, false, hasMap: false);
+    end = DateTime.Now;
+    Console.WriteLine("模拟时长" + (end - start).TotalSeconds + "秒");
+    key = Console.ReadKey();
+    if (key.Key == ConsoleKey.Escape)
+    {
+        break;
+    }
+    //await FunGameSimulation.StartSimulationGame(false, false, true, false, useStore: false, hasMap: false);
+    //await FunGameSimulation.StartSimulationGame(false, false, false, false, hasMap: false);
 }
 
 //strings.ForEach(Console.WriteLine);
