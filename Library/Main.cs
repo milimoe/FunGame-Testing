@@ -33,10 +33,10 @@ FunGameController controller = new(new Logger<FunGameController>(new LoggerFacto
 //    Console.WriteLine(controller.GetStats((int)c.Id));
 //}
 
-foreach (Character c in FunGameSimulation.TeamCharacterStatistics.Keys)
-{
-    Console.WriteLine(controller.GetTeamStats((int)c.Id));
-}
+//foreach (Character c in FunGameSimulation.TeamCharacterStatistics.Keys)
+//{
+//    Console.WriteLine(controller.GetTeamStats((int)c.Id));
+//}
 
 //HorseTest.HorseTest1();
 
@@ -62,12 +62,12 @@ queue.LoadGameMap(new FastAutoMap());
 //    s.Level = 6;
 //    Console.WriteLine(s.GetInfo());
 //}
-//foreach (Skill m in FunGameConstant.Magics)
-//{
-//    m.GamingQueue = queue;
-//    m.Level = 8;
-//    Console.WriteLine(m.GetInfo());
-//}
+foreach (Skill m in FunGameConstant.Magics)
+{
+    m.GamingQueue = queue;
+    m.Level = 8;
+    Console.WriteLine(m.GetInfo());
+}
 foreach (Character c in FunGameConstant.Characters)
 {
     Character character = c.Copy();
@@ -75,11 +75,12 @@ foreach (Character c in FunGameConstant.Characters)
     character.NormalAttack.Level = 8;
     character.Recovery();
     FunGameService.AddCharacterSkills(character, 1, 6, 6);
-    Console.WriteLine($"{character.ToStringWithOutUser()} - {CharacterSet.GetPrimaryAttributeName(character.PrimaryAttribute)}角色");
-    foreach (Skill skill in character.Skills)
-    {
-        Console.WriteLine($"【{SkillSet.GetSkillTypeName(skill.SkillType)}】{skill.Name}\r\n{skill.Description}");
-    }
+    Console.WriteLine(character.GetInfo());
+    //Console.WriteLine($"{character.ToStringWithOutUser()} - {CharacterSet.GetPrimaryAttributeName(character.PrimaryAttribute)}角色");
+    //foreach (Skill skill in character.Skills)
+    //{
+    //    Console.WriteLine($"【{SkillSet.GetSkillTypeName(skill.SkillType)}】{skill.Name}\r\n{skill.Description}");
+    //}
     Console.WriteLine();
 }
 //foreach (Skill s in FunGameConstant.Skills)
