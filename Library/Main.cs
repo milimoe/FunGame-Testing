@@ -135,6 +135,7 @@ while (true)
         break;
     }
     //await FunGameSimulation.StartSimulationGame(false, false, true, false, useStore: false, hasMap: false);
+    //await Task.Delay(1);
     //await FunGameSimulation.StartSimulationGame(false, false, false, false, hasMap: false);
 }
 
