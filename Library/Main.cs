@@ -116,7 +116,7 @@ while (true)
 {
     FunGameSimulation.IsDebug = true;
     DateTime start = DateTime.Now;
-    await FunGameSimulation.StartSimulationGame(true, false, true, false, useStore: false, hasMap: false);
+    await FunGameSimulation.StartSimulationGame(true, false, true, false, useStore: false, hasMap: true);
     DateTime end = DateTime.Now;
     Console.WriteLine("模拟时长" + (end - start).TotalSeconds + "秒");
     ConsoleKeyInfo key = Console.ReadKey();
@@ -126,7 +126,7 @@ while (true)
     }
     await Task.Delay(1);
     start = DateTime.Now;
-    await FunGameSimulation.StartSimulationGame(true, false, false, false, hasMap: false);
+    await FunGameSimulation.StartSimulationGame(true, false, false, false, hasMap: true);
     end = DateTime.Now;
     Console.WriteLine("模拟时长" + (end - start).TotalSeconds + "秒");
     key = Console.ReadKey();
