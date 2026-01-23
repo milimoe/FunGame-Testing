@@ -1485,7 +1485,7 @@ namespace Milimoe.FunGame.Testing.Desktop.GameMapTesting
                     InquiryResponseSelectionItemsControl.ItemsSource = responses;
                     SetRichTextBoxText(InquiryResponseDetailsRichTextBox, "将鼠标悬停在选项上以查看详情。");
                     InquiryResponseSelectionOverlay.Visibility = Visibility.Visible;
-                    InquiryResponseCancel.Visibility = Visibility.Hidden;
+                    InquiryResponseCancel.Visibility = options.CanCancel ? Visibility.Visible : Visibility.Hidden;
                     break;
             }
         }

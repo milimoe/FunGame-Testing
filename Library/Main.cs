@@ -56,15 +56,23 @@ queue.LoadGameMap(new FastAutoMap());
 //    Console.WriteLine(i.ToString(true, false));
 //}
 
-//foreach (Skill s in FunGameConstant.Skills)
-//{
-//    s.GamingQueue = queue;
-//    s.Level = 6;
-//    Console.WriteLine(s.GetInfo());
-//}
+foreach (Skill s in FunGameConstant.Skills)
+{
+    s.GamingQueue = queue;
+    s.Level = 1;
+    Console.WriteLine(s.GetInfo());
+    s.Level = 2;
+    Console.WriteLine(s.GetInfo());
+    s.Level = 6;
+    Console.WriteLine(s.GetInfo());
+}
 foreach (Skill m in FunGameConstant.Magics)
 {
     m.GamingQueue = queue;
+    m.Level = 1;
+    Console.WriteLine(m.GetInfo());
+    m.Level = 2;
+    Console.WriteLine(m.GetInfo());
     m.Level = 8;
     Console.WriteLine(m.GetInfo());
 }

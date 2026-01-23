@@ -723,7 +723,10 @@ namespace Milimoe.FunGame.Testing.Desktop.GameMapTesting
                 SyncAwaiter.Wait(Controller.UpdateCharacterPositionsOnMap());
                 InquiryResponse? response = SyncAwaiter.WaitResult(Controller.RequestInquiryResponseSelection(options));
                 SyncAwaiter.Wait(Controller.ResolveInquiryResponseSelection(response));
-                return response ?? new(options);
+                return response ?? new(options)
+                {
+                    Cancel = true
+                };
             }
             return new(options);
         }

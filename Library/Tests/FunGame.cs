@@ -436,8 +436,8 @@ namespace Milimoe.FunGame.Testing.Tests
                 Task.Run(() =>
                 {
                     Console.WriteLine($"你的角色编号：{character.GetIdName()}");
-                    Console.WriteLine("【敌对角色列表】" + "\r\n" + string.Join("\r\n", enemys.Select(c => $"{c.GetIdName()}：{c.GetSimpleInBattleInfo(queue.HardnessTime[c])}")));
-                    Console.WriteLine("【友方角色列表】" + "\r\n" + string.Join("\r\n", teammates.Select(c => $"{c.GetIdName()}：{c.GetSimpleInBattleInfo(queue.HardnessTime[c])}")));
+                    Console.WriteLine("【敌对角色列表】" + "\r\n" + string.Join("\r\n", enemys.Select(c => $"{c.GetIdName()}：{c.GetInBattleInfo(queue.HardnessTime[c], true)}")));
+                    Console.WriteLine("【友方角色列表】" + "\r\n" + string.Join("\r\n", teammates.Select(c => $"{c.GetIdName()}：{c.GetInBattleInfo(queue.HardnessTime[c], true)}")));
                     while (true)
                     {
                         if (characters.Count > attack.CanSelectTargetCount)
@@ -538,8 +538,8 @@ namespace Milimoe.FunGame.Testing.Tests
                 Task.Run(() =>
                 {
                     Console.WriteLine($"你的角色编号：{caster.GetIdName()}");
-                    Console.WriteLine("【敌对角色列表】" + "\r\n" + string.Join("\r\n", enemys.Select(c => $"{c.GetIdName()}：{c.GetSimpleInBattleInfo(queue.HardnessTime[c])}")));
-                    Console.WriteLine("【友方角色列表】" + "\r\n" + string.Join("\r\n", teammates.Select(c => $"{c.GetIdName()}：{c.GetSimpleInBattleInfo(queue.HardnessTime[c])}")));
+                    Console.WriteLine("【敌对角色列表】" + "\r\n" + string.Join("\r\n", enemys.Select(c => $"{c.GetIdName()}：{c.GetInBattleInfo(queue.HardnessTime[c], true)}")));
+                    Console.WriteLine("【友方角色列表】" + "\r\n" + string.Join("\r\n", teammates.Select(c => $"{c.GetIdName()}：{c.GetInBattleInfo(queue.HardnessTime[c], true)}")));
                     while (true)
                     {
                         if (characters.Count > skill.CanSelectTargetCount)
