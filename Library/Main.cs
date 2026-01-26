@@ -1,7 +1,6 @@
 using Microsoft.Extensions.Logging;
 using Milimoe.FunGame.Core.Api.Utility;
 using Milimoe.FunGame.Core.Entity;
-using Milimoe.FunGame.Core.Library.Constant;
 using Milimoe.FunGame.Core.Model;
 using Oshima.FunGame.OshimaMaps;
 using Oshima.FunGame.OshimaModules;
@@ -24,7 +23,7 @@ sm.Load();
 ItemModule im = new();
 im.Load();
 
-FunGameService.InitFunGame();
+FunGameConstant.InitFunGame();
 FunGameSimulation.InitFunGameSimulation();
 FunGameController controller = new(new Logger<FunGameController>(new LoggerFactory()));
 
@@ -124,7 +123,7 @@ while (true)
 {
     FunGameSimulation.IsDebug = true;
     DateTime start = DateTime.Now;
-    await FunGameSimulation.StartSimulationGame(true, false, true, false, useStore: false, hasMap: true);
+    await FunGameSimulation.StartSimulationGame(true, false, true, false, useStore: false, hasMap: false);
     DateTime end = DateTime.Now;
     Console.WriteLine("模拟时长" + (end - start).TotalSeconds + "秒");
     ConsoleKeyInfo key = Console.ReadKey();
@@ -134,7 +133,7 @@ while (true)
     }
     await Task.Delay(1);
     start = DateTime.Now;
-    await FunGameSimulation.StartSimulationGame(true, false, false, false, hasMap: true);
+    await FunGameSimulation.StartSimulationGame(true, false, false, false, hasMap: false);
     end = DateTime.Now;
     Console.WriteLine("模拟时长" + (end - start).TotalSeconds + "秒");
     key = Console.ReadKey();

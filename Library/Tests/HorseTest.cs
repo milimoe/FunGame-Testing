@@ -1,7 +1,7 @@
 ﻿using Milimoe.FunGame.Core.Api.Utility;
 using Milimoe.FunGame.Core.Entity;
+using Oshima.FunGame.OshimaModules.Models;
 using Oshima.FunGame.OshimaServers.Model;
-using Oshima.FunGame.OshimaServers.Service;
 
 namespace Milimoe.FunGame.Testing.Tests
 {
@@ -17,7 +17,7 @@ namespace Milimoe.FunGame.Testing.Tests
             {
                 User user = Factory.GetUser();
                 user.Id = i;
-                user.Username = FunGameService.GenerateRandomChineseUserName();
+                user.Username = FunGameConstant.GenerateRandomChineseUserName();
                 room.UserAndIsReady.Add(user, true);
                 points[user] = 0;
                 if (i == 0) room.RoomMaster = user;

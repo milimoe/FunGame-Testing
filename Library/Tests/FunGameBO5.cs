@@ -15,7 +15,7 @@ namespace Milimoe.FunGame.Testing.Tests
             while (userlist.Count != 10)
             {
                 User user = Factory.GetUser();
-                user.Username = FunGameService.GenerateRandomChineseUserName();
+                user.Username = FunGameConstant.GenerateRandomChineseUserName();
                 userlist.Add(user);
             }
 
@@ -38,7 +38,7 @@ namespace Milimoe.FunGame.Testing.Tests
                     u1.Add(x);
                     if (u1.Count == 1)
                     {
-                        userTeams[u1] = FunGameService.GenerateRandomChineseUserName();
+                        userTeams[u1] = FunGameConstant.GenerateRandomChineseUserName();
                     }
                     Console.WriteLine($"{x} 加入了 {userTeams[u1]}");
                 }
@@ -47,7 +47,7 @@ namespace Milimoe.FunGame.Testing.Tests
                     u2.Add(x);
                     if (u2.Count == 1)
                     {
-                        userTeams[u2] = FunGameService.GenerateRandomChineseUserName();
+                        userTeams[u2] = FunGameConstant.GenerateRandomChineseUserName();
                     }
                     Console.WriteLine($"{x} 加入了 {userTeams[u2]}");
                 }
