@@ -17,9 +17,9 @@ namespace Milimoe.FunGame.Testing.Tests
             }
 
             Dictionary<string, string> plugindllsha256 = [];
-            foreach (string pfp in PluginLoader.PluginFilePaths.Keys)
+            foreach (string pfp in plugins.PluginFilePaths.Keys)
             {
-                string text = Encryption.FileSha256(PluginLoader.PluginFilePaths[pfp]);
+                string text = Encryption.FileSha256(plugins.PluginFilePaths[pfp]);
                 plugindllsha256.Add(pfp, text);
                 Console.WriteLine(pfp + $" is {text}.");
             }
@@ -41,9 +41,9 @@ namespace Milimoe.FunGame.Testing.Tests
             }
 
             Dictionary<string, string> moduledllsha256 = [];
-            foreach (string mfp in GameModuleLoader.ModuleFilePaths.Keys)
+            foreach (string mfp in modules.ModuleFilePaths.Keys)
             {
-                string text = Encryption.FileSha256(GameModuleLoader.ModuleFilePaths[mfp]);
+                string text = Encryption.FileSha256(modules.ModuleFilePaths[mfp]);
                 moduledllsha256.Add(mfp, text);
                 Console.WriteLine(mfp + $" is {text}.");
             }
@@ -54,7 +54,7 @@ namespace Milimoe.FunGame.Testing.Tests
             {
                 if (!serverModels.ModuleServers[moduledll].IsAnonymous)
                 {
-                    string server = Encryption.FileSha256(GameModuleLoader.ModuleFilePaths[moduledll]);
+                    string server = Encryption.FileSha256(serverModels.ModuleFilePaths[moduledll]);
                     string client = moduledllsha256[moduledll];
                     if (server == client)
                     {
