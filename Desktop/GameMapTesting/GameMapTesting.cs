@@ -1,9 +1,7 @@
 ﻿using System.Text;
 using Milimoe.FunGame.Core.Api.Utility;
 using Milimoe.FunGame.Core.Entity;
-using Milimoe.FunGame.Core.Interface.Entity;
 using Milimoe.FunGame.Core.Library.Common.Addon;
-using Milimoe.FunGame.Core.Library.Common.Architecture;
 using Milimoe.FunGame.Core.Library.Constant;
 using Milimoe.FunGame.Core.Model;
 using Oshima.Core.Constant;
@@ -702,7 +700,7 @@ namespace Milimoe.FunGame.Testing.Desktop.GameMapTesting
             else Thread.Sleep(100);
         }
 
-        private CharacterActionType GamingQueue_DecideAction(GamingQueue queue, Character character, DecisionPoints dp , List<Character> enemys, List<Character> teammates, List<Skill> skills, List<Item> items)
+        private CharacterActionType GamingQueue_DecideAction(GamingQueue queue, Character character, DecisionPoints dp, List<Character> enemys, List<Character> teammates, List<Skill> skills, List<Item> items)
         {
             if (IsPlayer_OnlyTest(queue, character))
             {
