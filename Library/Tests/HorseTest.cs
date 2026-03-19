@@ -18,7 +18,7 @@ namespace Milimoe.FunGame.Testing.Tests
                 User user = Factory.GetUser();
                 user.Id = i;
                 user.Username = FunGameConstant.GenerateRandomChineseUserName();
-                room.UserAndIsReady.Add(user, true);
+                room.UserAndIsReady.TryAdd(user, true);
                 points[user] = 0;
                 if (i == 0) room.RoomMaster = user;
             }

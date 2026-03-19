@@ -1,6 +1,7 @@
 ﻿using System.Text;
 using Milimoe.FunGame.Core.Api.Utility;
 using Milimoe.FunGame.Core.Entity;
+using Milimoe.FunGame.Core.Library.Constant;
 using Milimoe.FunGame.Core.Model;
 using MilimoeFunGame.Testing.Characters;
 
@@ -30,6 +31,19 @@ namespace Milimoe.FunGame.Testing.Solutions
             Conditions.Add("马猴烧酒的好感度低于50", () => 好感度低于50(character));
             Conditions.Add("主角攻击力大于20", () => 攻击力大于20(main));
             Conditions.Add("马猴烧酒攻击力大于20", () => 攻击力大于20(character));
+
+            NovelCharacterNode mainNode1 = CreateCharacterNode(main);
+            mainNode1.PositionType = PositionType.Left;
+            NovelCharacterNode mainNode2 = CreateCharacterNode(main);
+            mainNode2.PositionType = PositionType.Left;
+            mainNode2.StandOut = false;
+
+            NovelCharacterNode characterNode1 = CreateCharacterNode(character);
+            characterNode1.PositionType = PositionType.Right;
+            NovelCharacterNode characterNode2 = CreateCharacterNode(character);
+            characterNode2.PositionType = PositionType.Right;
+            characterNode2.StandOut = false;
+
             NovelNode node1 = new()
             {
                 Key = "node1",
@@ -40,8 +54,10 @@ namespace Milimoe.FunGame.Testing.Solutions
             {
                 Key = "node2",
                 Name = main.NickName,
-                Content = "什么人！"
+                Content = "什么人！",
+                Character = mainNode1
             };
+            node2.Opponents.Add(characterNode2);
             node1.NextNodes.Add(node2);
             node2.Previous = node1;
             NovelOption option1 = new()
@@ -63,20 +79,26 @@ namespace Milimoe.FunGame.Testing.Solutions
                 Key = "node3",
                 Name = character.NickName,
                 Content = "你好，我叫【马猴烧酒】！",
+                Character = characterNode1,
                 Options = [option1, option2]
             };
+            node3.Opponents.Add(mainNode2);
             NovelNode node4 = new()
             {
                 Key = "node4",
                 Name = character.NickName,
-                Content = "你的名字是？"
+                Content = "你的名字是？",
+                Character = characterNode1
             };
+            node4.Opponents.Add(mainNode2);
             NovelNode node5 = new()
             {
                 Key = "node5",
-                Name = character.NickName,
-                Content = "滚，谁要认识你？"
+                Name = main.NickName,
+                Content = "滚，谁要认识你？",
+                Character = mainNode1
             };
+            node5.Opponents.Add(characterNode2);
             node2.NextNodes.Add(node3);
             option1.Targets.Add(node4);
             option2.Targets.Add(node5);
@@ -209,6 +231,30 @@ namespace Milimoe.FunGame.Testing.Solutions
 
                 Console.WriteLine(builder.ToString());
             }
+        }
+
+        public static NovelCharacterNode CreateCharacterNode(Character character, NovelNode? node = null, bool isOpponent = false, bool standOut = true)
+        {
+            NovelCharacterNode ncn = new()
+            {
+                Name = character.NickName,
+                PortraitImagePath = "",
+                PositionType = PositionType.Center,
+                StandOut = standOut
+            };
+            if (node != null)
+            {
+                if (isOpponent)
+                {
+                    node.Opponents.Add(ncn);
+                }
+                else
+                {
+                    node.Character = ncn;
+                    node.Name = ncn.Name;
+                }
+            }
+            return ncn;
         }
     }
 }

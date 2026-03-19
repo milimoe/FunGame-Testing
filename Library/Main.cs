@@ -55,41 +55,143 @@ queue.LoadGameMap(new FastAutoMap());
 //    Console.WriteLine(i.ToString(true, false));
 //}
 
-foreach (Skill s in FunGameConstant.Skills)
+Character exampleCharacter = new Oshima.FunGame.OshimaModules.Characters.CustomCharacter(0, "演示角色");
+exampleCharacter.Level = 1;
+exampleCharacter.Recovery();
+Console.WriteLine($"以下技能效果的演示基于该角色：\r\n{exampleCharacter.GetInfo()}");
+foreach (Skill s in FunGameConstant.Skills.Union(FunGameConstant.CommonSuperSkills))
 {
     s.GamingQueue = queue;
+    s.Character = exampleCharacter;
+    List<string> 技能描述 = [];
+    List<double> 能量消耗 = [];
+    List<double> 冷却时间 = [];
+    List<double> 硬直时间 = [];
+    Console.WriteLine(s.GetInfo().Trim());
     s.Level = 1;
-    Console.WriteLine(s.GetInfo());
+    技能描述.Add(s.Description);
+    能量消耗.Add(s.EPCost);
+    冷却时间.Add(s.CD);
+    硬直时间.Add(s.HardnessTime);
     s.Level = 2;
-    Console.WriteLine(s.GetInfo());
+    技能描述.Add(s.Description);
+    能量消耗.Add(s.EPCost);
+    冷却时间.Add(s.CD);
+    硬直时间.Add(s.HardnessTime);
+    s.Level = 3;
+    技能描述.Add(s.Description);
+    能量消耗.Add(s.EPCost);
+    冷却时间.Add(s.CD);
+    硬直时间.Add(s.HardnessTime);
+    s.Level = 4;
+    技能描述.Add(s.Description);
+    能量消耗.Add(s.EPCost);
+    冷却时间.Add(s.CD);
+    硬直时间.Add(s.HardnessTime);
+    s.Level = 5;
+    技能描述.Add(s.Description);
+    能量消耗.Add(s.EPCost);
+    冷却时间.Add(s.CD);
+    硬直时间.Add(s.HardnessTime);
     s.Level = 6;
-    Console.WriteLine(s.GetInfo());
+    技能描述.Add(s.Description);
+    能量消耗.Add(s.EPCost);
+    冷却时间.Add(s.CD);
+    硬直时间.Add(s.HardnessTime);
+    Console.WriteLine($"技能各等级详细描述：");
+    for (int i = 0; i < 6; i++)
+    {
+        Console.WriteLine($"等级 {i + 1} - {技能描述[i]}");
+    }
+    Console.WriteLine($"能量消耗：" + string.Join("/", 能量消耗.Select(d => $"{d:0.##}")));
+    Console.WriteLine($"冷却时间：" + string.Join("/", 冷却时间.Select(d => $"{d:0.##}")));
+    Console.WriteLine($"硬直时间：" + string.Join("/", 硬直时间.Select(d => $"{d:0.##}")));
+    Console.WriteLine();
 }
 foreach (Skill m in FunGameConstant.Magics)
 {
     m.GamingQueue = queue;
+    m.Character = exampleCharacter;
+    List<string> 技能描述 = [];
+    List<double> 魔法消耗 = [];
+    List<double> 吟唱时间 = [];
+    List<double> 冷却时间 = [];
+    List<double> 硬直时间 = [];
+    Console.WriteLine(m.GetInfo().Trim());
     m.Level = 1;
-    Console.WriteLine(m.GetInfo());
+    技能描述.Add(m.Description);
+    魔法消耗.Add(m.MPCost);
+    吟唱时间.Add(m.CastTime);
+    冷却时间.Add(m.CD);
+    硬直时间.Add(m.HardnessTime);
     m.Level = 2;
-    Console.WriteLine(m.GetInfo());
+    技能描述.Add(m.Description);
+    魔法消耗.Add(m.MPCost);
+    吟唱时间.Add(m.CastTime);
+    冷却时间.Add(m.CD);
+    硬直时间.Add(m.HardnessTime);
+    m.Level = 3;
+    技能描述.Add(m.Description);
+    魔法消耗.Add(m.MPCost);
+    吟唱时间.Add(m.CastTime);
+    冷却时间.Add(m.CD);
+    硬直时间.Add(m.HardnessTime);
+    m.Level = 4;
+    技能描述.Add(m.Description);
+    魔法消耗.Add(m.MPCost);
+    吟唱时间.Add(m.CastTime);
+    冷却时间.Add(m.CD);
+    硬直时间.Add(m.HardnessTime);
+    m.Level = 5;
+    技能描述.Add(m.Description);
+    魔法消耗.Add(m.MPCost);
+    吟唱时间.Add(m.CastTime);
+    冷却时间.Add(m.CD);
+    硬直时间.Add(m.HardnessTime);
+    m.Level = 6;
+    技能描述.Add(m.Description);
+    魔法消耗.Add(m.MPCost);
+    吟唱时间.Add(m.CastTime);
+    冷却时间.Add(m.CD);
+    硬直时间.Add(m.HardnessTime);
+    m.Level = 7;
+    技能描述.Add(m.Description);
+    魔法消耗.Add(m.MPCost);
+    吟唱时间.Add(m.CastTime);
+    冷却时间.Add(m.CD);
+    硬直时间.Add(m.HardnessTime);
     m.Level = 8;
-    Console.WriteLine(m.GetInfo());
-}
-foreach (Character c in FunGameConstant.Characters)
-{
-    Character character = c.Copy();
-    character.Level = 60;
-    character.NormalAttack.Level = 8;
-    character.Recovery();
-    FunGameService.AddCharacterSkills(character, 1, 6, 6);
-    Console.WriteLine(character.GetInfo());
-    //Console.WriteLine($"{character.ToStringWithOutUser()} - {CharacterSet.GetPrimaryAttributeName(character.PrimaryAttribute)}角色");
-    //foreach (Skill skill in character.Skills)
-    //{
-    //    Console.WriteLine($"【{SkillSet.GetSkillTypeName(skill.SkillType)}】{skill.Name}\r\n{skill.Description}");
-    //}
+    技能描述.Add(m.Description);
+    魔法消耗.Add(m.MPCost);
+    吟唱时间.Add(m.CastTime);
+    冷却时间.Add(m.CD);
+    硬直时间.Add(m.HardnessTime);
+    Console.WriteLine($"技能各等级详细描述：");
+    for (int i = 0; i < 6; i++)
+    {
+        Console.WriteLine($"等级 {i + 1} - {技能描述[i]}");
+    }
+    Console.WriteLine($"魔法消耗：" + string.Join("/", 魔法消耗.Select(d => $"{d:0.##}")));
+    Console.WriteLine($"吟唱时间：" + string.Join("/", 吟唱时间.Select(d => $"{d:0.##}")));
+    Console.WriteLine($"冷却时间：" + string.Join("/", 冷却时间.Select(d => $"{d:0.##}")));
+    Console.WriteLine($"硬直时间：" + string.Join("/", 硬直时间.Select(d => $"{d:0.##}")));
     Console.WriteLine();
 }
+//foreach (Character c in FunGameConstant.Characters)
+//{
+//    Character character = c.Copy();
+//    character.Level = 60;
+//    character.NormalAttack.Level = 8;
+//    character.Recovery();
+//    FunGameService.AddCharacterSkills(character, 1, 6, 6);
+//    Console.WriteLine(character.GetInfo());
+//    //Console.WriteLine($"{character.ToStringWithOutUser()} - {CharacterSet.GetPrimaryAttributeName(character.PrimaryAttribute)}角色");
+//    //foreach (Skill skill in character.Skills)
+//    //{
+//    //    Console.WriteLine($"【{SkillSet.GetSkillTypeName(skill.SkillType)}】{skill.Name}\r\n{skill.Description}");
+//    //}
+//    Console.WriteLine();
+//}
 //foreach (Skill s in FunGameConstant.Skills)
 //{
 //    s.Level = 6;
