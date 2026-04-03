@@ -9,10 +9,9 @@ using Oshima.FunGame.OshimaServers.Service;
 using Oshima.FunGame.WebAPI.Controllers;
 
 //_ = new Milimoe.FunGame.Testing.Solutions.Novels();
+//Console.ReadKey();
 
 //_ = new Milimoe.FunGame.Testing.Tests.CheckDLL();
-
-Console.WriteLine();
 
 //_ = new Milimoe.FunGame.Testing.Tests.WebSocketTest();
 
@@ -23,9 +22,21 @@ sm.Load();
 ItemModule im = new();
 im.Load();
 
+Milimoe.FunGame.Testing.Tests.RogueLikeTest rogue = new();
+await rogue.RogueLike.StartGame();
+
 FunGameConstant.InitFunGame();
 FunGameSimulation.InitFunGameSimulation();
 FunGameController controller = new(new Logger<FunGameController>(new LoggerFactory()));
+
+//foreach (OshimaRegion or in FunGameConstant.Regions)
+//{
+//    Console.WriteLine(or.ToString());
+//}
+//Console.ReadKey();
+
+//await Milimoe.FunGame.Testing.Tests.FunGameBO5.StartBO5();
+//Console.ReadKey();
 
 //foreach (Character c in FunGameSimulation.CharacterStatistics.Keys)
 //{

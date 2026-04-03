@@ -100,6 +100,24 @@ namespace Milimoe.FunGame.Testing.Tests
                             Console.WriteLine($"{userTeams[u2]} 禁用了 {x}");
                         }
                     }
+                    else if (i == 6 || i == 7)
+                    {
+                        if (ban.Count < 4)
+                        {
+                            Character? x = xx.FirstOrDefault(c => !ban.Contains(c));
+                            if (x is null) continue;
+                            if (i % 2 != 0)
+                            {
+                                ban.Add(x);
+                                Console.WriteLine($"{userTeams[u1]} 禁用了 {x}");
+                            }
+                            else if (i % 2 == 0)
+                            {
+                                ban.Add(x);
+                                Console.WriteLine($"{userTeams[u2]} 禁用了 {x}");
+                            }
+                        }
+                    }
                     else
                     {
                         // 选秀
@@ -109,7 +127,7 @@ namespace Milimoe.FunGame.Testing.Tests
                         c.Level = 60;
                         c.NormalAttack.Level = 8;
                         FunGameService.AddCharacterSkills(c, 1, 6, 6);
-                        if (i % 2 == 0 && t1.Count < 5)
+                        if ((i < 7 ? i % 2 == 0 : i % 2 != 0) && t1.Count < 5)
                         {
                             User? uu = u1.FirstOrDefault(u => !t1.ContainsKey(u));
                             if (uu is null) continue;
@@ -119,7 +137,7 @@ namespace Milimoe.FunGame.Testing.Tests
                             Console.WriteLine($"{userTeams[u1]}.{uu} 选择了 {c}");
                             c.User = uu;
                         }
-                        if (i % 2 != 0 && t2.Count < 5)
+                        if ((i < 7 ? i % 2 != 0 : i % 2 == 0) && t2.Count < 5)
                         {
                             User? uu = u2.FirstOrDefault(u => !t2.ContainsKey(u));
                             if (uu is null) continue;
@@ -148,8 +166,8 @@ namespace Milimoe.FunGame.Testing.Tests
                 DropItems(team2.Members);
                 team1.Members.ForEach(c => c.Recovery());
                 team2.Members.ForEach(c => c.Recovery());
-                FunGameActionQueue queue = new();
-                List<string> msgs = await queue.StartTeamGame(teams, -1, 30);
+                FunGameActionQueue queue = await FunGameActionQueue.NewAndStartTeamGame(teams, -1, 30);
+                List<string> msgs = queue.Result;
                 foreach (Character character in queue.GamingQueue.CharacterStatistics.Keys)
                 {
                     FunGameTesting.UpdateStatistics(stats[character.User], queue.GamingQueue.CharacterStatistics[character]);
