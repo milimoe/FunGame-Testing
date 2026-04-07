@@ -22,12 +22,13 @@ sm.Load();
 ItemModule im = new();
 im.Load();
 
-Milimoe.FunGame.Testing.Tests.RogueLikeTest rogue = new();
-await rogue.RogueLike.StartGame();
-
 FunGameConstant.InitFunGame();
 FunGameSimulation.InitFunGameSimulation();
 FunGameController controller = new(new Logger<FunGameController>(new LoggerFactory()));
+
+Milimoe.FunGame.Testing.Tests.RogueLikeTest rogue = new(controller);
+await rogue.RogueLike.StartGame();
+Console.ReadKey();
 
 //foreach (OshimaRegion or in FunGameConstant.Regions)
 //{

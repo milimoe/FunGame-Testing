@@ -1,7 +1,6 @@
-﻿using Milimoe.FunGame.Core.Entity;
-using Milimoe.FunGame.Core.Model;
+﻿using Milimoe.FunGame.Core.Model;
 using Milimoe.FunGame.Testing.Solutions;
-using Oshima.FunGame.OshimaModules.Regions;
+using Oshima.FunGame.WebAPI.Controllers;
 
 namespace Milimoe.FunGame.Testing.Tests
 {
@@ -13,16 +12,16 @@ namespace Milimoe.FunGame.Testing.Tests
         public RogueLike RogueLike { get; set; }
         public RogueLikeServer RogueLikeServer { get; set; }
 
-        public RogueLikeTest()
+        public RogueLikeTest(FunGameController controller)
         {
-            RogueLikeDispatcher dispatcher = new();
+            RogueLikeDispatcher dispatcher = new(controller);
             RogueLike = new(dispatcher);
             RogueLikeServer = new(dispatcher);
             dispatcher.RogueLikeInstance = RogueLike;
             dispatcher.RogueLikeServer = RogueLikeServer;
             RogueLike.ReadInputStringHandler += RogueLike_ReadInputStringHandler;
             RogueLike.ReadInputNumberHandler += RogueLike_ReadInputNumberHandler;
-            RogueLike.ReadInputInGameResponseHandler += RogueLike_ReadInputInGameResponseHandler;
+            RogueLike.ReadInputInquiryResponseHandler += RogueLike_ReadInputInGameResponseHandler;
         }
 
         /// <summary>
@@ -180,8 +179,9 @@ namespace Milimoe.FunGame.Testing.Tests
     /// <summary>
     /// 仅本地测试原型用，实际使用时需替换为网络层
     /// </summary>
-    public class RogueLikeDispatcher
+    public class RogueLikeDispatcher(FunGameController controller)
     {
+        public FunGameController Controller { get; set; } = controller;
         public RogueLike? RogueLikeInstance { get; set; } = null;
         public RogueLikeServer? RogueLikeServer { get; set; } = null;
 
@@ -191,6 +191,12 @@ namespace Milimoe.FunGame.Testing.Tests
         {
             if (RogueLikeInstance is null) return;
             RogueLikeInstance.WriteLine(str);
+        }
+
+        public void AddDialog(string speaker, string message)
+        {
+            if (RogueLikeInstance is null) return;
+            RogueLikeInstance.AddDialog(speaker, message);
         }
 
         public async Task<List<string>> GetChoiceResultsAsync(InquiryOptions options, Dictionary<string, object> args)
@@ -211,10 +217,10 @@ namespace Milimoe.FunGame.Testing.Tests
             return await RogueLikeInstance.GetTextResultsAsync(args);
         }
 
-        public async Task<InquiryResponse> GetInGameResponse(InquiryOptions options)
+        public async Task<InquiryResponse> GetInquiryResponse(InquiryOptions options)
         {
             if (RogueLikeInstance is null) return new(options);
-            return await RogueLikeInstance.GetInGameResponse(options);
+            return await RogueLikeInstance.GetInquiryResponse(options);
         }
 
         public async Task DataRequestComplete(Guid guid, DataRequestArgs response)
@@ -240,19 +246,6 @@ namespace Milimoe.FunGame.Testing.Tests
             if (RogueLikeServer is null) return;
             await RogueLikeServer.CreateGameLoop(username);
         }
-    }
-
-    public class RogueLikeGameData(Character character)
-    {
-        public RogueState RogueState { get; set; } = RogueState.Init;
-        public Character Character { get; set; } = character;
-        public int Chapter { get; set; } = 1;
-        public OshimaRegion? CurrentRegion { get; set; } = null;
-        public string CurrentArea { get; set; } = "";
-        public int RoomId { get; set; } = -1;
-        public OshimaRegion? Chapter1Region { get; set; } = null;
-        public OshimaRegion? Chapter2Region { get; set; } = null;
-        public OshimaRegion? Chapter3Region { get; set; } = null;
     }
 
     public class DataRequestArgs(string type)

@@ -35,27 +35,20 @@ namespace Milimoe.FunGame.Testing.Solutions
         {
             Running = true;
             Dispatcher.StartServer();
-            AddDialog("？？？", "探索者，欢迎入职【永恒方舟计划】，我是您的专属 AI，协助您前往指定任务地点开展勘测工作。请问您的名字是？");
-            string username;
-            do
+            DataRequestArgs response = await DataRequest(new("login")
             {
-                username = await GetTextResultsAsync([]);
-                if (username == "")
+                Data =
                 {
-                    WriteLine("请输入不为空的字符串。");
-                }
-            }
-            while (username == "");
-            DataRequestArgs response = await DataRequest(new("createuser")
-            {
-                Data = new()
-                {
-                    { "username", username }
+                    { "uid", 1 }
                 }
             });
             if (response.Data.TryGetValue("user", out object? value) && value is User user)
             {
                 User = user;
+            }
+            else
+            {
+                return;
             }
             // 初始化菜单指令
             Commands["quit"] = async (args) =>
@@ -93,7 +86,6 @@ namespace Milimoe.FunGame.Testing.Solutions
             };
             AddCommandAlias("help", "菜单", "h", "帮助");
             AddCommandAlias("start", "开局");
-            AddDialog("柔哥", $"让我再次欢迎您，{username}。入职手续已办理完毕，接下来，您可以使用菜单了。请您记住我的名字：【柔哥】。");
             await Help([]);
             while (Running)
             {
@@ -135,10 +127,10 @@ namespace Milimoe.FunGame.Testing.Solutions
         }
 
         public delegate Task ReadInput<T>(Dictionary<string, object> args, List<T> results);
-        public delegate Task<InquiryResponse> ReadInputInGameResponse(InquiryOptions options);
+        public delegate Task<InquiryResponse> ReadInputInquiryResponse(InquiryOptions options);
         public event ReadInput<string>? ReadInputStringHandler;
         public event ReadInput<double>? ReadInputNumberHandler;
-        public event ReadInputInGameResponse? ReadInputInGameResponseHandler;
+        public event ReadInputInquiryResponse? ReadInputInquiryResponseHandler;
 
         public async Task<List<string>> GetChoiceResultsAsync(InquiryOptions options, Dictionary<string, object> args)
         {
@@ -200,10 +192,10 @@ namespace Milimoe.FunGame.Testing.Solutions
             }
         }
 
-        public async Task<InquiryResponse> GetInGameResponse(InquiryOptions options)
+        public async Task<InquiryResponse> GetInquiryResponse(InquiryOptions options)
         {
-            if (ReadInputInGameResponseHandler is null) return new(options);
-            return await ReadInputInGameResponseHandler.Invoke(options);
+            if (ReadInputInquiryResponseHandler is null) return new(options);
+            return await ReadInputInquiryResponseHandler.Invoke(options);
         }
 
         public void WriteLine(string message = "")
