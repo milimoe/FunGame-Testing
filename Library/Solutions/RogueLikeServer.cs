@@ -1,9 +1,9 @@
 ﻿using System.Text;
-using Microsoft.Extensions.Logging;
 using Milimoe.FunGame.Core.Api.Utility;
 using Milimoe.FunGame.Core.Entity;
 using Milimoe.FunGame.Core.Interface.Base;
 using Milimoe.FunGame.Core.Library.Common.Addon;
+using Milimoe.FunGame.Core.Library.Common.Architecture;
 using Milimoe.FunGame.Core.Library.Constant;
 using Milimoe.FunGame.Core.Model;
 using Milimoe.FunGame.Testing.Tests;
@@ -23,6 +23,9 @@ namespace Milimoe.FunGame.Testing.Solutions
         public ConcurrentQueue<(Guid Guid, DataRequestArgs Args)> Inquiries { get; } = [];
         public Dictionary<string, User> Users { get; set; } = [];
         public Dictionary<string, RogueLikeGameData> RogueLikeGameDatas { get; set; } = [];
+
+        public string Credit_Name { get; set; } = General.GameplayEquilibriumConstant.InGameCurrency;
+        public string Material_Name { get; set; } = General.GameplayEquilibriumConstant.InGameMaterial;
 
         private readonly FunGameController _controller = dispatcher.Controller;
 
@@ -102,6 +105,8 @@ namespace Milimoe.FunGame.Testing.Solutions
                             Level = 1
                         };
                         character.Recovery();
+                        user.Inventory.Credits = 100;
+                        user.Inventory.Materials = 5;
                         user.Inventory.Characters.Add(character);
                         user.Inventory.MainCharacter = character;
                         pc.Add("user", user);
@@ -342,21 +347,10 @@ namespace Milimoe.FunGame.Testing.Solutions
                 WriteLine("突发！小队和方舟失联了！永恒方舟计划终止。");
                 return newState;
             }
-            WriteLine("正在降落...");
-            data.CurrentArea = data.CurrentRegion.Areas.OrderByDescending(o => data.Random.Next()).First();
-            WriteLine($"在【{data.CurrentRegion.Name}】的【{data.CurrentArea}】区域完成降落！");
-            List<Quest> quests = GetQuests(data, data.CurrentRegion, 2);
-            data.CurrentQuests = quests;
-            AddDialog("柔哥", $"我看到您安全着陆了，现在方舟给您下发任务指令：\r\n{string.Join("\r\n", quests.Select(q => q.ToString()))}");
-            bool fin = false;
-            while (!fin)
+            if (data.CurrentMap is null)
             {
-                if (data.CurrentMap != null)
-                {
-                    DisplayMapInConsole(data.CurrentMap);
-                }
-                // TODO:开始探索区域，主要抉择
-                fin = true;
+                WriteLine($"降落舱在{data.CurrentRegion.Name}的天空中迷失了，你从此永远地消失。永恒方舟计划终止。");
+                return newState;
             }
             newState = chapter switch
             {
@@ -365,7 +359,140 @@ namespace Milimoe.FunGame.Testing.Solutions
                 3 => RogueState.ArriveChapter3RallyPoint,
                 _ => RogueState.Finish,
             };
+
+            WriteLine("正在降落...");
+            data.CurrentArea = data.CurrentRegion.Areas.OrderByDescending(o => data.Random.Next()).First();
+            WriteLine($"在【{data.CurrentRegion.Name}】的【{data.CurrentArea}】区域完成降落！");
+            List<Quest> quests = GetQuests(data, data.CurrentRegion, 2);
+            data.CurrentQuests = quests;
+            AddDialog("柔哥", $"我看到您安全着陆了，现在方舟给您下发任务指令：\r\n{string.Join("\r\n", quests.Select(q => q.ToString()))}");
+            Character character = data.Character;
+
+            bool fin = false;
+            while (!fin)
+            {
+                Grid currentGrid = Grid.Empty;
+
+                DisplayMapInConsole(data.CurrentMap);
+                currentGrid = data.CurrentMap.GetCharacterCurrentGrid(character) ?? Grid.Empty;
+
+                // 获取可移动范围（曼哈顿距离1格）
+                List<Grid> movableGrids = data.CurrentMap.GetGridsByRange(currentGrid, 1, false);
+
+                // 构建选择字典
+                Dictionary<string, string> choices = [];
+                Dictionary<string, Grid> keyToGrid = [];
+                int index = 1;
+                foreach (Grid grid in movableGrids.OrderBy(g => g.Y).ThenBy(g => g.X))
+                {
+                    string dir = GetDirectionName(currentGrid, grid);
+                    string roomType = GetRoomTypeDisplay(grid);
+                    choices[dir] = $"{roomType} ({grid.X},{grid.Y})";
+                    keyToGrid[dir] = grid;
+                    index++;
+                }
+
+                choices["查看角色状态"] = "";
+                if (data.CurrentQuests.All(q => q.Status == QuestState.Completed))
+                {
+                    choices["前往集结点"] = "结束本地区的探索，并前往本地区的BOSS房间";
+                }
+                choices["结束本次区域探索"] = "放弃本地区的探索进度并返回方舟";
+
+                InquiryOptions options = new(InquiryType.Choice, "请选择你的下一步行动：")
+                {
+                    Choices = choices
+                };
+
+                InquiryResponse response = await Dispatcher.GetInquiryResponse(options);
+                if (response.Cancel)
+                {
+                    WriteLine("操作已取消。");
+                    continue;
+                }
+
+                string choice = response.Choices.FirstOrDefault() ?? "";
+
+                if (choice == "查看角色状态")
+                {
+                    WriteLine(character.GetInfo());
+                    continue;
+                }
+
+                if (choice == "前往集结点")
+                {
+                    fin = true;
+                    WriteLine("任务目标已完成！你决定前往集结点。");
+                    continue;
+                }
+
+                if (choice == "结束本次区域探索")
+                {
+                    fin = true;
+                    WriteLine("你决定结束本次探索，返回方舟。");
+                    newState = chapter switch
+                    {
+                        1 => RogueState.InArk,
+                        2 => RogueState.Chapter2InArk,
+                        3 => RogueState.Chapter3InArk,
+                        _ => RogueState.Finish,
+                    };
+                    continue;
+                }
+
+                // 处理移动
+                if (keyToGrid.TryGetValue(choice, out Grid? targetGrid) && targetGrid != null)
+                {
+                    WriteLine($"你移动到了 ({targetGrid.X}, {targetGrid.Y})");
+                    data.CurrentMap.CharacterMove(character, currentGrid, targetGrid);
+                }
+                else
+                {
+                    WriteLine("无效选择，请重试。");
+                }
+
+                CheckQuestProgress(data);
+                await Task.Delay(80);
+            }
             return newState;
+        }
+
+        private void CheckQuestProgress(RogueLikeGameData data)
+        {
+            WriteLine(string.Join("\r\n", data.CurrentQuests.Select(q => q.ToString())));
+        }
+
+        private static string GetDirectionName(Grid current, Grid target)
+        {
+            int dx = target.X - current.X;
+            int dy = target.Y - current.Y;
+            return (dx, dy) switch
+            {
+                (0, -1) => "↑ 北",
+                (0, 1) => "↓ 南",
+                (-1, 0) => "← 西",
+                (1, 0) => "→ 东",
+                (-1, -1) => "↖ 西北",
+                (1, -1) => "↗ 东北",
+                (-1, 1) => "↙ 西南",
+                (1, 1) => "↘ 东南",
+                _ => "？"
+            };
+        }
+        private static string GetRoomTypeDisplay(Grid grid)
+        {
+            if (grid.InteractionPoints.Count == 0) return "<空>";
+            InteractionPointType type = (InteractionPointType)grid.InteractionPoints.First().CustomValue;
+            return type switch
+            {
+                InteractionPointType.General => "<普>",
+                InteractionPointType.Elite => "<精>",
+                InteractionPointType.Store => "<商>",
+                InteractionPointType.Treasure => "<宝>",
+                InteractionPointType.Rest => "<休>",
+                InteractionPointType.Change => "<事>",
+                _ => "<？>"
+            };
         }
 
         private static List<Quest> GetQuests(RogueLikeGameData data, OshimaRegion region, int count)
@@ -375,11 +502,11 @@ namespace Milimoe.FunGame.Testing.Solutions
             int immediateQuestCount = data.Random.Next(count + 1);
             int progressiveQuestCount = count - immediateQuestCount;
 
-            var list = region.ImmediateQuestList.OrderBy(kv => data.Random.Next()).Take(count);
+            var list = region.ImmediateQuestList.OrderBy(kv => data.Random.Next()).Take(immediateQuestCount);
             foreach (var item in list)
             {
-                string name = region.ImmediateQuestList.Keys.OrderBy(o => Random.Shared.Next()).First();
-                QuestExploration exploration = region.ImmediateQuestList[name];
+                string name = item.Key;
+                QuestExploration exploration = item.Value;
                 int difficulty = Random.Shared.Next(3, 11);
                 Quest quest = new()
                 {
@@ -393,11 +520,11 @@ namespace Milimoe.FunGame.Testing.Solutions
                 };
                 quests.Add(quest);
             }
-            list = region.ProgressiveQuestList.OrderBy(kv => data.Random.Next()).Take(count);
+            list = region.ProgressiveQuestList.OrderBy(kv => data.Random.Next()).Take(progressiveQuestCount);
             foreach (var item in list)
             {
-                string name = region.ProgressiveQuestList.Keys.OrderBy(o => Random.Shared.Next()).First();
-                QuestExploration exploration = region.ProgressiveQuestList[name];
+                string name = item.Key;
+                QuestExploration exploration = item.Value;
                 int maxProgress = Random.Shared.Next(3, 11);
                 Quest quest = new()
                 {
@@ -480,7 +607,7 @@ namespace Milimoe.FunGame.Testing.Solutions
             sb.Append("   ");
             for (int x = 0; x < map.Length; x++)
             {
-                sb.Append($" {x}  ");
+                sb.Append($" {x}\t");
             }
 
             for (int y = 0; y < map.Width; y++)
@@ -509,23 +636,21 @@ namespace Milimoe.FunGame.Testing.Solutions
                     }
                     else if (grid.InteractionPoints.Count > 0)
                     {
-                        InteractionPoint ip = grid.InteractionPoints.First();
-                        string displayChar = ((InteractionPointType)ip.CustomValue).ToString();
-                        displayChar = displayChar.Length > 0 ? displayChar[0].ToString().ToUpper() : "?";
-                        sb.Append($"<{displayChar}> ");
+                        string displayChar = GetRoomTypeDisplay(grid);
+                        sb.Append(displayChar);
                     }
                     else
                     {
                         sb.Append(" .  ");
                     }
-                    if (x == map.Length - 1) sb.Append('\t');
+                    if (x != map.Length - 1) sb.Append('\t');
                 }
             }
 
             WriteLine(sb.ToString());
         }
 
-        private static void SetupGrid(RogueLikeGameData data, GameMap map)
+        private void SetupGrid(RogueLikeGameData data, GameMap map)
         {
             // 生成交互点，8*8的地图，生成30个交互点
             int count = 30;
@@ -540,52 +665,366 @@ namespace Milimoe.FunGame.Testing.Solutions
                     CustomValue = random.Next((int)InteractionPointType.MaxValueMark)
                 };
                 grid.InteractionPoints.Add(ip);
-                switch ((InteractionPointType)ip.CustomValue)
+                grid.CharacterEntered += (character) =>
                 {
-                    case InteractionPointType.General:
-                        grid.CharacterEntered += (character) =>
-                        {
-
-                        };
-                        break;
-                    case InteractionPointType.Elite:
-                        grid.CharacterEntered += (character) =>
-                        {
-
-                        };
-                        break;
-                    case InteractionPointType.Store:
-                        grid.CharacterEntered += (character) =>
-                        {
-
-                        };
-                        break;
-                    case InteractionPointType.Treasure:
-                        grid.CharacterEntered += (character) =>
-                        {
-
-                        };
-                        break;
-                    case InteractionPointType.Rest:
-                        grid.CharacterEntered += (character) =>
-                        {
-
-                        };
-                        break;
-                    case InteractionPointType.Change:
-                        grid.CharacterEntered += (character) =>
-                        {
-
-                        };
-                        break;
-                    default:
-                        break;
-                }
+                    HandleCharacterEnteredGrid(data, character, grid, ip);
+                };
             }
             Grid? land = map.Grids.Values.OrderBy(g => random.Next()).FirstOrDefault(g => g.InteractionPoints.Count == 0);
             if (land != null)
             {
                 map.SetCharacterCurrentGrid(data.Character, land);
+            }
+        }
+
+        public void HandleCharacterEnteredGrid(RogueLikeGameData data, Character character, Grid grid, InteractionPoint ip)
+        {
+            InteractionPointType type = (InteractionPointType)ip.CustomValue;
+            // 移除交互点，战斗、宝箱、事件、休息点不会再触发，商店会一直存在
+            if (type != InteractionPointType.Store)
+            {
+                if (!grid.InteractionPoints.Remove(ip))
+                {
+                    return;
+                }
+            }
+
+            switch (type)
+            {
+                case InteractionPointType.General:
+                    SyncAwaiter.Wait(HandleGeneralBattle(data, character));
+                    break;
+                case InteractionPointType.Elite:
+                    SyncAwaiter.Wait(HandleEliteBattle(data, character));
+                    break;
+                case InteractionPointType.Store:
+                    SyncAwaiter.Wait(HandleStore(data, character));
+                    break;
+                case InteractionPointType.Treasure:
+                    SyncAwaiter.Wait(HandleTreasure(data, character));
+                    break;
+                case InteractionPointType.Rest:
+                    HandleRest(character);
+                    break;
+                case InteractionPointType.Change:
+                    SyncAwaiter.Wait(HandleRandomEvent(data, character));
+                    break;
+                default:
+                    WriteLine("你踏入了一片未知的区域，但什么也没有发生。");
+                    break;
+            }
+        }
+
+        private async Task HandleGeneralBattle(RogueLikeGameData data, Character character)
+        {
+            WriteLine("⚔️ 遭遇战！");
+            WriteLine("敌人出现了，战斗一触即发！");
+
+            // 模拟战斗流程
+            bool victory = await SimulateBattle(data, character, isElite: false);
+
+            if (victory)
+            {
+                int creditsReward = data.Random.Next(10, 21);
+                int materialsReward = data.Random.Next(1, 4);
+                character.User.Inventory.Credits += creditsReward;
+                character.User.Inventory.Materials += materialsReward;
+                WriteLine($"战斗胜利！获得了 {creditsReward:0.##} {Credit_Name} 和 {materialsReward:0.##} {Material_Name}。");
+
+                // 有概率掉落物品（可扩展）
+                if (data.Random.NextDouble() < 0.2)
+                {
+                    WriteLine("敌人掉落了【小型医疗包】！");
+                    // 实际物品添加逻辑
+                }
+
+                // 更新探索任务进度
+                UpdateQuestProgress(data, "战斗");
+            }
+            else
+            {
+                WriteLine("战斗失败，你被迫撤退。");
+                character.HP = (int)(character.MaxHP * 0.3);
+                character.MP = (int)(character.MaxMP * 0.3);
+                WriteLine($"你的状态变得很糟糕...\n{character.GetInfo()}");
+            }
+        }
+
+        private async Task HandleEliteBattle(RogueLikeGameData data, Character character)
+        {
+            WriteLine("👾 精英战斗！");
+            WriteLine("一股强大的气息扑面而来，精英敌人出现了！");
+
+            bool victory = await SimulateBattle(data, character, isElite: true);
+
+            if (victory)
+            {
+                int creditsReward = data.Random.Next(30, 51);
+                int materialsReward = data.Random.Next(3, 7);
+                character.User.Inventory.Credits += creditsReward;
+                character.User.Inventory.Materials += materialsReward;
+                WriteLine($"苦战后获胜！获得了 {creditsReward:0.##} {Credit_Name} 和 {materialsReward:0.##} {Material_Name}。");
+
+                // 精英战必定掉落一个遗物/装备（模拟）
+                WriteLine("精英敌人掉落了一件【稀有装备】！");
+
+                UpdateQuestProgress(data, "精英战斗");
+            }
+            else
+            {
+                WriteLine("你倒在了精英敌人的脚下，被紧急传送回方舟。");
+                character.HP = 1;
+                character.MP = 0;
+                WriteLine($"重伤状态...\n{character.GetInfo()}");
+                // 可以标记本次探索失败或返回方舟
+            }
+        }
+
+        private async Task HandleStore(RogueLikeGameData data, Character character)
+        {
+            WriteLine("🏪 你发现了一台自动售货机（或者一位流浪商人）。");
+            WriteLine($"当前持有：{character.User.Inventory.Credits:0.##} {Credit_Name}，{character.User.Inventory.Materials:0.##} {Material_Name}。");
+
+            // 构建商店选项
+            Dictionary<string, string> storeItems = new()
+            {
+                ["购买医疗包"] = $"恢复30%生命值 (15 {Credit_Name})",
+                ["购买能量饮料"] = $"恢复30%魔法值 (10 {Credit_Name})",
+                ["购买武器升级"] = $"永久提升5%攻击力 (30 {Credit_Name})",
+                ["购买防御芯片"] = $"永久提升5%防御力 (30 {Credit_Name})",
+                ["离开商店"] = ""
+            };
+
+            bool shopping = true;
+            while (shopping)
+            {
+                InquiryOptions options = new(InquiryType.Choice, "请选择你要购买的商品：")
+                {
+                    Choices = storeItems
+                };
+
+                InquiryResponse response = await Dispatcher.GetInquiryResponse(options);
+                if (response.Cancel || response.Choices.FirstOrDefault() == "离开商店")
+                {
+                    shopping = false;
+                    WriteLine("你离开了商店。");
+                    continue;
+                }
+
+                string choice = response.Choices.FirstOrDefault() ?? "";
+                bool purchased = false;
+
+                switch (choice)
+                {
+                    case "购买医疗包":
+                        if (character.User.Inventory.Credits >= 15)
+                        {
+                            character.User.Inventory.Credits -= 15;
+                            int heal = (int)(character.MaxHP * 0.3);
+                            character.HP += heal;
+                            WriteLine($"使用了医疗包，恢复了 {heal:0.##} 点生命值。");
+                            purchased = true;
+                        }
+                        else WriteLine($"{Credit_Name}不足！");
+                        break;
+
+                    case "购买能量饮料":
+                        if (character.User.Inventory.Credits >= 10)
+                        {
+                            character.User.Inventory.Credits -= 10;
+                            int recover = (int)(character.MaxMP * 0.3);
+                            character.MP += recover;
+                            WriteLine($"饮用了能量饮料，恢复了 {recover:0.##} 点魔法值。");
+                            purchased = true;
+                        }
+                        else WriteLine($"{Credit_Name}不足！");
+                        break;
+
+                    case "购买武器升级":
+                        if (character.User.Inventory.Credits >= 30)
+                        {
+                            character.User.Inventory.Credits -= 30;
+                            character.ExATKPercentage += 0.05;
+                            WriteLine($"武器升级完成！攻击力提升至 {character.ATK:0.##}。");
+                            purchased = true;
+                            storeItems.Remove(choice); // 限购一次
+                        }
+                        else WriteLine($"{Credit_Name}不足！");
+                        break;
+
+                    case "购买防御芯片":
+                        if (character.User.Inventory.Credits >= 30)
+                        {
+                            character.User.Inventory.Credits -= 30;
+                            character.ExDEFPercentage += 0.05;
+                            WriteLine($"防御芯片安装完成！防御力提升至 {character.DEF:0.##}。");
+                            purchased = true;
+                            storeItems.Remove(choice);
+                        }
+                        else WriteLine($"{Credit_Name}不足！");
+                        break;
+                }
+
+                if (purchased)
+                {
+                    WriteLine($"剩余{Credit_Name}：{character.User.Inventory.Credits:0.##}");
+                }
+                await Task.Delay(100);
+            }
+
+            UpdateQuestProgress(data, "商店");
+        }
+
+        private async Task HandleTreasure(RogueLikeGameData data, Character character)
+        {
+            WriteLine("🎁 你发现了一个上锁的宝箱！");
+
+            InquiryOptions options = new(InquiryType.Choice, "要尝试打开它吗？")
+            {
+                Choices = new Dictionary<string, string>
+                {
+                    ["打开宝箱"] = "可能获得稀有物品，也可能触发陷阱",
+                    ["无视它"] = "安全第一"
+                }
+            };
+
+            InquiryResponse response = await Dispatcher.GetInquiryResponse(options);
+            if (response.Cancel || response.Choices.FirstOrDefault() == "无视它")
+            {
+                WriteLine("你谨慎地绕过了宝箱。");
+                return;
+            }
+
+            // 开箱结果
+            int roll = data.Random.Next(100);
+            if (roll < 60) // 60% 正面奖励
+            {
+                int credits = data.Random.Next(20, 41);
+                int materials = data.Random.Next(2, 6);
+                character.User.Inventory.Credits += credits;
+                character.User.Inventory.Materials += materials;
+                WriteLine($"宝箱里装满了物资！获得了 {credits:0.##} {Credit_Name} 和 {materials:0.##} {Material_Name}。");
+            }
+            else if (roll < 80) // 20% 稀有物品
+            {
+                WriteLine("宝箱中散发着奇异的光芒... 你获得了【神秘遗物】！");
+                // 实际添加遗物逻辑
+            }
+            else // 20% 陷阱
+            {
+                int damage = (int)(character.MaxHP * 0.2);
+                character.HP = Math.Max(1, character.HP - damage);
+                WriteLine($"宝箱突然爆炸！你受到了 {damage:0.##} 点伤害。");
+            }
+
+            UpdateQuestProgress(data, "宝箱");
+        }
+
+        private void HandleRest(Character character)
+        {
+            WriteLine("🌸 你来到了一片宁静的休息区。");
+            character.Recovery();
+            WriteLine($"弥漫香气的花海治愈了你。\n{character.GetInfo()}");
+            // 可添加额外 buff 或移除负面状态
+        }
+
+        private async Task HandleRandomEvent(RogueLikeGameData data, Character character)
+        {
+            WriteLine("❓ 你踏入了一个奇异的空间，周围的环境开始扭曲...");
+            await Task.Delay(500);
+
+            int eventType = data.Random.Next(5);
+            switch (eventType)
+            {
+                case 0:
+                    WriteLine("一位神秘的旅者给了你一些补给。");
+                    character.User.Inventory.Credits += 15;
+                    WriteLine($"{Credit_Name} +15");
+                    break;
+                case 1:
+                    WriteLine("你不小心踩到了陷阱！");
+                    int damage = (int)(character.MaxHP * 0.15);
+                    character.HP = Math.Max(1, character.HP - damage);
+                    WriteLine($"受到了 {damage:0.##} 点伤害。");
+                    break;
+                case 2:
+                    WriteLine("你发现了一具探险者的遗骸，从他的背包中找到了有用的物资。");
+                    character.User.Inventory.Materials += 3;
+                    WriteLine($"{Material_Name} +3");
+                    break;
+                case 3:
+                    WriteLine("一股神秘的力量笼罩了你，你感觉身体变得更加强壮。");
+                    character.ExHP2 += 10;
+                    character.HP += 10;
+                    WriteLine($"最大生命值提升了10点！\n{character.GetInfo()}");
+                    break;
+                case 4:
+                    if (data.CurrentQuests.FirstOrDefault(q => q.Status != QuestState.Completed) is Quest quest)
+                    {
+                        if (quest.QuestType == QuestType.Progressive)
+                        {
+                            quest.Progress = quest.MaxProgress;
+                        }
+                        quest.Status = QuestState.Completed;
+                        WriteLine($"任务{quest.Name}已完成！");
+                    }
+                    break;
+            }
+
+            UpdateQuestProgress(data, "随机事件");
+        }
+
+        // 模拟战斗（临时占位，等待接入实际战斗系统）
+        private async Task<bool> SimulateBattle(RogueLikeGameData data, Character character, bool isElite)
+        {
+            // 简单模拟：基于角色属性和随机数决定胜负
+            // 实际应调用 FunGameActionQueue 的战斗系统
+
+            double winRate = 0.7; // 基础胜率
+            if (isElite) winRate = 0.5;
+
+            // 根据角色属性调整胜率
+            double power = (character.ATK * 0.6 + character.DEF * 0.4) / 50.0;
+            winRate = Math.Clamp(winRate + (power - 1) * 0.15, 0.1, 0.95);
+
+            bool victory = data.Random.NextDouble() < winRate;
+
+            // 模拟战斗过程文本
+            WriteLine("战斗开始！");
+            await Task.Delay(300);
+            WriteLine($"敌方生命值：{data.Random.Next(30, 80):0.##}");
+            await Task.Delay(300);
+            WriteLine($"你发起了攻击，造成了 {character.ATK + data.Random.Next(-5, 10):0.##} 点伤害！");
+            await Task.Delay(300);
+
+            if (victory)
+            {
+                WriteLine("敌人倒下了！");
+            }
+            else
+            {
+                WriteLine("敌人反击！你的生命值急速下降...");
+            }
+
+            return victory;
+        }
+
+        // 辅助方法：更新探索任务进度
+        private void UpdateQuestProgress(RogueLikeGameData data, string actionType)
+        {
+            foreach (var quest in data.CurrentQuests.Where(q => q.Status == QuestState.InProgress))
+            {
+                if (quest.QuestType == QuestType.Progressive)
+                {
+                    quest.Progress = Math.Min(quest.MaxProgress, quest.Progress + 1);
+                    WriteLine($"[任务进度] {quest.Name}: {quest.Progress}/{quest.MaxProgress}");
+                    if (quest.Progress >= quest.MaxProgress)
+                    {
+                        quest.Status = QuestState.Completed;
+                        WriteLine($"任务【{quest.Name}】已完成！");
+                    }
+                }
+                // 即时任务可能需要特定条件，此处简化处理
             }
         }
     }

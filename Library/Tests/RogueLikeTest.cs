@@ -44,7 +44,8 @@ namespace Milimoe.FunGame.Testing.Tests
                         {
                             index++;
                             indexToChoice[index] = choice;
-                            RogueLike.WriteLine($"{index}. {choice}：{options.Choices[choice]}");
+                            string description = options.Choices[choice];
+                            RogueLike.WriteLine($"{index}. {choice}{(description.Trim() != "" ? $"：{description}" : "")}");
                         }
                         RogueLike.WriteLine($"--- {options.Topic} ---");
                         bool resolve = false;
