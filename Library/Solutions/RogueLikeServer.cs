@@ -1,4 +1,5 @@
-﻿using System.Text;
+﻿using System.Collections.Concurrent;
+using System.Text;
 using Milimoe.FunGame.Core.Api.Utility;
 using Milimoe.FunGame.Core.Entity;
 using Milimoe.FunGame.Core.Interface.Base;
@@ -11,7 +12,6 @@ using Oshima.FunGame.OshimaModules.Characters;
 using Oshima.FunGame.OshimaModules.Models;
 using Oshima.FunGame.OshimaModules.Regions;
 using Oshima.FunGame.OshimaServers.Service;
-using Oshima.FunGame.WebAPI.Controllers;
 
 namespace Milimoe.FunGame.Testing.Solutions
 {
@@ -20,14 +20,9 @@ namespace Milimoe.FunGame.Testing.Solutions
         public bool Running => Dispatcher.Running;
         public Task? Guard { get; set; } = null;
         public RogueLikeDispatcher Dispatcher { get; set; } = dispatcher;
-        public ConcurrentQueue<(Guid Guid, DataRequestArgs Args)> Inquiries { get; } = [];
-        public Dictionary<string, User> Users { get; set; } = [];
-        public Dictionary<string, RogueLikeGameData> RogueLikeGameDatas { get; set; } = [];
-
-        public string Credit_Name { get; set; } = General.GameplayEquilibriumConstant.InGameCurrency;
-        public string Material_Name { get; set; } = General.GameplayEquilibriumConstant.InGameMaterial;
-
-        private readonly FunGameController _controller = dispatcher.Controller;
+        public ConcurrentFIFOQueue<(Guid Guid, DataRequestArgs Args)> Inquiries { get; } = [];
+        public ConcurrentDictionary<string, User> Users { get; set; } = [];
+        public ConcurrentDictionary<string, RogueLikeGameLoopWorker> RogueLikeGameWorkers { get; set; } = [];
 
         public void ReceiveDataRequest(Guid guid, DataRequestArgs args)
         {
@@ -42,7 +37,7 @@ namespace Milimoe.FunGame.Testing.Solutions
         {
             while (Running)
             {
-                if (!Inquiries.IsEmpty && Inquiries.GetFirst(out var obj))
+                if (!Inquiries.IsEmpty && Inquiries.Dequeue(out var obj))
                 {
                     DataRequestArgs response = await HandleDataRequest(obj.Args);
                     await DataRequestCallback(obj.Guid, response);
@@ -55,24 +50,12 @@ namespace Milimoe.FunGame.Testing.Solutions
         {
             Users.TryGetValue(username, out User? user);
             user ??= General.UnknownUserInstance;
-            Character character = user.Inventory.MainCharacter;
-            RogueLikeGameData data = new(character);
-            RogueLikeGameDatas[username] = data;
-            await GameLoop(data);
+            RogueLikeGameLoopWorker worker = new(this, user);
+            RogueLikeGameWorkers[username] = worker;
+            await worker.GameLoop();
         }
 
-        private async Task GameLoop(RogueLikeGameData data)
-        {
-            while (data.RogueState != RogueState.Finish)
-            {
-                data.RogueState = await NextRogueState(data, data.RogueState);
-                if (data.RogueState == RogueState.Init)
-                {
-                    data.RogueState = RogueState.Finish;
-                }
-                await Task.Delay(100);
-            }
-        }
+        public async Task<InquiryResponse> GetInquiryResponse(InquiryOptions options) => await Dispatcher.GetInquiryResponse(options);
 
         private async Task<DataRequestArgs> HandleDataRequest(DataRequestArgs args)
         {
@@ -82,11 +65,11 @@ namespace Milimoe.FunGame.Testing.Solutions
             {
                 case "createuser":
                     {
-                        AddDialog("？？？", "探索者，欢迎入职【永恒方舟计划】，我是您的专属 AI，协助您前往指定任务地点开展勘测工作。请问您的名字是？");
+                        WriteLine("建立一个存档，这是属于你的【永恒方舟】。");
                         string username = "";
                         do
                         {
-                            InquiryResponse inquiryResponse = await Dispatcher.GetInquiryResponse(new(InquiryType.TextInput, "请问您的名字是？"));
+                            InquiryResponse inquiryResponse = await Dispatcher.GetInquiryResponse(new(InquiryType.TextInput, "为【永恒方舟】命名"));
                             if (inquiryResponse.TextResult == "")
                             {
                                 WriteLine("请输入不为空的字符串。");
@@ -113,7 +96,7 @@ namespace Milimoe.FunGame.Testing.Solutions
                         FunGameService.SetUserConfig(uid.ToString(), pc, user);
                         Users[username] = user;
                         response.Data["user"] = user;
-                        AddDialog("柔哥", $"让我再次欢迎您，{username}。入职手续已办理完毕，从今以后，您就是【永恒方舟计划】的探员了。请您记住我的名字：【柔哥】，如有任何需要我都会随时提供您帮助。");
+                        WriteLine($"永恒方舟【{username}】号，起航！正在发射至预定轨道……");
                         break;
                     }
                 case "login":
@@ -129,7 +112,7 @@ namespace Milimoe.FunGame.Testing.Solutions
                             User user = FunGameService.GetUser(pc);
                             Users[user.Username] = user;
                             response.Data["user"] = user;
-                            AddDialog("柔哥", $"{user.Username}，欢迎您回到永恒方舟！");
+                            WriteLine($"欢迎回来，这里是永恒方舟【{user.Username}】号。");
                         }
                         else WriteLine("登录失败，没有找到符合条件的存档。");
                     }
@@ -145,8 +128,43 @@ namespace Milimoe.FunGame.Testing.Solutions
         {
             await Dispatcher.DataRequestComplete(guid, response);
         }
+    }
 
-        private async Task<RogueState> NextRogueState(RogueLikeGameData data, RogueState state)
+    public class RogueLikeGameLoopWorker
+    {
+        public RogueLikeServer Server { get; set; }
+        public User User { get; set; }
+        public RogueLikeGameData Data { get; set; }
+        public string Credit_Name { get; set; } = General.GameplayEquilibriumConstant.InGameCurrency;
+        public string Material_Name { get; set; } = General.GameplayEquilibriumConstant.InGameMaterial;
+
+        public RogueLikeGameLoopWorker(RogueLikeServer server, User user)
+        {
+            Server = server;
+            User = user;
+            Data = new(User.Inventory.MainCharacter);
+        }
+
+        public void WriteLine(string message = "") => Server.WriteLine(message);
+
+        public void AddDialog(string speaker = "", string message = "") => Server.AddDialog(speaker, message);
+
+        public async Task<InquiryResponse> GetInquiryResponse(InquiryOptions options) => await Server.GetInquiryResponse(options);
+
+        public async Task GameLoop()
+        {
+            while (Data.RogueState != RogueState.Finish)
+            {
+                Data.RogueState = await NextRogueState(Data.RogueState);
+                if (Data.RogueState == RogueState.Init)
+                {
+                    Data.RogueState = RogueState.Finish;
+                }
+                await Task.Delay(100);
+            }
+        }
+
+        private async Task<RogueState> NextRogueState(RogueState state)
         {
             RogueState newState = RogueState.Init;
 
@@ -154,22 +172,36 @@ namespace Milimoe.FunGame.Testing.Solutions
             {
                 case RogueState.Init:
                     {
-                        newState = RogueState.InArk;
+                        // 选择角色出发
+                        AddDialog("？？？", "您是谁……？");
+                        Character? character = await ChooseCharacter();
+                        if (character != null)
+                        {
+                            Data.Character = character;
+                            AddDialog("柔哥", $"您好，{character.NickName}探员。我是【柔哥】，作为方舟上的智能 AI，我将协助您前往指定任务地点开展本次勘测工作。");
+                            newState = RogueState.InArk;
+                        }
+                        else
+                        {
+                            WriteLine("未选择角色，永恒方舟计划终止。");
+                            newState = RogueState.Finish;
+                        }
                     }
                     break;
                 case RogueState.InArk:
                     {
                         // 玩家选择第一章的地区（从3个1-2★的地区里选一个）
-                        OshimaRegion? region = await ChooseRegion(data, 1, 3);
+                        OshimaRegion? region = await ChooseRegion(3);
                         if (region != null)
                         {
                             WriteLine("-- 【永恒方舟计划】进程·Ⅰ：启动 --");
-                            data.CurrentRegion = region;
-                            data.Chapter1Region = region;
-                            data.Region1Map = new RogueLikeMap();
-                            data.Region1Map.Load();
-                            data.CurrentMap = data.Region1Map;
-                            SetupGrid(data, data.CurrentMap);
+                            Data.Chapter = 1;
+                            Data.CurrentRegion = region;
+                            Data.Chapter1Region = region;
+                            Data.Region1Map = new RogueLikeMap();
+                            Data.Region1Map.Load();
+                            Data.CurrentMap = Data.Region1Map;
+                            SetupGrid(Data.CurrentMap);
                             newState = RogueState.Chapter1InArk;
                         }
                         else
@@ -182,24 +214,25 @@ namespace Milimoe.FunGame.Testing.Solutions
                 case RogueState.Chapter1InArk:
                     {
                         WriteLine("探索前的准备。");
-                        await RestInArk(data);
+                        await RestInArk();
                         newState = RogueState.ExploringChapter1;
                     }
                     break;
                 case RogueState.Chapter2InArk:
                     {
-                        WriteLine("回到方舟后，我们得到了新的任务。");
+                        WriteLine("回到方舟后，你得到了新的任务。");
                         // 玩家选择第二章的地区（从3-4★的地区里随机抽取3个来选一个）
-                        OshimaRegion? region = await ChooseRegion(data, 2, 3);
+                        OshimaRegion? region = await ChooseRegion(3);
                         if (region != null)
                         {
                             WriteLine("-- 【永恒方舟计划】进程·Ⅱ：启动 --");
-                            data.CurrentRegion = region;
-                            data.Chapter2Region = region;
-                            data.Region2Map = new RogueLikeMap();
-                            data.Region2Map.Load();
-                            data.CurrentMap = data.Region2Map;
-                            SetupGrid(data, data.CurrentMap);
+                            Data.Chapter = 2;
+                            Data.CurrentRegion = region;
+                            Data.Chapter2Region = region;
+                            Data.Region2Map = new RogueLikeMap();
+                            Data.Region2Map.Load();
+                            Data.CurrentMap = Data.Region2Map;
+                            SetupGrid(Data.CurrentMap);
                         }
                         else
                         {
@@ -208,23 +241,24 @@ namespace Milimoe.FunGame.Testing.Solutions
                             WriteLine("结算到目前为止的奖励。");
                             break;
                         }
-                        await RestInArk(data);
+                        await RestInArk();
                         newState = RogueState.ExploringChapter2;
                     }
                     break;
                 case RogueState.Chapter3InArk:
                     {
                         // 玩家选择第三章的地区（从3个5★的地区里选一个）
-                        OshimaRegion? region = await ChooseRegion(data, 3, 3);
+                        OshimaRegion? region = await ChooseRegion(3);
                         if (region != null)
                         {
                             WriteLine("-- 【永恒方舟计划】进程·Ⅲ：启动 --");
-                            data.CurrentRegion = region;
-                            data.Chapter3Region = region;
-                            data.Region3Map = new RogueLikeMap();
-                            data.Region3Map.Load();
-                            data.CurrentMap = data.Region3Map;
-                            SetupGrid(data, data.CurrentMap);
+                            Data.Chapter = 3;
+                            Data.CurrentRegion = region;
+                            Data.Chapter3Region = region;
+                            Data.Region3Map = new RogueLikeMap();
+                            Data.Region3Map.Load();
+                            Data.CurrentMap = Data.Region3Map;
+                            SetupGrid(Data.CurrentMap);
                         }
                         else
                         {
@@ -233,7 +267,7 @@ namespace Milimoe.FunGame.Testing.Solutions
                             WriteLine("结算到目前为止的奖励。");
                             break;
                         }
-                        await RestInArk(data);
+                        await RestInArk();
                         newState = RogueState.ExploringChapter3;
                     }
                     break;
@@ -244,25 +278,25 @@ namespace Milimoe.FunGame.Testing.Solutions
                     newState = RogueState.ExploringArk;
                     break;
                 case RogueState.ExploringChapter1:
-                    newState = await ExploreRegion(data, 1);
+                    newState = await ExploreRegion();
                     break;
                 case RogueState.ExploringChapter2:
-                    newState = await ExploreRegion(data, 2);
+                    newState = await ExploreRegion();
                     break;
                 case RogueState.ExploringChapter3:
-                    newState = await ExploreRegion(data, 3);
+                    newState = await ExploreRegion();
                     break;
                 case RogueState.ArriveChapter1RallyPoint:
-                    newState = await ArriveRallyPoint(data, 1);
+                    newState = await ArriveRallyPoint(1);
                     break;
                 case RogueState.ArriveChapter2RallyPoint:
-                    newState = await ArriveRallyPoint(data, 2);
+                    newState = await ArriveRallyPoint(2);
                     break;
                 case RogueState.ArriveChapter3RallyPoint:
-                    newState = await ArriveRallyPoint(data, 3);
+                    newState = await ArriveRallyPoint(3);
                     break;
                 case RogueState.ExploringArk:
-                    await ExploreArk(data);
+                    await ExploreArk();
                     newState = RogueState.FinalBossBattle;
                     break;
                 case RogueState.Chapter1BossBattle:
@@ -307,14 +341,96 @@ namespace Milimoe.FunGame.Testing.Solutions
             return newState;
         }
 
-        private async Task<OshimaRegion?> ChooseRegion(RogueLikeGameData data, int chapter, int candidate)
+        private async Task<Character?> ChooseCharacter()
         {
-            string topic = chapter switch
+            List<Character> characters = FunGameConstant.Characters;
+
+            const int pageSize = 6;
+            int currentPage = 1;
+            int maxPage = characters.MaxPage(pageSize);
+
+            bool choosing = true;
+            while (choosing)
+            {
+                // 获取当前页物品
+                Character[] currentPageCharacters = [.. characters.GetPage(currentPage, pageSize)];
+
+                // 构建显示选项
+                Dictionary<string, string> chooseChoices = [];
+
+                foreach (Character c in currentPageCharacters)
+                {
+                    c.Level = 1;
+                    chooseChoices[$"选择 {c.NickName}"] = c.GetInfo();
+                }
+
+                // 分页控制选项
+                if (maxPage > 1)
+                {
+                    if (currentPage < maxPage)
+                        chooseChoices["下一页"] = $"当前 {currentPage} / {maxPage} 页";
+                    if (currentPage > 1)
+                        chooseChoices["上一页"] = $"当前 {currentPage} / {maxPage} 页";
+                }
+
+                chooseChoices["返回主菜单"] = "结束本次游戏";
+
+                InquiryOptions options = new(InquiryType.Choice, $"【选择你的角色】第 {currentPage} / {maxPage} 页")
+                {
+                    Choices = chooseChoices
+                };
+
+                InquiryResponse response = await GetInquiryResponse(options);
+
+                if (response.Cancel || response.Choices.FirstOrDefault() == "返回主菜单")
+                {
+                    choosing = false;
+                    WriteLine("永恒方舟计划终止。");
+                    continue;
+                }
+
+                string choice = response.Choices.FirstOrDefault() ?? "";
+
+                // 处理翻页
+                if (choice == "上一页")
+                {
+                    if (currentPage > 1) currentPage--;
+                    continue;
+                }
+                if (choice == "下一页")
+                {
+                    if (currentPage < maxPage) currentPage++;
+                    continue;
+                }
+
+                // 处理选择
+                if (choice.StartsWith("选择 "))
+                {
+                    string cName = choice[3..]; // 去掉“选择 ”前缀
+                    Character? selectedCharacter = characters.FirstOrDefault(c => c.NickName == cName)?.Copy();
+
+                    if (selectedCharacter != null)
+                    {
+                        return selectedCharacter;
+                    }
+                    else
+                    {
+                        WriteLine("未找到该角色，请重试。");
+                    }
+                }
+            }
+
+            return null;
+        }
+
+        private async Task<OshimaRegion?> ChooseRegion(int candidate)
+        {
+            string topic = Data.Chapter switch
             {
                 1 => "选择初始探索地区",
                 _ => "选择下一个探索地区",
             };
-            Func<OshimaRegion, bool> predicate = chapter switch
+            Func<OshimaRegion, bool> predicate = Data.Chapter switch
             {
                 2 => r => (int)r.Difficulty >= (int)RarityType.ThreeStar && (int)r.Difficulty <= (int)RarityType.FourStar,
                 3 => r => (int)r.Difficulty == (int)RarityType.FiveStar,
@@ -322,9 +438,9 @@ namespace Milimoe.FunGame.Testing.Solutions
             };
             InquiryOptions options = new(InquiryType.Choice, topic)
             {
-                Choices = FunGameConstant.Regions.Where(predicate).OrderBy(r => data.Random.Next()).Take(candidate).ToDictionary(r => r.Name, r => r.ToString())
+                Choices = FunGameConstant.Regions.Where(predicate).OrderBy(r => Data.Random.Next()).Take(candidate).ToDictionary(r => r.Name, r => r.ToString())
             };
-            InquiryResponse response = await Dispatcher.GetInquiryResponse(options);
+            InquiryResponse response = await GetInquiryResponse(options);
             if (!response.Cancel)
             {
                 if (response.Choices.FirstOrDefault() is string regionName)
@@ -339,20 +455,20 @@ namespace Milimoe.FunGame.Testing.Solutions
             return null;
         }
 
-        private async Task<RogueState> ExploreRegion(RogueLikeGameData data, int chapter)
+        private async Task<RogueState> ExploreRegion()
         {
             RogueState newState = RogueState.Finish;
-            if (data.CurrentRegion is null)
+            if (Data.CurrentRegion is null)
             {
                 WriteLine("突发！小队和方舟失联了！永恒方舟计划终止。");
                 return newState;
             }
-            if (data.CurrentMap is null)
+            if (Data.CurrentMap is null)
             {
-                WriteLine($"降落舱在{data.CurrentRegion.Name}的天空中迷失了，你从此永远地消失。永恒方舟计划终止。");
+                WriteLine($"降落舱在{Data.CurrentRegion.Name}的天空中迷失了，你从此永远地消失。永恒方舟计划终止。");
                 return newState;
             }
-            newState = chapter switch
+            newState = Data.Chapter switch
             {
                 1 => RogueState.ArriveChapter1RallyPoint,
                 2 => RogueState.ArriveChapter2RallyPoint,
@@ -361,23 +477,21 @@ namespace Milimoe.FunGame.Testing.Solutions
             };
 
             WriteLine("正在降落...");
-            data.CurrentArea = data.CurrentRegion.Areas.OrderByDescending(o => data.Random.Next()).First();
-            WriteLine($"在【{data.CurrentRegion.Name}】的【{data.CurrentArea}】区域完成降落！");
-            List<Quest> quests = GetQuests(data, data.CurrentRegion, 2);
-            data.CurrentQuests = quests;
-            AddDialog("柔哥", $"我看到您安全着陆了，现在方舟给您下发任务指令：\r\n{string.Join("\r\n", quests.Select(q => q.ToString()))}");
-            Character character = data.Character;
+            Data.CurrentArea = Data.CurrentRegion.Areas.OrderByDescending(o => Data.Random.Next()).First();
+            WriteLine($"在【{Data.CurrentRegion.Name}】的【{Data.CurrentArea}】区域完成降落！");
+            AddDialog("柔哥", $"我看到您安全着陆了，现在方舟给您下发任务指令：\r\n{string.Join("\r\n", Data.CurrentQuests.Select(q => q.ToString()))}");
+            Character character = Data.Character;
 
             bool fin = false;
             while (!fin)
             {
                 Grid currentGrid = Grid.Empty;
 
-                DisplayMapInConsole(data.CurrentMap);
-                currentGrid = data.CurrentMap.GetCharacterCurrentGrid(character) ?? Grid.Empty;
+                DisplayMapInConsole(Data.CurrentMap);
+                currentGrid = Data.CurrentMap.GetCharacterCurrentGrid(character) ?? Grid.Empty;
 
-                // 获取可移动范围（曼哈顿距离1格）
-                List<Grid> movableGrids = data.CurrentMap.GetGridsByRange(currentGrid, 1, false);
+                // 获取可移动范围
+                List<Grid> movableGrids = [.. Data.CurrentMap.GetGridsBySquareRange(currentGrid, 1, false)];
 
                 // 构建选择字典
                 Dictionary<string, string> choices = [];
@@ -393,7 +507,7 @@ namespace Milimoe.FunGame.Testing.Solutions
                 }
 
                 choices["查看角色状态"] = "";
-                if (data.CurrentQuests.All(q => q.Status == QuestState.Completed))
+                if (Data.CurrentQuests.All(q => q.Status == QuestState.Completed))
                 {
                     choices["前往集结点"] = "结束本地区的探索，并前往本地区的BOSS房间";
                 }
@@ -404,7 +518,7 @@ namespace Milimoe.FunGame.Testing.Solutions
                     Choices = choices
                 };
 
-                InquiryResponse response = await Dispatcher.GetInquiryResponse(options);
+                InquiryResponse response = await GetInquiryResponse(options);
                 if (response.Cancel)
                 {
                     WriteLine("操作已取消。");
@@ -430,7 +544,7 @@ namespace Milimoe.FunGame.Testing.Solutions
                 {
                     fin = true;
                     WriteLine("你决定结束本次探索，返回方舟。");
-                    newState = chapter switch
+                    newState = Data.Chapter switch
                     {
                         1 => RogueState.InArk,
                         2 => RogueState.Chapter2InArk,
@@ -444,107 +558,25 @@ namespace Milimoe.FunGame.Testing.Solutions
                 if (keyToGrid.TryGetValue(choice, out Grid? targetGrid) && targetGrid != null)
                 {
                     WriteLine($"你移动到了 ({targetGrid.X}, {targetGrid.Y})");
-                    data.CurrentMap.CharacterMove(character, currentGrid, targetGrid);
+                    Data.CurrentMap.CharacterMove(character, currentGrid, targetGrid);
                 }
                 else
                 {
                     WriteLine("无效选择，请重试。");
                 }
 
-                CheckQuestProgress(data);
+                CheckQuestProgress();
                 await Task.Delay(80);
             }
             return newState;
         }
 
-        private void CheckQuestProgress(RogueLikeGameData data)
+        private void CheckQuestProgress()
         {
-            WriteLine(string.Join("\r\n", data.CurrentQuests.Select(q => q.ToString())));
+            WriteLine(string.Join("\r\n", Data.CurrentQuests.Select(q => q.ToString())));
         }
 
-        private static string GetDirectionName(Grid current, Grid target)
-        {
-            int dx = target.X - current.X;
-            int dy = target.Y - current.Y;
-            return (dx, dy) switch
-            {
-                (0, -1) => "↑ 北",
-                (0, 1) => "↓ 南",
-                (-1, 0) => "← 西",
-                (1, 0) => "→ 东",
-                (-1, -1) => "↖ 西北",
-                (1, -1) => "↗ 东北",
-                (-1, 1) => "↙ 西南",
-                (1, 1) => "↘ 东南",
-                _ => "？"
-            };
-        }
-        private static string GetRoomTypeDisplay(Grid grid)
-        {
-            if (grid.InteractionPoints.Count == 0) return "<空>";
-            InteractionPointType type = (InteractionPointType)grid.InteractionPoints.First().CustomValue;
-            return type switch
-            {
-                InteractionPointType.General => "<普>",
-                InteractionPointType.Elite => "<精>",
-                InteractionPointType.Store => "<商>",
-                InteractionPointType.Treasure => "<宝>",
-                InteractionPointType.Rest => "<休>",
-                InteractionPointType.Change => "<事>",
-                _ => "<？>"
-            };
-        }
-
-        private static List<Quest> GetQuests(RogueLikeGameData data, OshimaRegion region, int count)
-        {
-            List<Quest> quests = [];
-
-            int immediateQuestCount = data.Random.Next(count + 1);
-            int progressiveQuestCount = count - immediateQuestCount;
-
-            var list = region.ImmediateQuestList.OrderBy(kv => data.Random.Next()).Take(immediateQuestCount);
-            foreach (var item in list)
-            {
-                string name = item.Key;
-                QuestExploration exploration = item.Value;
-                int difficulty = Random.Shared.Next(3, 11);
-                Quest quest = new()
-                {
-                    Id = quests.Count + 1,
-                    Name = name,
-                    Description = exploration.Description,
-                    RegionId = region.Id,
-                    NeedyExploreItemName = exploration.Item,
-                    QuestType = QuestType.Immediate,
-                    Status = QuestState.InProgress
-                };
-                quests.Add(quest);
-            }
-            list = region.ProgressiveQuestList.OrderBy(kv => data.Random.Next()).Take(progressiveQuestCount);
-            foreach (var item in list)
-            {
-                string name = item.Key;
-                QuestExploration exploration = item.Value;
-                int maxProgress = Random.Shared.Next(3, 11);
-                Quest quest = new()
-                {
-                    Id = quests.Count + 1,
-                    Name = name,
-                    Description = string.Format(exploration.Description, maxProgress),
-                    RegionId = region.Id,
-                    NeedyExploreItemName = exploration.Item,
-                    QuestType = QuestType.Progressive,
-                    Progress = 0,
-                    MaxProgress = maxProgress,
-                    Status = QuestState.InProgress
-                };
-                quests.Add(quest);
-            }
-
-            return quests;
-        }
-
-        private async Task<RogueState> ArriveRallyPoint(RogueLikeGameData data, int chapter)
+        private async Task<RogueState> ArriveRallyPoint(int chapter)
         {
             WriteLine("BOSS房间出现了！做好准备再继续出发吧。");
             bool fin = false;
@@ -569,29 +601,186 @@ namespace Milimoe.FunGame.Testing.Solutions
             return newState;
         }
 
-        private async Task RestInArk(RogueLikeGameData data)
+        private async Task RestInArk()
         {
+            Func<Item, bool> predicate = Data.Chapter switch
+            {
+                2 => i => (int)i.QualityType >= (int)QualityType.Green && (int)i.QualityType <= (int)QualityType.Orange,
+                3 => i => (int)i.QualityType >= (int)QualityType.Purple && (int)i.QualityType <= (int)QualityType.Red,
+                _ => i => (int)i.QualityType >= (int)QualityType.White && (int)i.QualityType <= (int)QualityType.Blue
+            };
+            Item[] storeItems = [.. FunGameConstant.PlayerRegions.First().Items.Where(predicate)];
             bool fin = false;
             while (!fin)
             {
                 // TODO:战后整备，提供菜单回复和提升等
-                fin = true;
+                // 主菜单
+                Dictionary<string, string> mainMenu = new()
+                {
+                    ["查看角色状态"] = "",
+                    ["方舟商店"] = "购买恢复道具、装备、消耗品等",
+                    ["提升角色能力"] = "消耗材料永久提升属性",
+                    ["出发！"] = "继续下一阶段探索"
+                };
+
+                InquiryOptions mainOptions = new(InquiryType.Choice, "【方舟整备中心】请选择操作：")
+                {
+                    Choices = mainMenu
+                };
+
+                InquiryResponse mainResponse = await GetInquiryResponse(mainOptions);
+
+                if (mainResponse.Cancel)
+                {
+                    WriteLine("操作已取消。");
+                    continue;
+                }
+
+                string mainChoice = mainResponse.Choices.FirstOrDefault() ?? "";
+
+                switch (mainChoice)
+                {
+                    case "查看角色状态":
+                        WriteLine(Data.Character.GetInfo());
+                        break;
+
+                    case "方舟商店":
+                        await HandleArkStore(storeItems);
+                        break;
+
+                    case "提升角色能力":
+                        // TODO: 未来可扩展为属性点分配、技能解锁等系统
+                        WriteLine("【能力提升】系统正在开发中，敬请期待...");
+                        break;
+
+                    case "出发！":
+                        fin = true;
+                        WriteLine("整备完毕，出发！");
+                        break;
+
+                    default:
+                        WriteLine("无效选择，请重试。");
+                        break;
+                }
             }
             WriteLine("出发！");
         }
 
-        private async Task ExploreArk(RogueLikeGameData data)
+        private async Task HandleArkStore(Item[] storeItems)
         {
-            data.ArkMap = new RogueLikeMap();
-            data.ArkMap.Load();
-            data.CurrentMap = data.ArkMap;
-            SetupGrid(data, data.CurrentMap);
+            if (storeItems.Length == 0)
+            {
+                WriteLine("当前章节暂无可用商店物品。");
+                return;
+            }
+
+            const int pageSize = 8;
+            int currentPage = 1;
+            int maxPage = storeItems.MaxPage(pageSize);
+
+            bool shopping = true;
+            while (shopping)
+            {
+                // 获取当前页物品
+                Item[] currentPageItems = [.. storeItems.GetPage(currentPage, pageSize)];
+
+                // 构建显示选项
+                Dictionary<string, string> shopChoices = [];
+
+                foreach (Item item in currentPageItems)
+                {
+                    string priceStr = item.Price > 0 ? $" ({item.Price} {Credit_Name})" : "";
+                    string desc = string.IsNullOrEmpty(item.Description) ? "无描述" : item.Description;
+                    shopChoices[$"购买 {item.Name}"] = $"{desc}{priceStr} | 品质: {ItemSet.GetQualityTypeName(item.QualityType)}";
+                }
+
+                // 分页控制选项
+                if (maxPage > 1)
+                {
+                    if (currentPage < maxPage)
+                        shopChoices["下一页"] = $"当前 {currentPage} / {maxPage} 页";
+                    if (currentPage > 1)
+                        shopChoices["上一页"] = $"当前 {currentPage} / {maxPage} 页";
+                }
+
+                shopChoices["返回主菜单"] = "";
+
+                InquiryOptions options = new(InquiryType.Choice,
+                    $"【方舟商店】 第 {currentPage} / {maxPage} 页 | 当前持有：{Data.Character.User.Inventory.Credits} {Credit_Name}")
+                {
+                    Choices = shopChoices
+                };
+
+                InquiryResponse response = await GetInquiryResponse(options);
+
+                if (response.Cancel || response.Choices.FirstOrDefault() == "返回主菜单")
+                {
+                    shopping = false;
+                    WriteLine("已离开方舟商店。");
+                    continue;
+                }
+
+                string choice = response.Choices.FirstOrDefault() ?? "";
+
+                // 处理翻页
+                if (choice == "上一页")
+                {
+                    if (currentPage > 1) currentPage--;
+                    continue;
+                }
+                if (choice == "下一页")
+                {
+                    if (currentPage < maxPage) currentPage++;
+                    continue;
+                }
+
+                // 处理购买
+                if (choice.StartsWith("购买 "))
+                {
+                    string itemName = choice[3..]; // 去掉“购买 ”前缀
+                    Item? selectedItem = storeItems.FirstOrDefault(i => i.Name == itemName);
+
+                    if (selectedItem != null)
+                    {
+                        await TryPurchaseItem(selectedItem);
+                    }
+                    else
+                    {
+                        WriteLine("未找到该物品，请重试。");
+                    }
+                }
+            }
+        }
+
+        private async Task TryPurchaseItem(Item item)
+        {
+            if (Data.Character.User.Inventory.Credits < item.Price)
+            {
+                WriteLine($"【购买失败】{Credit_Name} 不足！需要 {item.Price}，当前持有 {Data.Character.User.Inventory.Credits}");
+                return;
+            }
+
+            // 执行购买
+            Data.Character.User.Inventory.Credits -= item.Price;
+
+            WriteLine($"剩余 {Credit_Name}：{Data.Character.User.Inventory.Credits}");
+
+            await Task.Delay(100);
+        }
+
+        private async Task ExploreArk()
+        {
+            Data.Chapter = 4;
+            Data.ArkMap = new RogueLikeMap();
+            Data.ArkMap.Load();
+            Data.CurrentMap = Data.ArkMap;
+            SetupGrid(Data.CurrentMap);
             bool fin = false;
             while (!fin)
             {
-                if (data.CurrentMap != null)
+                if (Data.CurrentMap != null)
                 {
-                    DisplayMapInConsole(data.CurrentMap);
+                    DisplayMapInConsole(Data.CurrentMap);
                 }
                 // TODO:方舟事变，需进行方舟探索和收复功能房间并找到最终BOSS房间
                 fin = true;
@@ -631,7 +820,7 @@ namespace Milimoe.FunGame.Testing.Solutions
                     {
                         // 取第一个角色首字母
                         Character character = grid.Characters.First();
-                        string displayChar = character.Name.Length > 0 ? character.Name[0].ToString().ToUpper() : "?";
+                        string displayChar = character.NickName.Length > 0 ? character.NickName[0].ToString().ToUpper() : "?";
                         sb.Append($"[{displayChar}] ");
                     }
                     else if (grid.InteractionPoints.Count > 0)
@@ -650,34 +839,133 @@ namespace Milimoe.FunGame.Testing.Solutions
             WriteLine(sb.ToString());
         }
 
-        private void SetupGrid(RogueLikeGameData data, GameMap map)
+        private void SetupGrid(GameMap map)
         {
-            // 生成交互点，8*8的地图，生成30个交互点
-            int count = 30;
-            Random random = data.Random ?? new();
-            Grid[] grids = [.. map.Grids.Values.OrderBy(o => random.Next()).Take(count)];
-            foreach (Grid grid in grids)
+            Random random = Data.Random;
+
+            // ====================== 第一步：先生成任务 ======================
+            List<Quest> quests = GetQuests(Data.CurrentRegion!, 2);  // 保持原生成数量，可后续调整
+            Data.CurrentQuests = quests;
+
+            // ====================== 第二步：根据任务需求生成房间 ======================
+            // 房间类型最小/最大生成数量配置
+            var roomConfig = new Dictionary<InteractionPointType, (int min, int max)>
             {
-                // 这些交互点就是房间
-                InteractionPoint ip = new()
-                {
-                    Id = grid.Id,
-                    CustomValue = random.Next((int)InteractionPointType.MaxValueMark)
-                };
-                grid.InteractionPoints.Add(ip);
-                grid.CharacterEntered += (character) =>
-                {
-                    HandleCharacterEnteredGrid(data, character, grid, ip);
-                };
+                { InteractionPointType.General, (5, -1) },   // 普通战斗 - 无上限
+                { InteractionPointType.Elite,   (4, -1) },   // 精英 - 无上限
+                { InteractionPointType.Store,   (2, 2) },    // 商店 - 固定2个
+                { InteractionPointType.Treasure,(3, 6) },    // 宝箱
+                { InteractionPointType.Rest,    (2, 5) },    // 休息
+                { InteractionPointType.Change,  (3, -1) }    // 随机事件 - 无上限
+            };
+
+            // 统计任务需要的房间类型
+            Dictionary<InteractionPointType, int> requiredRooms = [];
+
+            // 即时任务：确保至少有一个对应房间
+            foreach (Quest quest in quests.Where(q => q.QuestType == QuestType.Immediate))
+            {
+                InteractionPointType neededType = GetNeededRoomTypeForQuest(quest);
+                if (!requiredRooms.ContainsKey(neededType))
+                    requiredRooms[neededType] = 0;
+                requiredRooms[neededType] = Math.Max(requiredRooms[neededType], 1);
             }
-            Grid? land = map.Grids.Values.OrderBy(g => random.Next()).FirstOrDefault(g => g.InteractionPoints.Count == 0);
+
+            // 渐进任务：确保有足够“行动次数”（溢出）
+            int totalActionsNeeded = quests
+                .Where(q => q.QuestType == QuestType.Progressive)
+                .Sum(q => q.MaxProgress);
+
+            requiredRooms[InteractionPointType.General] = Math.Max(
+                requiredRooms.GetValueOrDefault(InteractionPointType.General, 0),
+                (int)(totalActionsNeeded * 0.55) + 3);
+
+            requiredRooms[InteractionPointType.Elite] = Math.Max(
+                requiredRooms.GetValueOrDefault(InteractionPointType.Elite, 0),
+                (int)(totalActionsNeeded * 0.15) + 1);
+
+            requiredRooms[InteractionPointType.Change] = Math.Max(
+                requiredRooms.GetValueOrDefault(InteractionPointType.Change, 0),
+                (int)(totalActionsNeeded * 0.20) + 2);
+
+            // ====================== 实际生成房间 ======================
+            List<Grid> allGrids = [.. map.Grids.Values];
+            List<Grid> selectedGrids = [.. allGrids.OrderBy(_ => random.Next())];
+
+            int gridIndex = 0;
+            Dictionary<InteractionPointType, int> currentCounts = [];
+
+            // 1. 先强制生成最小数量（包含任务需求）
+            foreach (var (type, (min, _)) in roomConfig)
+            {
+                int actualMin = Math.Max(min, requiredRooms.GetValueOrDefault(type, 0));
+                for (int i = 0; i < actualMin && gridIndex < selectedGrids.Count; i++)
+                {
+                    Grid grid = selectedGrids[gridIndex++];
+                    AddInteractionPoint(grid, type);
+                    currentCounts[type] = currentCounts.GetValueOrDefault(type, 0) + 1;
+                }
+            }
+
+            // 2. 动态补充剩余房间，直到总数达到30个
+            while (gridIndex < 30 && gridIndex < selectedGrids.Count)
+            {
+                InteractionPointType type = ChooseRoomTypeByWeight(roomConfig, currentCounts);
+
+                // 检查是否超过最大限制
+                int max = roomConfig[type].max;
+                if (max != -1 && currentCounts.GetValueOrDefault(type, 0) >= max)
+                {
+                    // 如果该类型已满，尝试其他类型（避免死循环）
+                    if (roomConfig.All(kv => kv.Value.max != -1 && currentCounts.GetValueOrDefault(kv.Key, 0) >= kv.Value.max))
+                        break;
+                    continue;
+                }
+
+                Grid grid = selectedGrids[gridIndex++];
+                AddInteractionPoint(grid, type);
+                currentCounts[type] = currentCounts.GetValueOrDefault(type, 0) + 1;
+            }
+
+            // 如果实际生成的少于30个，用普通或精英战斗、事件补满
+            while (gridIndex < 30 && gridIndex < selectedGrids.Count)
+            {
+                Grid grid = selectedGrids[gridIndex++];
+                InteractionPointType type = Data.Chapter switch // 根据当前章节决定补全策略
+                {
+                    1 => random.Next(3) switch
+                    {
+                        0 => InteractionPointType.Elite,
+                        1 => InteractionPointType.Change,
+                        _ => InteractionPointType.General
+                    },
+                    2 => random.Next(10) switch
+                    {
+                        0 or 1 or 2 or 3 => InteractionPointType.Elite,   // 40%
+                        4 or 5 or 6 => InteractionPointType.Change,  // 30%
+                        _ => InteractionPointType.General  // 30%
+                    },
+                    3 => InteractionPointType.Elite,
+                    _ => InteractionPointType.General,
+                };
+                AddInteractionPoint(grid, type);
+                currentCounts[type] = currentCounts.GetValueOrDefault(type, 0) + 1;
+            }
+
+            // 确保起始位置为空地（无交互点）
+            Grid? land = allGrids.OrderBy(g => random.Next()).FirstOrDefault(g => g.InteractionPoints.Count == 0);
             if (land != null)
             {
-                map.SetCharacterCurrentGrid(data.Character, land);
+                map.SetCharacterCurrentGrid(Data.Character, land);
             }
+
+            // 输出任务和房间生成信息（调试用）
+            WriteLine($"本区域任务已生成：{quests.Count} 个");
+            WriteLine($"房间生成完成（总计 {gridIndex} 个）");
+            WriteLine($"房间分布：普通战 {CountRoomType(map, InteractionPointType.General)} | 精英战 {CountRoomType(map, InteractionPointType.Elite)} | 商店 {CountRoomType(map, InteractionPointType.Store)} | 宝箱 {CountRoomType(map, InteractionPointType.Treasure)} | 休息点 {CountRoomType(map, InteractionPointType.Rest)} | 事件 {CountRoomType(map, InteractionPointType.Change)}");
         }
 
-        public void HandleCharacterEnteredGrid(RogueLikeGameData data, Character character, Grid grid, InteractionPoint ip)
+        public void HandleCharacterEnteredGrid(Character character, Grid grid, InteractionPoint ip)
         {
             InteractionPointType type = (InteractionPointType)ip.CustomValue;
             // 移除交互点，战斗、宝箱、事件、休息点不会再触发，商店会一直存在
@@ -692,22 +980,22 @@ namespace Milimoe.FunGame.Testing.Solutions
             switch (type)
             {
                 case InteractionPointType.General:
-                    SyncAwaiter.Wait(HandleGeneralBattle(data, character));
+                    SyncAwaiter.Wait(HandleGeneralBattle(character));
                     break;
                 case InteractionPointType.Elite:
-                    SyncAwaiter.Wait(HandleEliteBattle(data, character));
+                    SyncAwaiter.Wait(HandleEliteBattle(character));
                     break;
                 case InteractionPointType.Store:
-                    SyncAwaiter.Wait(HandleStore(data, character));
+                    SyncAwaiter.Wait(HandleStore(character));
                     break;
                 case InteractionPointType.Treasure:
-                    SyncAwaiter.Wait(HandleTreasure(data, character));
+                    SyncAwaiter.Wait(HandleTreasure(character));
                     break;
                 case InteractionPointType.Rest:
                     HandleRest(character);
                     break;
                 case InteractionPointType.Change:
-                    SyncAwaiter.Wait(HandleRandomEvent(data, character));
+                    SyncAwaiter.Wait(HandleRandomEvent(character));
                     break;
                 default:
                     WriteLine("你踏入了一片未知的区域，但什么也没有发生。");
@@ -715,31 +1003,31 @@ namespace Milimoe.FunGame.Testing.Solutions
             }
         }
 
-        private async Task HandleGeneralBattle(RogueLikeGameData data, Character character)
+        private async Task HandleGeneralBattle(Character character)
         {
             WriteLine("⚔️ 遭遇战！");
             WriteLine("敌人出现了，战斗一触即发！");
 
             // 模拟战斗流程
-            bool victory = await SimulateBattle(data, character, isElite: false);
+            bool victory = await SimulateBattle(character, isElite: false);
 
             if (victory)
             {
-                int creditsReward = data.Random.Next(10, 21);
-                int materialsReward = data.Random.Next(1, 4);
+                int creditsReward = Data.Random.Next(10, 21);
+                int materialsReward = Data.Random.Next(1, 4);
                 character.User.Inventory.Credits += creditsReward;
                 character.User.Inventory.Materials += materialsReward;
                 WriteLine($"战斗胜利！获得了 {creditsReward:0.##} {Credit_Name} 和 {materialsReward:0.##} {Material_Name}。");
 
                 // 有概率掉落物品（可扩展）
-                if (data.Random.NextDouble() < 0.2)
+                if (Data.Random.NextDouble() < 0.2)
                 {
                     WriteLine("敌人掉落了【小型医疗包】！");
                     // 实际物品添加逻辑
                 }
 
                 // 更新探索任务进度
-                UpdateQuestProgress(data, "战斗");
+                UpdateQuestProgress("战斗");
             }
             else
             {
@@ -750,17 +1038,17 @@ namespace Milimoe.FunGame.Testing.Solutions
             }
         }
 
-        private async Task HandleEliteBattle(RogueLikeGameData data, Character character)
+        private async Task HandleEliteBattle(Character character)
         {
             WriteLine("👾 精英战斗！");
             WriteLine("一股强大的气息扑面而来，精英敌人出现了！");
 
-            bool victory = await SimulateBattle(data, character, isElite: true);
+            bool victory = await SimulateBattle(character, isElite: true);
 
             if (victory)
             {
-                int creditsReward = data.Random.Next(30, 51);
-                int materialsReward = data.Random.Next(3, 7);
+                int creditsReward = Data.Random.Next(30, 51);
+                int materialsReward = Data.Random.Next(3, 7);
                 character.User.Inventory.Credits += creditsReward;
                 character.User.Inventory.Materials += materialsReward;
                 WriteLine($"苦战后获胜！获得了 {creditsReward:0.##} {Credit_Name} 和 {materialsReward:0.##} {Material_Name}。");
@@ -768,7 +1056,7 @@ namespace Milimoe.FunGame.Testing.Solutions
                 // 精英战必定掉落一个遗物/装备（模拟）
                 WriteLine("精英敌人掉落了一件【稀有装备】！");
 
-                UpdateQuestProgress(data, "精英战斗");
+                UpdateQuestProgress("精英战斗");
             }
             else
             {
@@ -780,7 +1068,7 @@ namespace Milimoe.FunGame.Testing.Solutions
             }
         }
 
-        private async Task HandleStore(RogueLikeGameData data, Character character)
+        private async Task HandleStore(Character character)
         {
             WriteLine("🏪 你发现了一台自动售货机（或者一位流浪商人）。");
             WriteLine($"当前持有：{character.User.Inventory.Credits:0.##} {Credit_Name}，{character.User.Inventory.Materials:0.##} {Material_Name}。");
@@ -803,7 +1091,7 @@ namespace Milimoe.FunGame.Testing.Solutions
                     Choices = storeItems
                 };
 
-                InquiryResponse response = await Dispatcher.GetInquiryResponse(options);
+                InquiryResponse response = await GetInquiryResponse(options);
                 if (response.Cancel || response.Choices.FirstOrDefault() == "离开商店")
                 {
                     shopping = false;
@@ -872,10 +1160,10 @@ namespace Milimoe.FunGame.Testing.Solutions
                 await Task.Delay(100);
             }
 
-            UpdateQuestProgress(data, "商店");
+            UpdateQuestProgress("商店");
         }
 
-        private async Task HandleTreasure(RogueLikeGameData data, Character character)
+        private async Task HandleTreasure(Character character)
         {
             WriteLine("🎁 你发现了一个上锁的宝箱！");
 
@@ -888,7 +1176,7 @@ namespace Milimoe.FunGame.Testing.Solutions
                 }
             };
 
-            InquiryResponse response = await Dispatcher.GetInquiryResponse(options);
+            InquiryResponse response = await GetInquiryResponse(options);
             if (response.Cancel || response.Choices.FirstOrDefault() == "无视它")
             {
                 WriteLine("你谨慎地绕过了宝箱。");
@@ -896,11 +1184,11 @@ namespace Milimoe.FunGame.Testing.Solutions
             }
 
             // 开箱结果
-            int roll = data.Random.Next(100);
+            int roll = Data.Random.Next(100);
             if (roll < 60) // 60% 正面奖励
             {
-                int credits = data.Random.Next(20, 41);
-                int materials = data.Random.Next(2, 6);
+                int credits = Data.Random.Next(20, 41);
+                int materials = Data.Random.Next(2, 6);
                 character.User.Inventory.Credits += credits;
                 character.User.Inventory.Materials += materials;
                 WriteLine($"宝箱里装满了物资！获得了 {credits:0.##} {Credit_Name} 和 {materials:0.##} {Material_Name}。");
@@ -917,7 +1205,7 @@ namespace Milimoe.FunGame.Testing.Solutions
                 WriteLine($"宝箱突然爆炸！你受到了 {damage:0.##} 点伤害。");
             }
 
-            UpdateQuestProgress(data, "宝箱");
+            UpdateQuestProgress("宝箱");
         }
 
         private void HandleRest(Character character)
@@ -928,12 +1216,12 @@ namespace Milimoe.FunGame.Testing.Solutions
             // 可添加额外 buff 或移除负面状态
         }
 
-        private async Task HandleRandomEvent(RogueLikeGameData data, Character character)
+        private async Task HandleRandomEvent(Character character)
         {
             WriteLine("❓ 你踏入了一个奇异的空间，周围的环境开始扭曲...");
             await Task.Delay(500);
 
-            int eventType = data.Random.Next(5);
+            int eventType = Data.Random.Next(5);
             switch (eventType)
             {
                 case 0:
@@ -959,7 +1247,7 @@ namespace Milimoe.FunGame.Testing.Solutions
                     WriteLine($"最大生命值提升了10点！\n{character.GetInfo()}");
                     break;
                 case 4:
-                    if (data.CurrentQuests.FirstOrDefault(q => q.Status != QuestState.Completed) is Quest quest)
+                    if (Data.CurrentQuests.FirstOrDefault(q => q.Status != QuestState.Completed) is Quest quest)
                     {
                         if (quest.QuestType == QuestType.Progressive)
                         {
@@ -971,11 +1259,11 @@ namespace Milimoe.FunGame.Testing.Solutions
                     break;
             }
 
-            UpdateQuestProgress(data, "随机事件");
+            UpdateQuestProgress("随机事件");
         }
 
         // 模拟战斗（临时占位，等待接入实际战斗系统）
-        private async Task<bool> SimulateBattle(RogueLikeGameData data, Character character, bool isElite)
+        private async Task<bool> SimulateBattle(Character character, bool isElite)
         {
             // 简单模拟：基于角色属性和随机数决定胜负
             // 实际应调用 FunGameActionQueue 的战斗系统
@@ -987,14 +1275,14 @@ namespace Milimoe.FunGame.Testing.Solutions
             double power = (character.ATK * 0.6 + character.DEF * 0.4) / 50.0;
             winRate = Math.Clamp(winRate + (power - 1) * 0.15, 0.1, 0.95);
 
-            bool victory = data.Random.NextDouble() < winRate;
+            bool victory = Data.Random.NextDouble() < winRate;
 
             // 模拟战斗过程文本
             WriteLine("战斗开始！");
             await Task.Delay(300);
-            WriteLine($"敌方生命值：{data.Random.Next(30, 80):0.##}");
+            WriteLine($"敌方生命值：{Data.Random.Next(30, 80):0.##}");
             await Task.Delay(300);
-            WriteLine($"你发起了攻击，造成了 {character.ATK + data.Random.Next(-5, 10):0.##} 点伤害！");
+            WriteLine($"你发起了攻击，造成了 {character.ATK + Data.Random.Next(-5, 10):0.##} 点伤害！");
             await Task.Delay(300);
 
             if (victory)
@@ -1010,9 +1298,9 @@ namespace Milimoe.FunGame.Testing.Solutions
         }
 
         // 辅助方法：更新探索任务进度
-        private void UpdateQuestProgress(RogueLikeGameData data, string actionType)
+        private void UpdateQuestProgress(string actionType)
         {
-            foreach (var quest in data.CurrentQuests.Where(q => q.Status == QuestState.InProgress))
+            foreach (Quest quest in Data.CurrentQuests.Where(q => q.Status == QuestState.InProgress))
             {
                 if (quest.QuestType == QuestType.Progressive)
                 {
@@ -1026,6 +1314,158 @@ namespace Milimoe.FunGame.Testing.Solutions
                 }
                 // 即时任务可能需要特定条件，此处简化处理
             }
+        }
+
+        // 根据任务类型返回需要的房间类型（可根据实际Quest设计扩展）
+        private InteractionPointType GetNeededRoomTypeForQuest(Quest quest)
+        {
+            if (quest.Name.Contains("战斗") || quest.NeedyExploreItemName?.Contains("战斗") == true)
+                return InteractionPointType.General;
+
+            if (quest.Name.Contains("精英") || quest.NeedyExploreItemName?.Contains("精英") == true)
+                return InteractionPointType.Elite;
+
+            if (quest.Name.Contains("宝箱") || quest.NeedyExploreItemName?.Contains("宝箱") == true)
+                return InteractionPointType.Treasure;
+
+            if (quest.Name.Contains("商店") || quest.NeedyExploreItemName?.Contains("商店") == true)
+                return InteractionPointType.Store;
+
+            // 默认返回普通战斗或事件
+            return Data.Random.Next(2) == 0 ? InteractionPointType.General : InteractionPointType.Change;
+        }
+
+        // 按权重随机选择房间类型（可自行调整权重）
+        private InteractionPointType ChooseRoomTypeByWeight(Dictionary<InteractionPointType, (int min, int max)> config, Dictionary<InteractionPointType, int> required)
+        {
+            // 示例权重：普通战最高，其次事件、宝箱等
+            Dictionary<InteractionPointType, int> weights = new()
+            {
+                { InteractionPointType.General, 35 },
+                { InteractionPointType.Change,  20 },
+                { InteractionPointType.Treasure,15 },
+                { InteractionPointType.Elite,   18 },
+                { InteractionPointType.Rest,    7 },
+                { InteractionPointType.Store,    5 }
+            };
+
+            int totalWeight = weights.Values.Sum();
+            int roll = Data.Random.Next(totalWeight);
+
+            int current = 0;
+            foreach (var (type, weight) in weights)
+            {
+                current += weight;
+                if (roll < current)
+                    return type;
+            }
+            return InteractionPointType.General;
+        }
+
+        // 统计当前地图中某种房间的数量
+        private static int CountRoomType(GameMap map, InteractionPointType type)
+        {
+            return map.Grids.Values.Count(g =>
+                g.InteractionPoints.Any(ip => (InteractionPointType)ip.CustomValue == type));
+        }
+
+        // 添加交互点
+        private void AddInteractionPoint(Grid grid, InteractionPointType type)
+        {
+            InteractionPoint ip = new()
+            {
+                Id = grid.Id,
+                CustomValue = (int)type
+            };
+            grid.InteractionPoints.Add(ip);
+
+            grid.CharacterEntered += (character) =>
+            {
+                HandleCharacterEnteredGrid(character, grid, ip);  // 注意：data 需要通过闭包或字段传递
+            };
+        }
+
+        private static string GetDirectionName(Grid current, Grid target)
+        {
+            int dx = target.X - current.X;
+            int dy = target.Y - current.Y;
+            return (dx, dy) switch
+            {
+                (0, -1) => "↑ 北",
+                (0, 1) => "↓ 南",
+                (-1, 0) => "← 西",
+                (1, 0) => "→ 东",
+                (-1, -1) => "↖ 西北",
+                (1, -1) => "↗ 东北",
+                (-1, 1) => "↙ 西南",
+                (1, 1) => "↘ 东南",
+                _ => "？"
+            };
+        }
+
+        private static string GetRoomTypeDisplay(Grid grid)
+        {
+            if (grid.InteractionPoints.Count == 0) return "<空>";
+            InteractionPointType type = (InteractionPointType)grid.InteractionPoints.First().CustomValue;
+            return type switch
+            {
+                InteractionPointType.General => "<普>",
+                InteractionPointType.Elite => "<精>",
+                InteractionPointType.Store => "<商>",
+                InteractionPointType.Treasure => "<宝>",
+                InteractionPointType.Rest => "<休>",
+                InteractionPointType.Change => "<事>",
+                _ => "<？>"
+            };
+        }
+
+        private List<Quest> GetQuests(OshimaRegion region, int count)
+        {
+            List<Quest> quests = [];
+
+            int immediateQuestCount = Data.Random.Next(count + 1);
+            int progressiveQuestCount = count - immediateQuestCount;
+
+            var list = region.ImmediateQuestList.OrderBy(kv => Data.Random.Next()).Take(immediateQuestCount);
+            foreach (var item in list)
+            {
+                string name = item.Key;
+                QuestExploration exploration = item.Value;
+                int difficulty = Random.Shared.Next(3, 11);
+                Quest quest = new()
+                {
+                    Id = quests.Count + 1,
+                    Name = name,
+                    Description = exploration.Description,
+                    RegionId = region.Id,
+                    NeedyExploreItemName = exploration.Item,
+                    QuestType = QuestType.Immediate,
+                    Status = QuestState.InProgress
+                };
+                quests.Add(quest);
+            }
+            list = region.ProgressiveQuestList.OrderBy(kv => Data.Random.Next()).Take(progressiveQuestCount);
+            foreach (var item in list)
+            {
+                string name = item.Key;
+                QuestExploration exploration = item.Value;
+                int maxProgress = Random.Shared.Next(3, 11);
+                Quest quest = new()
+                {
+                    Id = quests.Count + 1,
+                    Name = name,
+                    Description = string.Format(exploration.Description, maxProgress),
+                    RegionId = region.Id,
+                    NeedyExploreItemName = exploration.Item,
+                    QuestType = QuestType.Progressive,
+                    Progress = 0,
+                    MaxProgress = maxProgress,
+                    Status = QuestState.InProgress
+                };
+                quests.Add(quest);
+            }
+
+            return quests;
         }
     }
 
