@@ -1381,7 +1381,7 @@ namespace Milimoe.FunGame.Testing.Solutions
 
             grid.CharacterEntered += (character) =>
             {
-                HandleCharacterEnteredGrid(character, grid, ip);  // 注意：data 需要通过闭包或字段传递
+                HandleCharacterEnteredGrid(character, grid, ip);
             };
         }
 
