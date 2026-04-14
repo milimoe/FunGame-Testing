@@ -109,9 +109,9 @@ namespace Milimoe.FunGame.Testing.Desktop.GameMapTesting
             );
         }
 
-        public async Task<List<Character>> RequestTargetSelection(Character character, ISkill skill, List<Character> enemys, List<Character> teammates, List<Grid> range)
+        public async Task<List<Character>> RequestTargetSelection(Character character, ISkill skill, List<Character> allEnemys, List<Character> allTeammates, List<Character> enemys, List<Character> teammates, List<Grid> range)
         {
-            List<Character> selectable = skill.GetSelectableTargets(character, enemys, teammates);
+            List<Character> selectable = skill.GetSelectableTargets(character, allEnemys, allTeammates, enemys, teammates);
             await WriteLine($"请为 {skill.Name} 选择目标 (最多 {skill.RealCanSelectTargetCount(enemys, teammates)} 个)。");
             List<Character> targets = await _targetSelectionRequester.RequestInput(
                 async (callback) => await UI.InvokeAsync(() => UI.ShowTargetSelectionUI(character, skill, selectable, enemys, teammates, range, callback))

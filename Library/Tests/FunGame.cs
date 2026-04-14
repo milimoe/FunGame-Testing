@@ -428,7 +428,7 @@ namespace Milimoe.FunGame.Testing.Tests
             return true;
         }
 
-        private static List<Character> GamingQueue_SelectNormalAttackTargets(GamingQueue queue, Character character, NormalAttack attack, List<Character> enemys, List<Character> teammates, List<Grid> attackRange)
+        private static List<Character> GamingQueue_SelectNormalAttackTargets(GamingQueue queue, Character character, NormalAttack attack, List<Character> allEnemys, List<Character> allTeammates, List<Character> enemys, List<Character> teammates, List<Grid> attackRange)
         {
             List<Character> characters = [];
             if (IsPlayer_OnlyTest(queue, character))
@@ -530,7 +530,7 @@ namespace Milimoe.FunGame.Testing.Tests
             return item;
         }
 
-        private static List<Character> GamingQueue_SelectSkillTargets(GamingQueue queue, Character caster, Skill skill, List<Character> enemys, List<Character> teammates, List<Grid> castRange)
+        private static List<Character> GamingQueue_SelectSkillTargets(GamingQueue queue, Character caster, Skill skill, List<Character> allEnemys, List<Character> allTeammates, List<Character> enemys, List<Character> teammates, List<Grid> castRange)
         {
             List<Character> characters = [];
             if (IsPlayer_OnlyTest(queue, caster))

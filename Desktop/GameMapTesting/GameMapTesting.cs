@@ -324,17 +324,14 @@ namespace Milimoe.FunGame.Testing.Desktop.GameMapTesting
                                 hpPercentage.TryAdd(c, c.HP / c.MaxHP);
                             }
                             double max = hpPercentage.Values.Max();
-                            Character winner = hpPercentage.Keys.Where(c => hpPercentage[c] == max).First();
+                            Character winner = hpPercentage.Keys.First(c => hpPercentage[c] == max);
                             await Controller.WriteLine("[ " + winner + " ] 成为了天选之人！！");
                             foreach (Character c in characters.Where(c => c != winner && c.HP > 0))
                             {
                                 await Controller.WriteLine("[ " + winner + " ] 对 [ " + c + " ] 造成了 99999999999 点真实伤害。");
                                 _gamingQueue.DeathCalculation(winner, c);
                             }
-                            if (mgq != null)
-                            {
-                                mgq.EndGameInfo(winner);
-                            }
+                            mgq?.EndGameInfo(winner);
                         }
                         result.Add(Msg);
                         break;
@@ -586,7 +583,7 @@ namespace Milimoe.FunGame.Testing.Desktop.GameMapTesting
             return true;
         }
 
-        private List<Character> GamingQueue_SelectNormalAttackTargets(GamingQueue queue, Character character, NormalAttack attack, List<Character> enemys, List<Character> teammates, List<Grid> attackRange)
+        private List<Character> GamingQueue_SelectNormalAttackTargets(GamingQueue queue, Character character, NormalAttack attack, List<Character> allEnemys, List<Character> allTeammates, List<Character> enemys, List<Character> teammates, List<Grid> attackRange)
         {
             if (!IsPlayer_OnlyTest(queue, character)) return [];
 
@@ -594,6 +591,8 @@ namespace Milimoe.FunGame.Testing.Desktop.GameMapTesting
             List<Character> selectedTargets = SyncAwaiter.WaitResult(Controller.RequestTargetSelection(
                 character,
                 attack,
+                allEnemys,
+                allTeammates,
                 enemys,
                 teammates,
                 attackRange
@@ -613,7 +612,7 @@ namespace Milimoe.FunGame.Testing.Desktop.GameMapTesting
             return selectedItem;
         }
 
-        private List<Character> GamingQueue_SelectSkillTargets(GamingQueue queue, Character caster, Skill skill, List<Character> enemys, List<Character> teammates, List<Grid> castRange)
+        private List<Character> GamingQueue_SelectSkillTargets(GamingQueue queue, Character caster, Skill skill, List<Character> allEnemys, List<Character> allTeammates, List<Character> enemys, List<Character> teammates, List<Grid> castRange)
         {
             if (!IsPlayer_OnlyTest(queue, caster)) return [];
 
@@ -626,6 +625,8 @@ namespace Milimoe.FunGame.Testing.Desktop.GameMapTesting
             List<Character>? selectedTargets = SyncAwaiter.WaitResult(Controller.RequestTargetSelection(
                 caster,
                 skill,
+                allEnemys,
+                allTeammates,
                 enemys,
                 teammates,
                 castRange
