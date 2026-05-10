@@ -425,11 +425,11 @@ while (true)
         }
         else if (msg.StartsWith("cjs") && int.TryParse(msg.Replace("cjs", ""), out int cIndex))
         {
-            Console.WriteLine(NetworkUtility.JsonDeserialize<string>(controller.GetCharacterInfoFromInventory(1, cIndex)));
+            Console.WriteLine(controller.GetCharacterInfoFromInventory(1, cIndex));
         }
         else if (msg.StartsWith("cwp") && int.TryParse(msg.Replace("cwp", ""), out int itemIndex))
         {
-            Console.WriteLine(NetworkUtility.JsonDeserialize<string>(controller.GetItemInfoFromInventory(1, itemIndex)));
+            Console.WriteLine(controller.GetItemInfoFromInventory(1, itemIndex));
         }
         else if (int.TryParse(msg, out int page2))
         {
